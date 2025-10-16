@@ -21,7 +21,7 @@
 	<meta name="twitter:site" content="@dreamguystech">
 	<meta name="twitter:title" content="DreamSports -  Booking Coaches, Venue for tournaments, Court Rental template">
 
-	<meta name="twitter:image" content="assets/img/meta-image.jpg">
+	<meta name="twitter:image" content="{{ asset('img/meta-image.jpg') }}">
 	<meta name="twitter:image:alt" content="DreamSports">
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,8 +29,8 @@
 	<meta property="og:url" content="https://dreamsports.dreamguystech.com/">
 	<meta property="og:title" content="DreamSports -  Booking Coaches, Venue for tournaments, Court Rental template">
 	<meta property="og:description" content="Elevate your badminton business with Dream Sports template. Empower coaches & players, optimize court performance and unlock industry-leading success for your brand.">
-	<meta property="og:image" content="../assets/img/meta-image.jpg">
-	<meta property="og:image:secure_url" content="assets/img/meta-image.jpg">
+	<meta property="og:image" content="../{{ asset('img/meta-image.jpg') }}">
+	<meta property="og:image:secure_url" content="{{ asset('img/meta-image.jpg') }}">
 	<meta property="og:image:type" content="image/png">
 	<meta property="og:image:width" content="1200">
 	<meta property="og:image:height" content="600">
@@ -57,18 +57,14 @@
 	<link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
 
 	<!-- Feathericon CSS -->
-	{{-- <link rel="stylesheet" href="assets/css/feather.css"> --}}
 	<link rel="stylesheet" href="{{ asset('css/feather.css') }}">
 
 	<!-- Main CSS -->
-	{{-- <link rel="stylesheet" href="assets/css/style.css"> --}}
 	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
-	{{-- <link rel="stylesheet" href="assets/css/chatbox.css"> --}}
 	<link rel="stylesheet" href="{{ asset('css/chatbox.css') }}">
 
 	<!-- chatbox  -->
 	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
-	<!-- <script src="assets/js/chatbox/server.js"></script> -->
 	
 </head>
 
@@ -94,14 +90,14 @@
 								<span></span>
 							</span>
 						</a>
-						<a href="index.php?id=" class="navbar-brand logo">
-							<img src="assets/img/logo.svg" class="img-fluid" alt="Logo">
+						<a href="" class="navbar-brand logo">
+							<img src="{{ asset('img/logo.svg') }}" class="img-fluid" alt="Logo">
 						</a>
 					</div>
 					<div class="main-menu-wrapper">
 						<div class="menu-header">
 							<a href="index.html" class="menu-logo">
-								<img src="assets/img/logo-black.svg" class="img-fluid" alt="Logo">
+								<img src="{{ asset('img/logo-black.svg') }}" class="img-fluid" alt="Logo">
 							</a>
 							<a id="menu_close" class="menu-close" href="javascript:void(0);"> <i class="fas fa-times"></i></a>
 						</div>
@@ -214,14 +210,14 @@
 		<!-- Hero Section -->
 		<section class="hero-section">	
 			<div class="banner-cock-one">
-				<img src="assets/img/icons/banner-cock1.svg" alt="Banner">
+				<img src="{{ asset('img/icons/banner-cock1.svg') }}" alt="Banner">
 			</div>
 			<div class="banner-shapes">
 				<div class="banner-dot-one">
 					<span></span>
 				</div>
 				<div class="banner-cock-two">
-					<img src="assets/img/icons/banner-cock2.svg" alt="Banner">
+					<img src="{{ asset('img/icons/banner-cock2.svg') }}" alt="Banner">
 					<span></span>
 				</div>
 				<div class="banner-dot-two">
@@ -237,13 +233,8 @@
 								<h1>Chọn <span>Sân Cầu Lông Tốt</span> Và Bắt Đầu Hành Trình Rèn Luyện</h1>
 								<p class="sub-info">Giải phóng tiềm năng thể thao của bạn với cơ sở vật chất hiện đại và dịch vụ chuẩn thi đấu.</p>
 								<div class="search-box">
-									<!-- <form action="assets/view/khachhang/timKiemSan.php?action=timkiem" method="GET"> 
-										<div class="search-input line">
-											<input type="text" name="keyword" placeholder="Nhập tên sân">
-											<button type="submit" id="btn" name="btn">Tìm kiếm</button>
-										</div>
-									</form> -->
-									<form action="assets/view/khachhang/timKiemSan.php" method="GET">
+									
+									<form action="{{ asset('view/khachhang/timKiemSan.php') }}" method="GET">
 										<input type="search" name="keyword" placeholder="Bạn cần tìm gì" autocomplete="off" required style="width: 90%; border-radius: 10px; margin-right: 10px; border: solid 1px black;">
 										<input type="submit" class="btn btn-gradient pull-right write-review add-review" name="btn" id="btn" value="Search">
 									</form>
@@ -252,7 +243,7 @@
 						</div>
 						<div class="col-lg-5">
 							<div class="banner-imgs text-center aos" data-aos="fade-up">
-								<img class="img-fluid" src="assets/img/bg/banner-right.png" alt="Banner">
+								<img class="img-fluid" src="{{ asset('img/bg/banner-right.png') }}" alt="Banner">
 							</div>
 						</div>
 					</div>
@@ -264,11 +255,11 @@
 		<!-- How It Works -->
 		<section class="section work-section">
 			<div class="work-cock-img">
-				<img src="assets/img/icons/work-cock.svg" alt="Icon">
+				<img src="{{ asset('img/icons/work-cock.svg') }}" alt="Icon">
 			</div>
 			<div class="work-img">
 				<div class="work-img-right">
-					<img src="assets/img/bg/work-bg.png" alt="Icon">
+					<img src="{{ asset('img/bg/work-bg.png') }}" alt="Icon">
 				</div>
 			</div>
 			<div class="container">
@@ -281,7 +272,7 @@
 						<div class="work-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/work-icon1.svg" alt="Icon">
+									<img src="{{ asset('img/icons/work-icon1.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -299,7 +290,7 @@
 						<div class="work-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/work-icon2.svg" alt="Icon">
+									<img src="{{ asset('img/icons/work-icon2.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -317,7 +308,7 @@
 						<div class="work-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/work-icon3.svg" alt="Icon">
+									<img src="{{ asset('img/icons/work-icon3.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -368,7 +359,7 @@
 		<!-- Services -->
 		<section class="section service-section">
 			<div class="work-cock-img">
-				<img src="assets/img/icons/work-cock.svg" alt="Service">
+				<img src="{{ asset('img/icons/work-cock.svg') }}" alt="Service">
 			</div>
 			<div class="container">
 				<div class="section-heading aos" data-aos="fade-up">
@@ -380,7 +371,7 @@
 						<div class="service-grid w-100 aos" data-aos="fade-up">
 							<div class="service-img">
 								<a href="service-detail.html">
-									<img src="assets/img/services/service-01.jpg" class="img-fluid" alt="Service">
+									<img src="{{ asset('img/services/service-01.jpg') }}" class="img-fluid" alt="Service">
 								</a>
 							</div>
 							<div class="service-content">
@@ -393,7 +384,7 @@
 						<div class="service-grid w-100 aos" data-aos="fade-up">
 							<div class="service-img">
 								<a href="service-detail.html">
-									<img src="assets/img/services/service-02.jpg" class="img-fluid" alt="Service">
+									<img src="{{ asset('img/services/service-02.jpg') }}" class="img-fluid" alt="Service">
 								</a>
 							</div>
 							<div class="service-content">
@@ -406,7 +397,7 @@
 						<div class="service-grid w-100 aos" data-aos="fade-up">
 							<div class="service-img">
 								<a href="service-detail.html">
-									<img src="assets/img/services/service-03.jpg" class="img-fluid" alt="Service">
+									<img src="{{ asset('img/services/service-03.jpg') }}" class="img-fluid" alt="Service">
 								</a>
 							</div>
 							<div class="service-content">
@@ -419,7 +410,7 @@
 						<div class="service-grid w-100 aos" data-aos="fade-up">
 							<div class="service-img">
 								<a href="service-detail.html">
-									<img src="assets/img/services/service-04.jpg" class="img-fluid" alt="Service">
+									<img src="{{ asset('img/services/service-04.jpg') }}" class="img-fluid" alt="Service">
 								</a>
 							</div>
 							<div class="service-content">
@@ -442,13 +433,13 @@
 		<section class="section convenient-section">
 			<div class="cock-img">
 				<div class="cock-img-one">
-					<img src="assets/img/icons/cock-01.svg" alt="Icon">
+					<img src="{{ asset('img/icons/cock-01.svg') }}" alt="Icon">
 				</div>
 				<div class="cock-img-two">
-					<img src="assets/img/icons/cock-02.svg" alt="Icon">
+					<img src="{{ asset('img/icons/cock-02.svg') }}" alt="Icon">
 				</div>
 				<div class="cock-circle">
-					<img src="assets/img/bg/cock-shape.png" alt="Icon">
+					<img src="{{ asset('img/bg/cock-shape.png') }}" alt="Icon">
 				</div>
 			</div>
 			<div class="container">
@@ -502,7 +493,7 @@
 					</div>
 					<div class="col-lg-6">
 						<div class="journey-img aos" data-aos="fade-up">
-							<img src="assets/img/journey-01.png" class="img-fluid" alt="User">
+							<img src="{{ asset('img/journey-01.png') }}" class="img-fluid" alt="User">
 						</div>
 					</div>
 				</div>
@@ -518,27 +509,12 @@
 					<p class="sub-title">Khám phá khả năng của bản thân với cơ sở vật chất tiên tiến. Hãy tham gia cùng chúng tôi để cải thiện sức khỏe của bạn.</p>
 				</div>
 				<div class="row justify-content-center">
-					<!-- <div class="col-lg-4 col-md-6 d-flex">
-						<div class="work-grid coaching-grid w-100 aos" data-aos="fade-up">
-							<div class="work-icon">
-								<div class="work-icon-inner">
-									<img src="assets/img/icons/coache-icon-01.svg" alt="Icon">
-								</div>
-							</div>
-							<div class="work-content">
-								<h3>Group Coaching</h3>
-								<p>Accelerate your skills with tailored group coaching sessions for badminton players game.</p>
-								<a href="javascript:void(0);">
-									Tìm hiểu thêm
-								</a>
-							</div>
-						</div>
-					</div> -->
+					
 					<div class="col-lg-4 col-md-6 d-flex">
 						<div class="work-grid coaching-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/coache-icon-02.svg" alt="Icon">
+									<img src="{{ asset('img/icons/coache-icon-02.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -554,7 +530,7 @@
 						<div class="work-grid coaching-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/coache-icon-03.svg" alt="Icon">
+									<img src="{{ asset('img/icons/coache-icon-03.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -570,7 +546,7 @@
 						<div class="work-grid coaching-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/coache-icon-04.svg" alt="Icon">
+									<img src="{{ asset('img/icons/coache-icon-04.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -586,7 +562,7 @@
 						<div class="work-grid coaching-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/coache-icon-05.svg" alt="Icon">
+									<img src="{{ asset('img/icons/coache-icon-05.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -602,7 +578,7 @@
 						<div class="work-grid coaching-grid w-100 aos" data-aos="fade-up">
 							<div class="work-icon">
 								<div class="work-icon-inner">
-									<img src="assets/img/icons/coache-icon-06.svg" alt="Icon">
+									<img src="{{ asset('img/icons/coache-icon-06.svg') }}" alt="Icon">
 								</div>
 							</div>
 							<div class="work-content">
@@ -629,7 +605,7 @@
 				<div class="row">
 					<div class="col-lg-6">
 						<div class="best-service-img aos" data-aos="fade-up">
-							<img src="assets/img/best-service.jpg" class="img-fluid" alt="Service">
+							<img src="{{ asset('img/best-service.jpg') }}" class="img-fluid" alt="Service">
 							<div class="service-count-blk">
 								<div class="coach-count">
 									<h3>Sân Cầu Lông</h3>
@@ -761,7 +737,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="venue-details.html">
-											<img src="assets/img/venues/venues-04.jpg" alt="Venue">
+											<img src="{{ asset('img/venues/venues-04.jpg') }}" alt="Venue">
 										</a>
 										<div class="fav-item-venues">
 											<div class="list-reviews coche-star">
@@ -799,7 +775,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="venue-details.html">
-											<img src="assets/img/venues/venues-05.jpg" alt="Venue">
+											<img src="{{ asset('img/venues/venues-05.jpg') }}" alt="Venue">
 										</a>
 										<div class="fav-item-venues">
 											<div class="list-reviews coche-star">
@@ -837,7 +813,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="venue-details.html">
-											<img src="assets/img/venues/venues-06.jpg" alt="Venue">
+											<img src="{{ asset('img/venues/venues-06.jpg') }}" alt="Venue">
 										</a>
 										<div class="fav-item-venues">
 											<div class="list-reviews coche-star">
@@ -875,7 +851,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="venue-details.html">
-											<img src="assets/img/venues/venues-05.jpg" alt="Venue">
+											<img src="{{ asset('img/venues/venues-05.jpg') }}" alt="Venue">
 										</a>
 										<div class="fav-item-venues">
 											<div class="list-reviews coche-star">
@@ -949,7 +925,7 @@
 								</div>
 								<div class="listing-venue-owner">
 									<a class="navigation">
-										<img src="assets/img/profiles/avatar-01.jpg" alt="User">
+										<img src="{{ asset('img/profiles/avatar-01.jpg') }}" alt="User">
 									</a>	
 									<div class="testimonial-content">
 										<h5><a href="javascript:;">Ariyan Rusov</a></h5>
@@ -977,7 +953,7 @@
 								</div>
 								<div class="listing-venue-owner">
 									<a class="navigation">
-										<img src="assets/img/profiles/avatar-04.jpg" alt="User">
+										<img src="{{ asset('img/profiles/avatar-04.jpg') }}" alt="User">
 									</a>	
 									<div class="testimonial-content">
 										<h5><a href="javascript:;">Darren Valdez</a></h5>
@@ -1005,7 +981,7 @@
 								</div>
 								<div class="listing-venue-owner">
 									<a class="navigation">
-										<img src="assets/img/profiles/avatar-03.jpg" alt="User">
+										<img src="{{ asset('img/profiles/avatar-03.jpg') }}" alt="User">
 									</a>	
 									<div class="testimonial-content">
 										<h5><a href="javascript:;">Elinor Dunn</a></h5>
@@ -1033,7 +1009,7 @@
 								</div>
 								<div class="listing-venue-owner">
 									<a class="navigation">
-										<img src="assets/img/profiles/avatar-04.jpg" alt="User">
+										<img src="{{ asset('img/profiles/avatar-04.jpg') }}" alt="User">
 									</a>	
 									<div class="testimonial-content">
 										<h5><a href="javascript:;">Darren Valdez</a></h5>
@@ -1052,25 +1028,25 @@
 					<div class="brand-slider-group aos" data-aos="fade-up">
 			        	<div class="owl-carousel testimonial-brand-slider owl-theme">
 							<div class="brand-logos">
-								<img  src="assets/img/testimonial-icon-01.svg" alt="Brand">
+								<img  src="{{ asset('img/testimonial-icon-01.svg') }}" alt="Brand">
 							</div>
 							<div class="brand-logos">
-								<img  src="assets/img/testimonial-icon-04.svg" alt="Brand">
+								<img  src="{{ asset('img/testimonial-icon-04.svg') }}" alt="Brand">
 							</div>
 							<div class="brand-logos">
-								<img  src="assets/img/testimonial-icon-03.svg" alt="Brand">
+								<img  src="{{ asset('img/testimonial-icon-03.svg') }}" alt="Brand">
 							</div>
 							<div class="brand-logos">
-								<img  src="assets/img/testimonial-icon-04.svg" alt="Brand">
+								<img  src="{{ asset('img/testimonial-icon-04.svg') }}" alt="Brand">
 							</div>
 							<div class="brand-logos">
-								<img  src="assets/img/testimonial-icon-05.svg" alt="Brand">
+								<img  src="{{ asset('img/testimonial-icon-05.svg') }}" alt="Brand">
 							</div>
 							<div class="brand-logos">
-								<img  src="assets/img/testimonial-icon-03.svg" alt="Brand">
+								<img  src="{{ asset('img/testimonial-icon-03.svg') }}" alt="Brand">
 							</div>
 							<div class="brand-logos">
-								<img  src="assets/img/testimonial-icon-04.svg" alt="Brand">
+								<img  src="{{ asset('img/testimonial-icon-04.svg') }}" alt="Brand">
 							</div>
 						</div>
 					</div>	
@@ -1085,7 +1061,7 @@
 		<section class="section featured-plan">
 			<div class="work-img ">
 				<div class="work-img-right">
-					<img src="assets/img/bg/work-bg.png" alt="Icon">
+					<img src="{{ asset('img/bg/work-bg.png') }}" alt="Icon">
 				</div>
 			</div>
 			<div class="container">
@@ -1108,7 +1084,7 @@
 							<!-- Price Card -->
 						    <div class="price-card flex-fill ">
 								<div class="price-head">
-									<img  src="assets/img/icons/price-01.svg" alt="Price">
+									<img  src="{{ asset('img/icons/price-01.svg') }}" alt="Price">
 									<h3>Professoinal</h3>						
 								</div>	
 								<div class="price-body">
@@ -1143,7 +1119,7 @@
 							<!-- Price Card -->
 						    <div class="price-card flex-fill">
 								<div class="price-head expert-price">
-									<img  src="assets/img/icons/price-02.svg" alt="Price">
+									<img  src="{{ asset('img/icons/price-02.svg') }}" alt="Price">
 									<h3>Expert</h3>	
 									<span>Recommended</span>					
 								</div>	
@@ -1179,7 +1155,7 @@
 							<!-- Price Card -->
 						    <div class="price-card flex-fill">
 								<div class="price-head">
-									<img  src="assets/img/icons/price-03.svg" alt="Price">
+									<img  src="{{ asset('img/icons/price-03.svg') }}" alt="Price">
 									<h3>Enterprise</h3>						
 								</div>	
 								<div class="price-body">
@@ -1231,7 +1207,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="blog-details.html">
-											<img src="assets/img/venues/venues-07.jpg" alt="User">
+											<img src="{{ asset('img/venues/venues-07.jpg') }}" alt="User">
 										</a>
 										<div class="fav-item-venues news-sports">
 											<span class="tag tag-blue">Badminton</span>	
@@ -1245,7 +1221,7 @@
 									<div class="listing-content news-content">
 										<div class="listing-venue-owner listing-dates">
 											<a href="javascript:;" class="navigation">
-												<img src="assets/img/profiles/avatar-01.jpg" alt="User">Orlando Waters
+												<img src="{{ asset('img/profiles/avatar-01.jpg') }}" alt="User">Orlando Waters
 												
 											</a>			
 											<span ><i class="feather-calendar"></i>15 May 2023</span>									
@@ -1258,7 +1234,7 @@
 												<li><a href="javascript:;"><i class="feather-heart"></i>45</a></li>
 												<li><a href="javascript:;"><i class="feather-message-square"></i>45</a></li>
 											</ul>
-											<span><img src="assets/img/icons/clock.svg" alt="User">10 Min To Read</span>
+											<span><img src="{{ asset('img/icons/clock.svg') }}" alt="User">10 Min To Read</span>
 										</div>	
 									</div>
 								</div>
@@ -1270,7 +1246,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="blog-details.html">
-											<img src="assets/img/venues/venues-08.jpg" alt="User">
+											<img src="{{ asset('img/venues/venues-08.jpg') }}" alt="User">
 										</a>
 										<div class="fav-item-venues news-sports">
 											<span class="tag tag-blue">Sports Activites</span>	
@@ -1284,7 +1260,7 @@
 									<div class="listing-content news-content">
 										<div class="listing-venue-owner listing-dates">
 											<a href="javascript:;" class="navigation">
-												<img src="assets/img/profiles/avatar-03.jpg" alt="User">Nichols
+												<img src="{{ asset('img/profiles/avatar-03.jpg') }}" alt="User">Nichols
 											</a>
 											<span ><i class="feather-calendar"></i>16 Jun 2023</span>												
 										</div>
@@ -1296,7 +1272,7 @@
 												<li><a href="javascript:;"><i class="feather-heart"></i>35</a></li>
 												<li><a href="javascript:;"><i class="feather-message-square"></i>35</a></li>
 											</ul>
-											<span><img src="assets/img/icons/clock.svg" alt="Icon">12 Min To Read</span>
+											<span><img src="{{ asset('img/icons/clock.svg') }}" alt="Icon">12 Min To Read</span>
 										</div>	
 									</div>
 								</div>
@@ -1308,7 +1284,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="blog-details.html">
-											<img src="assets/img/venues/venues-09.jpg" alt="Venue">
+											<img src="{{ asset('img/venues/venues-09.jpg') }}" alt="Venue">
 										</a>
 										<div class="fav-item-venues news-sports">
 											<span class="tag tag-blue">Rules of Game</span>	
@@ -1322,7 +1298,7 @@
 									<div class="listing-content news-content">
 										<div class="listing-venue-owner listing-dates">
 											<a href="javascript:;" class="navigation">
-												<img src="assets/img/profiles/avatar-06.jpg" alt="User">Joanna Le
+												<img src="{{ asset('img/profiles/avatar-06.jpg') }}" alt="User">Joanna Le
 											</a>
 											<span ><i class="feather-calendar"></i>11 May 2023</span>												
 										</div>
@@ -1334,7 +1310,7 @@
 												<li><a href="javascript:;"><i class="feather-heart"></i>25</a></li>
 												<li><a href="javascript:;"><i class="feather-message-square"></i>25</a></li>
 											</ul>
-											<span><img src="assets/img/icons/clock.svg" alt="Clock">14 Min To Read</span>
+											<span><img src="{{ asset('img/icons/clock.svg') }}" alt="Clock">14 Min To Read</span>
 										</div>	
 									</div>
 								</div>
@@ -1346,7 +1322,7 @@
 								<div class="listing-item mb-0">										
 									<div class="listing-img">
 										<a href="blog-details.html">
-											<img src="assets/img/venues/venues-08.jpg" alt="Venue">
+											<img src="{{ asset('img/venues/venues-08.jpg') }}" alt="Venue">
 										</a>
 										<div class="fav-item-venues news-sports">
 											<span class="tag tag-blue">Sports Activites</span>	
@@ -1360,7 +1336,7 @@
 									<div class="listing-content news-content">
 										<div class="listing-venue-owner listing-dates">
 											<a href="javascript:;" class="navigation">
-												<img src="assets/img/profiles/avatar-01.jpg" alt="User">Mart Sublin
+												<img src="{{ asset('img/profiles/avatar-01.jpg') }}" alt="User">Mart Sublin
 											</a>
 											<span ><i class="feather-calendar"></i>12 May 2023</span>												
 										</div>
@@ -1372,7 +1348,7 @@
 												<li><a href="javascript:;"><i class="feather-heart"></i>35</a></li>
 												<li><a href="javascript:;"><i class="feather-message-square"></i>35</a></li>
 											</ul>
-											<span><img src="assets/img/icons/clock.svg" alt="Clock">12 Min To Read</span>
+											<span><img src="{{ asset('img/icons/clock.svg') }}" alt="Clock">12 Min To Read</span>
 										</div>	
 									</div>
 								</div>
@@ -1400,10 +1376,10 @@
 					<div class="col-sm-12">
 						<div class="subscribe-style aos" data-aos="fade-up">
 							<div class="banner-blk">
-								<img src="assets/img/subscribe-bg.jpg" class="img-fluid" alt="Subscribe">
+								<img src="{{ asset('img/subscribe-bg.jpg') }}" class="img-fluid" alt="Subscribe">
 							</div>
 							<div class="banner-info ">
-								<img src="assets/img/icons/subscribe.svg" class="img-fluid" alt="Subscribe">
+								<img src="{{ asset('img/icons/subscribe.svg') }}" class="img-fluid" alt="Subscribe">
 								<h2>Subscribe to Newsletter</h2>
 								<p>Just for you, exciting badminton news updates.</p>
 								<div class="subscribe-blk bg-white">
@@ -1572,10 +1548,10 @@
 								<h4 class="footer-title">Download</h4>
 								<ul>
 									<li>
-										<a href="#"><img src="assets/img/icons/icon-apple.svg" alt="Apple"></a>
+										<a href="#"><img src="{{ asset('img/icons/icon-apple.svg') }}" alt="Apple"></a>
 									</li>
 									<li>
-										<a href="#"><img src="assets/img/icons/google-icon.svg" alt="Google"></a>
+										<a href="#"><img src="{{ asset('img/icons/google-icon.svg') }}" alt="Google"></a>
 									</li>
 								</ul>
 							</div>
@@ -1682,29 +1658,29 @@
 	
 
 	<!-- jQuery -->
-	<script data-cfasync="false" src="../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="assets/js/jquery-3.7.1.min.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script data-cfasync="false" src="../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{ asset('') }}js/jquery-3.7.1.min.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 	<!-- Bootstrap Core JS -->
-	<script src="assets/js/bootstrap.bundle.min.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('js/bootstrap.bundle.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 	<!-- Select JS -->
-	<script src="assets/plugins/select2/js/select2.min.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('plugins/select2/js/select2.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 	<!-- Owl Carousel JS -->
-	<script src="assets/plugins/owl-carousel/owl.carousel.min.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('plugins/owl-carousel/owl.carousel.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 	<!-- Aos -->
-	<script src="assets/plugins/aos/aos.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('plugins/aos/aos.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 	<!-- Counterup JS -->
-	<script src="assets/js/jquery.waypoints.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
-	<script src="assets/js/jquery.counterup.min.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('js/jquery.waypoints.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('js/jquery.counterup.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 	<!-- Top JS -->
-	<script src="assets/js/backToTop.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('js/backToTop.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 	<!-- Custom JS -->
-	<script src="assets/js/script.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+	<script src="{{ asset('js/script.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 <script src="../cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="e4c26da156d9fccf88a221dd-|49" defer></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"92a5cc7dff1f1a5b","version":"2025.3.0","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"token":"3ca157e612a14eccbb30cf6db6691c29","b":1}' crossorigin="anonymous"></script>
 <script>
@@ -1723,7 +1699,7 @@
 <script>
   const socket = io("http://localhost:3000"); // Nếu server Node.js chạy ở port 3000
 </script>
-<script src="/quanLySanCauLong-B2B-/html/assets/js/chatbox/customer.js"></script>
+<script src="/quanLySanCauLong-B2B-/html/{{ asset('js/chatbox/customer.js') }}"></script>
 </body>
 
 <!-- Mirrored from dreamsports.dreamstechnologies.com/html/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 03 Apr 2025 04:28:07 GMT -->
