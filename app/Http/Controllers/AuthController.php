@@ -38,7 +38,7 @@ class AuthController extends Controller
         {
             //login thanh cong
             $request->session()->regenerate();
-
+            $userId = Auth::id();
             return redirect()->intended('/');
         }
         return back()->withErrors([

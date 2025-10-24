@@ -78,6 +78,7 @@
 	</div> --}}
 	<!-- Main Wrapper -->
 	<div class="main-wrapper">
+
 		<!-- Header -->
 		<header class="header header-trans">
 			<div class="container-fluid">
@@ -257,7 +258,7 @@
 @yield('index_content')
 @yield('listing-grid_content')
 @yield('venue-details_content')
-<!-- @yield('login') -->
+@yield('login')
 
 {{-- -------------------------------------- --}}
 

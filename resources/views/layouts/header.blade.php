@@ -69,7 +69,6 @@
 	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
 	
 </head>
-
 <body>
 
 	{{-- <div id="global-loader" >
@@ -198,10 +197,6 @@
 						</ul>
 					</div>
 					<ul class="nav header-navbar-rht logged-in">
-						<?php
-							if(isset($_REQUEST['id']) && $_REQUEST['id'] != "")
-							{
-								echo '
 									<li class="nav-item">
 										<a class="nav-link btn btn-secondary" href="user-complete.php?maKH='.$laymaKH.'"><span><i class="feather-check-circle"></i></span>Sân Của Bạn</a>
 									</li>
@@ -225,19 +220,6 @@
 											<p><a class="dropdown-item"  href="login.php">Logout</a></p>
 										</div>
 									</li>
-								';
-							}
-							else 
-							{
-								echo '
-								<li class="nav-item">
-									<div class="nav-link btn btn-white log-register">	
-										<a href="login.php"><span><i class="feather-users"></i></span>Đăng Nhập</a> / <a href="register.php">Đăng Ký</a>
-								</div>
-								</li>
-								';
-							}
-						?>
 					</ul>
 				</nav>
 			</div>
