@@ -134,15 +134,15 @@
                                         @csrf
                                         <div class="mb-10">
                                             <label for="name" class="form-label">Họ tên</label>
-                                            <input type="text" class="form-control" id="name" name="name" value="{{ $customer->tenKH }}">
+                                            <input type="text" class="form-control" id="name" name="name" value="{{ $customer->fullname ?? '' }}">
                                         </div>
                                         <div class="mb-10">
                                             <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" value="{{ $customer->email }}">
+                                            <input type="email" class="form-control" id="email" name="email" value="{{ $customer->email ?? '' }}">
                                         </div>
                                         <div class="mb-10">
                                             <label for="phonenumber" class="form-label">Số điện thoại</label>
-                                            <input type="text" class="form-control" id="phonenumber" name="phonenumber" value="{{ $customer->soDienThoai }}">
+                                            <input type="text" class="form-control" id="phonenumber" name="phonenumber" value="{{ $customer->phone ?? '' }}">
                                         </div>
                                         <div class="mb-10">
                                             <label for="soluong" class="form-label">Số lượng sân</label>
