@@ -51,16 +51,20 @@
                 </div>
             </div>
             {{-- THÊM ID CHO CONTAINER ĐỂ CHÈN DỮ LIỆU MỚI --}}
-            <div class="row justify-content-center" id="san-cau-long-list"> 
+            <div class="justify-content-center" id="san-cau-long-list"> 
 
                 @isset($danhsachsan)
                     @forelse ($danhsachsan as $san)
-                        <div class="featured-venues-item aos" data-aos="fade-up" style="width: 400px; height: 582.8px; margin: 10px; display:inline-block">
+                        <div class="featured-venues-item aos" data-aos="fade-up" style="width: 400px; height: 582.8px; margin: 10px; display:inline-block;">
                             <div class="listing-item mb-0"> 
                                 <div class="listing-img">
+                                    {{-- <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}">
+                                        <img src="{{ asset('img/venues/'.$san->image) }}" alt="">
+                                    </a> --}}
                                     <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}">
                                         <img src="{{ asset('img/venues/'.$san->image) }}" alt="">
                                     </a>
+
                                     <div class="fav-item-venues">
                                         <span class="tag tag-blue">Đang Hoạt Động</span>
                                         {{-- Định dạng tiền tệ cho đẹp --}}
@@ -77,7 +81,9 @@
                                         </a>
                                     </div> 
                                     <h3 class="listing-title" style="height: 64px;">
-                                        <a href="{{ url('venue-details.blade.php?maSan=' . $san->facility_id) }}">{{ $san->facility_name }}</a>
+                                        {{-- <a href="{{ url('venue-details.blade.php?maSan=' . $san->facility_id) }}">{{ $san->facility_name }}</a> --}}
+                                        <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}">{{ $san->facility_name }}</a>
+
                                     </h3>
                                     <div class="listing-details-group">
                                         {{-- Giả định 'ghiChu' là 'moTa' --}}
@@ -96,7 +102,9 @@
                                         </ul>
                                     </div>
                                     <div class="listing-button">
-                                        <a href="{{ url('venue-details.blade.php?maSan=' . $san->facility_id) }}" class="user-book-now"><span><i class="feather-calendar me-2"></i></span>Đặt Ngay</a>
+                                        {{-- <a href="{{ url('venue-details.blade.php?maSan=' . $san->facility_id) }}" class="user-book-now"><span><i class="feather-calendar me-2"></i></span>Đặt Ngay</a> --}}
+                                        <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}" class="user-book-now">
+
                                     </div> 
                                 </div>
                             </div>

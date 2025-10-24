@@ -8,5 +8,6 @@ class Users extends Model
 {
     protected $table = 'users';
 
-    protected $user_id = 'user_id';
+    protected $primaryKey = 'user_id'; // ✅ thêm dòng này
+    public $timestamps = false; // Nếu bảng không dùng created_at / updated_at
 }

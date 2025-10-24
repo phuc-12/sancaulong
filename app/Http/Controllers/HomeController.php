@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\facilities;
 use App\Models\Users;
 use App\Models\Time_slots;
-
+use Illuminate\Support\Facades\Auth;
 class HomeController extends Controller
 {
     const LIMIT_PER_LOAD = 10;
@@ -79,10 +79,10 @@ class HomeController extends Controller
     public function show($idSan)
     {
         // Lấy thông tin sân
-        $venue = Facilities::findOrFail($idSan);
+        $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
 
         // Lấy thông tin khách hàng (nếu đã đăng nhập)
-        $customer = Users::check() ? Users::where('user_id', Users::id())->first() : null;
+        $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
 
         // Lấy danh sách khung giờ
         $timeSlots = Time_slots::all();
@@ -95,9 +95,9 @@ class HomeController extends Controller
 
         // Lấy danh sách đặt sân
         $bookings = Bookings::where('facility_id', $idSan)
-            ->whereIn('ngayDat', $dates)
+            ->whereIn('booking_date', $dates)
             ->get()
-            ->groupBy(['ngayDat', 'time_slot_id']);
+            ->groupBy(['booking_date', 'time_slot_id']);
 
         // Từ điển chuyển đổi thứ sang tiếng Việt
         $thuTiengViet = [
@@ -110,7 +110,7 @@ class HomeController extends Controller
             'Sun' => 'Chủ nhật',
         ];
 
-        return view('venue-details', compact('venue', 'customer', 'timeSlots', 'dates', 'bookings', 'thuTiengViet'));
+        return view('venue-details', compact('thongtinsan', 'customer', 'timeSlots', 'dates', 'bookings', 'thuTiengViet'));
     }
 
     public function bookingProcess(Request $request)
@@ -133,29 +133,29 @@ class HomeController extends Controller
         return redirect()->route('venue.show', $request->idSan)->with('success', 'Đặt sân thành công!');
     }
 
-    // public function longtermStore(Request $request)
-    // {
-    //     $request->validate([
-    //         'name' => 'required',
-    //         'email' => 'required|email',
-    //         'phonenumber' => 'required',
-    //         'soluong' => 'required|integer',
-    //         'date_start' => 'required|date',
-    //         'date_end' => 'required|date|after:date_start',
-    //         'comments' => 'nullable',
-    //     ]);
+    public function longtermStore(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email',
+            'phonenumber' => 'required',
+            'soluong' => 'required|integer',
+            'date_start' => 'required|date',
+            'date_end' => 'required|date|after:date_start',
+            'comments' => 'nullable',
+        ]);
 
-    //     Contract::create([
-    //         'maKH' => $request->maKH,
-    //         'maSan' => $request->maSan,
-    //         'ngayTao' => now(),
-    //         'thoiGianBatDau' => $request->date_start,
-    //         'thoiGianKetThuc' => $request->date_end,
-    //         'soLuongSan' => $request->soluong,
-    //         'ghiChu' => $request->comments,
-    //         'trangThai' => 'chờ',
-    //     ]);
+        Contract::create([
+            'maKH' => $request->maKH,
+            'maSan' => $request->maSan,
+            'ngayTao' => now(),
+            'thoiGianBatDau' => $request->date_start,
+            'thoiGianKetThuc' => $request->date_end,
+            'soLuongSan' => $request->soluong,
+            'ghiChu' => $request->comments,
+            'trangThai' => 'chờ',
+        ]);
 
-    //     return redirect()->route('venue.show', $request->maSan)->with('success', 'Gửi yêu cầu thuê dài hạn thành công!');
-    // }
+        return redirect()->route('venue.show', $request->maSan)->with('success', 'Gửi yêu cầu thuê dài hạn thành công!');
+    }
 }
