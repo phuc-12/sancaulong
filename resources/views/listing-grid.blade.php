@@ -52,7 +52,7 @@
             </div>
             {{-- THÊM ID CHO CONTAINER ĐỂ CHÈN DỮ LIỆU MỚI --}}
             <div class="justify-content-center" id="san-cau-long-list"> 
-
+                
                 @isset($danhsachsan)
                     @forelse ($danhsachsan as $san)
                         <div class="featured-venues-item aos" data-aos="fade-up" style="width: 400px; height: 582.8px; margin: 10px; display:inline-block;">
