@@ -1,6 +1,7 @@
+@extends('layouts.header')
+@section('register')
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +9,10 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-
     <style>
         body {
             background-color: #f0f2f5;
         }
-
         .register-container {
             max-width: 500px;
             margin: 50px auto;
@@ -51,10 +50,10 @@
                             <form action="{{ route('postRegister') }}" method="POST" novalidate>
                                 @csrf
                                 <div class="mb-3">
-                                    <label for="name" class="form-label">Tên đăng nhập</label>
-                                    <input type="text" class="form-control" name="name" value="{{ old('name') }}"
-                                        placeholder="Nhập tên đăng nhập" required>
-                                    @error('name')
+                                    <label for="fullname" class="form-label">Tên đầy đủ</label>
+                                    <input type="text" class="form-control" name="fullname" value="{{ old('fullname') }}"
+                                        placeholder="Nhập tên đầy đủ" required>
+                                    @error('fullname')
                                         <div class="text-danger">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -102,3 +101,4 @@
 </body>
 
 </html>
+@endsection

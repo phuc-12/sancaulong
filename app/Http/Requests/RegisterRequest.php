@@ -22,7 +22,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|confirmed|min:8'
         ];
@@ -30,8 +30,7 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Không được để trống',
-            // 'name.unique' => 'Tên đăng nhập đã được sử dụng',
+            'fullname.required' => 'Không được để trống',
             'email.required' => 'Không được để trống',
             'email.email' => 'Email không đúng định dạng',
             'email.unique'=> 'Email đã được đăng ký',

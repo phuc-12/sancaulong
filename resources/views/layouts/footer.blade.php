@@ -1,4 +1,3 @@
-<!-- @yield('login') -->
 <footer class="footer">
 			<div class="container">
 				<!-- Footer Join -->

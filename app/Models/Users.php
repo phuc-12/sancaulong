@@ -10,4 +10,9 @@ class Users extends Model
 
     protected $primaryKey = 'user_id'; // ✅ thêm dòng này
     public $timestamps = false; // Nếu bảng không dùng created_at / updated_at
+    protected $fillable = [
+        'fullname',
+        'email',
+        'password',
+    ];
 }
