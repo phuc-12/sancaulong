@@ -138,8 +138,8 @@
 									<div class="featured-venues-item aos" data-aos="fade-up" style="width: 380px; height: 582.8px; margin: 10px; display:inline-block">
 									<div class="listing-item mb-0">										
 										<div class="listing-img">
-											<a href="">
-												<img src="{{ asset('img/venues/'.$thongtin['image']) }}" alt="">
+											<a href="{{ route('chi_tiet_san', ['idSan' => $thongtin->facility_id]) }}">
+												<img src="{{ asset('img/venues/'.$thongtin->image) }}" alt="">
 											</a>
 											<div class="fav-item-venues">
 												<span class="tag tag-blue">Đang Hoạt Động</span>	
@@ -161,7 +161,7 @@
 												</a>
 											</div>	
 											<h3 class="listing-title">
-												<a href="venue-details.php?maSan={{ $thongtin['facility_id'] }}">{{ $thongtin['facility_name'] }}</a>
+												<a href="{{ route('chi_tiet_san', ['idSan' => $thongtin->facility_id]) }}">{{ $thongtin->facility_name }}</a>
 											</h3>
 											<div class="listing-details-group">
 												<p>{{ $thongtin['description'] }}</p>
@@ -181,7 +181,7 @@
 											<div class="listing-button">
 												<div class="listing-venue-owner">											
 												</div>
-												<a href="venue-details.php" class="user-book-now"><span><i class="feather-calendar me-2"></i></span>Đặt Ngay</a>
+												<a href="{{ route('chi_tiet_san', ['idSan' => $thongtin->facility_id]) }}" class="user-book-now">
 											</div>	
 										</div>
 									</div>

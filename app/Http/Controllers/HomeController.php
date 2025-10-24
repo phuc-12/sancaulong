@@ -133,29 +133,44 @@ class HomeController extends Controller
         return redirect()->route('venue.show', $request->idSan)->with('success', 'Đặt sân thành công!');
     }
 
-    public function longtermStore(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'phonenumber' => 'required',
-            'soluong' => 'required|integer',
-            'date_start' => 'required|date',
-            'date_end' => 'required|date|after:date_start',
-            'comments' => 'nullable',
-        ]);
+    // public function longtermStore(Request $request)
+    // {
+    //     $request->validate([
+    //         'name' => 'required',
+    //         'email' => 'required|email',
+    //         'phonenumber' => 'required',
+    //         'soluong' => 'required|integer',
+    //         'date_start' => 'required|date',
+    //         'date_end' => 'required|date|after:date_start',
+    //         'comments' => 'nullable',
+    //     ]);
 
-        Contract::create([
-            'maKH' => $request->maKH,
-            'maSan' => $request->maSan,
-            'ngayTao' => now(),
-            'thoiGianBatDau' => $request->date_start,
-            'thoiGianKetThuc' => $request->date_end,
-            'soLuongSan' => $request->soluong,
-            'ghiChu' => $request->comments,
-            'trangThai' => 'chờ',
-        ]);
+    //     Contract::create([
+    //         'maKH' => $request->maKH,
+    //         'maSan' => $request->maSan,
+    //         'ngayTao' => now(),
+    //         'thoiGianBatDau' => $request->date_start,
+    //         'thoiGianKetThuc' => $request->date_end,
+    //         'soLuongSan' => $request->soluong,
+    //         'ghiChu' => $request->comments,
+    //         'trangThai' => 'chờ',
+    //     ]);
 
-        return redirect()->route('venue.show', $request->maSan)->with('success', 'Gửi yêu cầu thuê dài hạn thành công!');
-    }
+    //     return redirect()->route('venue.show', $request->maSan)->with('success', 'Gửi yêu cầu thuê dài hạn thành công!');
+    // }
+
+    // public function profile($id)
+    // {
+    //     $user = Users::findOrFail($id);
+    //     if (auth()->id() !== $user->id) {
+    //         abort(403);
+    //     }
+    //     return view('user.profile', compact('user'));
+    // }
+
+    // public function myCourts()
+    // {
+    //     $courts = auth()->user()->courts; // giả sử có quan hệ
+    //     return view('user.courts', compact('courts'));
+    // }
 }

@@ -37,3 +37,8 @@ Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'postLogin'])->name('postLogin');
 
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
+
+// Route::middleware('auth')->group(function () {
+//     Route::get('/profile/{id}', [UserController::class, 'profile'])->name('user.profile');
+//     Route::get('/my-courts', [UserController::class, 'myCourts'])->name('user.courts');
+// });

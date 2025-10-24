@@ -197,47 +197,57 @@
 						</ul>
 					</div>
 					<ul class="nav header-navbar-rht logged-in">
-						<?php
-							if(isset($_REQUEST['id']) && $_REQUEST['id'] != "")
-							{
-								echo '
-									<li class="nav-item">
-										<a class="nav-link btn btn-secondary" href="user-complete.php?maKH='.$laymaKH.'"><span><i class="feather-check-circle"></i></span>Sân Của Bạn</a>
-									</li>
-									<li class="nav-item dropdown has-arrow logged-item">
-										<a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
-											<span class="user-img">
-												<img class="rounded-circle" src="assets/img/profiles/avatar-05.jpg" width="31" alt="Darren Elder">
-											</span>
+					@auth
+						<!-- ĐÃ ĐĂNG NHẬP -->
+						<li class="nav-item">
+							<a class="nav-link btn btn-secondary" href="{{ route('user.courts') }}">
+								<span><i class="feather-check-circle"></i></span> Sân Của Bạn
+							</a>
+						</li>
+						<li class="nav-item dropdown has-arrow logged-item">
+							<a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
+								<span class="user-img">
+									<img class="rounded-circle" 
+										src="{{ auth()->user()->avatar ?? asset('img/profiles/avatar-05.jpg') }}" 
+										width="31" 
+										alt="{{ auth()->user()->fullname }}">
+								</span>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end">
+								<div class="user-header">
+									<div class="avatar avatar-sm">
+										<img src="{{ auth()->user()->avatar ?? asset('img/profiles/avatar-05.jpg') }}" 
+											alt="User" class="avatar-img rounded-circle">
+									</div>
+									<div class="user-text">
+										<h6>{{ auth()->user()->fullname }}</h6>
+										<a href="{{ route('user.profile', auth()->id()) }}" class="text-profile mb-0">
+											Go to Profile
 										</a>
-										<div class="dropdown-menu dropdown-menu-end">
-											<div class="user-header">
-												<div class="avatar avatar-sm">
-													<img src="assets/img/profiles/avatar-05.jpg" alt="User" class="avatar-img rounded-circle">
-												</div>
-												<div class="user-text">
-													<h6>'.$laytenND.'</h6>
-													<a href="user-profile.php?id='.$layid.'" style="color:black;" class="text-profile mb-0">Go to Profile</a>
-												</div>
-											</div>
-											<p><a class="dropdown-item"  href="coach-profile.php">Settings</a></p>
-											<p><a class="dropdown-item"  href="login.php">Logout</a></p>
-										</div>
-									</li>
-								';
-							}
-							else 
-							{
-								echo '
-								<li class="nav-item">
-									<div class="nav-link btn btn-white log-register">	
-										<a href="login.php"><span><i class="feather-users"></i></span>Đăng Nhập</a> / <a href="register.php">Đăng Ký</a>
+									</div>
 								</div>
-								</li>
-								';
-							}
-						?>
-					</ul>
+								<a class="dropdown-item" href="{{ route('user.profile', auth()->id()) }}">
+									<i class="feather-user me-2"></i> Profile
+								</a>
+								<form method="POST" action="{{ route('logout') }}" id="logout-form">
+									@csrf
+									<a class="dropdown-item" href="javascript:void(0)" 
+									onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+										<i class="feather-log-out me-2"></i> Đăng xuất
+									</a>
+								</form>
+							</div>
+						</li>
+					@else
+						<!-- CHƯA ĐĂNG NHẬP -->
+						<li class="nav-item">
+							<div class="nav-link btn btn-white log-register">
+								<a href="{{ route('login') }}"><span><i class="feather-users"></i></span> Đăng Nhập</a> / 
+								<a href="{{ route('register') }}">Đăng Ký</a>
+							</div>
+						</li>
+					@endauth
+				</ul>
 				</nav>
 			</div>
 		</header>
