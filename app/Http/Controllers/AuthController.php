@@ -17,10 +17,13 @@ class AuthController extends Controller
     }
     public function postRegister(RegisterRequest $request)
     {
+        $roleType = $request->get('role_type');
+        $roleId = ($roleType === 'business') ? 2 : 5;
         Users::create([
             'fullname' => $request->get('fullname'),
             'email' => $request->get('email'),
-            'password' => Hash::make($request->get('password'))
+            'password' => Hash::make($request->get('password')),
+            'role_id' => $roleId
         ]);
 
         return back()->with('message','Đăng ký thành công');

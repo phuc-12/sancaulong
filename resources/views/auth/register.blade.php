@@ -16,7 +16,7 @@
         .register-container {
             max-width: 500px;
             margin: 50px auto;
-            padding: 30px;
+            padding: 50px;
 
             display: flex;
             align-items: center;
@@ -26,7 +26,7 @@
         .register-card {
             max-width: 450px;
             width: 100%;
-
+            
             border: none;
             border-radius: 0.75rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -40,7 +40,7 @@
             <div class="row justify-content-center">
                 <div class="col-12">
                     <div class="card register-card">
-                        <div class="card-body p-4 p-md-5">
+                        <div class="card-body p-3 p-md-6">
                             <h3 class="card-title text-center mb-4">Đăng Ký</h3>
                             @if(session('message'))
                                 <div class="alert alert-success">
@@ -49,6 +49,28 @@
                             @endif
                             <form action="{{ route('postRegister') }}" method="POST" novalidate>
                                 @csrf
+                                <div class="mb-3">
+                                <label class="form-label">Bạn là:</label>
+                                <div class="d-flex">
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input" type="radio" name="role_type" id="role_customer" 
+                                               value="customer" {{ old('role_type', 'customer') == 'customer' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="role_customer">
+                                            Khách hàng
+                                        </label>
+                                    </div>
+                                    <div class="form-check me-1">
+                                        <input class="form-check-input" type="radio" name="role_type" id="role_business" 
+                                               value="business" {{ old('role_type') == 'business' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="role_business">
+                                            Doanh nghiệp cầu lông
+                                        </label>
+                                    </div>
+                                </div>
+                                @error('role_type')
+                                    <div class="text-danger mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
                                 <div class="mb-3">
                                     <label for="fullname" class="form-label">Tên đầy đủ</label>
                                     <input type="text" class="form-control" name="fullname" value="{{ old('fullname') }}"

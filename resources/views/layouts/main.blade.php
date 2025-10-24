@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/feather.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/chatbox.css') }}">
+    <!-- <link rel="stylesheet" href="{{ asset('css/chatbox.css') }}"> -->
 
     <!-- Favicon -->
     <link rel="shortcut icon" href="{{ asset('img/favicon.png') }}">
@@ -412,39 +412,7 @@
 		</footer>
 		<!-- /Footer -->
 		<!-- chatbox -->
-		<div class="chatbox">
-			<input type="checkbox" id="click">
-			<label for="click">
-			<i class="fab fa-facebook-messenger"></i>
-			<i class="fas fa-times"></i>
-			</label>
-			<div class="wrapper">
-				<div class="head-text">
-					Bắt đầu chat? - Online
-				</div>
-				<div class="chat-box">
-					<form id="chatRequestForm">
-						<!-- Chọn doanh nghiệp đang online -->
-						<div class="field">
-							<input type="hidden" id="maDN" value="" />
-							<input type="hidden" id="tenDN" value="" />
-							<select id="companySelect" style="color:black; border: 1px solid red; padding: 5px;">
-								<option value="">Loading...</option>
-							</select>
-						</div>
-						<!-- Nội dung yêu cầu -->
-						<div class="field textarea">
-							<textarea name="message" cols="30" rows="10" placeholder="Yêu cầu của bạn" required></textarea>
-						</div>
-						 
-						<div class="field">
-							<input type="hidden" name="maKH" id="maKH" value="">
-							<button type="submit">Bắt đầu chat</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
+		
 		<!-- /chatbox -->
 	</div>
 	<!-- /Main Wrapper -->
@@ -485,25 +453,7 @@
 	<script src="{{ asset('js/script.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
 <script src="../cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="e4c26da156d9fccf88a221dd-|49" defer></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"92a5cc7dff1f1a5b","version":"2025.3.0","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"token":"3ca157e612a14eccbb30cf6db6691c29","b":1}' crossorigin="anonymous"></script>
-<script>
-    // const maDN = "<?php echo isset($laymaDN) ? $laymaDN : ''; ?>";
-    // const tenDN = "<?php echo isset($laytenDN) ? $laytenDN : ''; ?>";
-	// if (!maDN && !tenDN) {
-	// 	console.error("maDN rỗng hoặc không xác định");
-	// } else {
-	// 	console.log("maDN lấy từ DB: ", maDN);
-	// 	console.log("tenDN lấy từ DB: ", tenDN);
-	// }
-</script>
-<script>
-  console.log("Giá trị maKH:", document.getElementById("maKH").value);
-</script>
-<script>
-  const socket = io("http://localhost:3000"); // Nếu server Node.js chạy ở port 3000
-</script>
-<script src="/quanLySanCauLong-B2B-/html/{{ asset('js/chatbox/customer.js') }}"></script>
-<!-- AOS JS -->
-<script src="{{ asset('plugins/aos/aos.js') }}"></script>
+
 <script>
 	AOS.init();
 </script>

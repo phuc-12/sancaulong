@@ -15,7 +15,7 @@
             max-width: 500px;
             margin: 50px auto;
             padding: 30px;
-
+            padding-top: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -24,7 +24,6 @@
         .login-card {
             max-width: 450px;
             width: 100%;
-
             border: none;
             border-radius: 0.75rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
