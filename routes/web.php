@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return view('index');
@@ -16,3 +18,21 @@ Route::prefix('/')->controller(HomeController::class)
     Route::post('/booking-process', 'bookingProcess')->name('booking.process');
     Route::post('/longterm-store', 'longtermStore')->name('longterm.store');
 });
+//
+Route::prefix('users')->controller(UserController::class)
+    ->name('users.')->group(function(){
+        Route::get('/', 'index')->name('index');
+
+        Route::get('/create', 'create')->name('create');
+
+        Route::post('/store', 'store')->name('store');
+
+    });
+
+Route::get('register', [AuthController::class, 'register'])->name('register');
+Route::post('register', [AuthController::class, 'postRegister'])->name('postRegister');
+
+Route::get('login', [AuthController::class, 'login'])->name('login');
+Route::post('login', [AuthController::class, 'postLogin'])->name('postLogin');
+
+Route::get('logout', [AuthController::class, 'logout'])->name('logout');
