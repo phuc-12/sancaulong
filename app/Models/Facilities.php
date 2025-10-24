@@ -15,5 +15,10 @@ class Facilities extends Model
         return $this->belongsTo(Court_prices::class, 'facility_id');
     }
 
+    public function Users()
+    {
+        return $this->belongsTo(Users::class, 'owner_id');
+    }
+
 }
 
