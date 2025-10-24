@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Facilities extends Model
 {
-    protected $table = 'facilities';
-
-    protected $facifity_id = 'facility_id';
+    protected $table = 'facilities'; // nếu chưa có
+    protected $primaryKey = 'facility_id'; // ✅ thêm dòng này
+    public $timestamps = false; // Nếu bảng không dùng created_at / updated_at
 
     public function Court_prices()
     {
