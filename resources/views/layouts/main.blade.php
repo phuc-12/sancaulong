@@ -198,6 +198,7 @@
 @yield('index_content')
 @yield('listing-grid_content')
 @yield('venue-details_content')
+@yield('payments_content')
 @yield('login')
 
 {{-- -------------------------------------- --}}

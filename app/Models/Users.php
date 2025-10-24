@@ -20,4 +20,9 @@ class Users extends Authenticatable
     protected $hidden = [
         'password',
     ];
+
+    public function Facilities()
+    {
+        return $this->belongsTo(Facilities::class, 'user_id');
+    }
 }

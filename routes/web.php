@@ -16,8 +16,11 @@ Route::prefix('/')->controller(HomeController::class)
     Route::get('/api/load-more-san','load_more_san')->name('api.load_san');
     // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
     Route::get('/venue/{idSan}', 'show')->name('chi_tiet_san');
-    Route::post('/booking-process', 'bookingProcess')->name('booking.process');
-    Route::post('/longterm-store', 'longtermStore')->name('longterm.store');
+    Route::post('/booking-process', 'processBooking')->name('booking.process');
+    Route::get('/payments','payments')->name('payment');
+    // web.php
+    Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
+    Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
 });
 //
 Route::prefix('users')->controller(UserController::class)

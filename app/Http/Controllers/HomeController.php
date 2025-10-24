@@ -8,6 +8,9 @@ use App\Models\facilities;
 use App\Models\Users;
 use App\Models\Time_slots;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 class HomeController extends Controller
 {
     const LIMIT_PER_LOAD = 10;
@@ -67,7 +70,7 @@ class HomeController extends Controller
     {
         $idSan = $request->query('idSan');
 
-        $thongtinsan = Facilities::get()->where('facility_id', $idSan)->first();
+        $thongtinsan = Facilities::with('Users')->get()->where('facility_id', $idSan)->first();
 
         if (!$thongtinsan) {
             return response()->json(['error' => 'Không tìm thấy sản phẩm'], 404);
@@ -110,72 +113,132 @@ class HomeController extends Controller
             'Sun' => 'Chủ nhật',
         ];
 
-        return view('venue-details', compact('thongtinsan', 'customer', 'timeSlots', 'dates', 'bookings', 'thuTiengViet'));
-    }
+        // Số sân con
+        $soLuongSan = $thongtinsan->quantity_court;
 
-    public function bookingProcess(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required',
-            'facility_id' => 'required',
-            'time_slot_id' => 'required',
-            'booking_date' => 'required|date',
-        ]);
-
-        Bookings::create([
-            'user_id' => $request->maKH,
-            'facility_id' => $request->maSan,
-            'time_slot_id' => $request->time_slot_id,
-            'booking_date' => $request->ngayDat,
-            'ngayTao' => now(),
-        ]);
-
-        return redirect()->route('venue.show', $request->idSan)->with('success', 'Đặt sân thành công!');
-    }
-
-    // public function longtermStore(Request $request)
-    // {
-    //     $request->validate([
-    //         'name' => 'required',
-    //         'email' => 'required|email',
-    //         'phonenumber' => 'required',
-    //         'soluong' => 'required|integer',
-    //         'date_start' => 'required|date',
-    //         'date_end' => 'required|date|after:date_start',
-    //         'comments' => 'nullable',
-    //     ]);
-
-    //     Contract::create([
-    //         'maKH' => $request->maKH,
-    //         'maSan' => $request->maSan,
-    //         'ngayTao' => now(),
-    //         'thoiGianBatDau' => $request->date_start,
-    //         'thoiGianKetThuc' => $request->date_end,
-    //         'soLuongSan' => $request->soluong,
-    //         'ghiChu' => $request->comments,
-    //         'trangThai' => 'chờ',
-    //     ]);
-
-    //     return redirect()->route('venue.show', $request->maSan)->with('success', 'Gửi yêu cầu thuê dài hạn thành công!');
-    // }
-
-    public function profile($id)
-    {
-        $user = Users::findOrFail($id);
-
-        // Chỉ cho phép xem profile của chính mình
-        if (Auth::id() !== $user->user_id) {
-            abort(403, 'Bạn không có quyền truy cập.');
+        // Tạo danh sách sân con như: San 1, San 2, San 3...
+        $dsSanCon = [];
+        for ($i = 1; $i <= $soLuongSan; $i++) {
+            $dsSanCon[] = [
+                'id' => $thongtinsan->facility_id . '-' . $i,   // Ví dụ SAN001-1
+                'ten' => 'Sân ' . $i
+            ];
         }
 
-        return view('user.profile', compact('user'));
+        return view('venue-details', compact('thongtinsan', 'customer', 'timeSlots', 'dates', 'bookings', 'thuTiengViet', 'soLuongSan', 'dsSanCon'));
     }
 
-    public function myCourts()
+    public function processBooking(Request $request)
     {
-        $user = Auth::user(); // ← Đây là Users
-        $courts = $user->courts; // Quan hệ hasMany
+        // validate input cơ bản
+        $data = $request->validate([
+            // facility_id kiểu integer hoặc string tùy DB -> điều chỉnh luật validate
+            'facility_id' => 'required',
+            'court_id' => 'required',
+            'booking_date' => 'required|date',
+            'time_slot_id' => 'required|integer',
+            'unit_price' => 'required|numeric',
+        ]);
 
-        return view('user.courts', compact('courts'));
+        // Lấy user hiện tại
+        $userId = Auth::id();
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để đặt sân.');
+        }
+
+        $facilityId = $data['facility_id'];
+        $courtId = $data['court_id'];
+        $bookingDate = Carbon::parse($data['booking_date'])->format('Y-m-d');
+        $timeSlotId = $data['time_slot_id'];
+        $unitPrice = $data['unit_price'];
+
+        // Sinh invoice_detail_id (unique). Bạn có thể đổi format nếu muốn
+        $invoiceDetailId = 'INVDET-' . time() . '-' . strtoupper(Str::random(6));
+
+        try {
+            // Dùng transaction để tránh race condition
+            DB::beginTransaction();
+
+            // Kiểm tra trùng: đã có booking cùng facility_id, court_id, booking_date, time_slot_id chưa?
+            $exists = DB::table('bookings')
+                ->where('facility_id', $facilityId)
+                ->where('court_id', $courtId)
+                ->where('booking_date', $bookingDate)
+                ->where('time_slot_id', $timeSlotId)
+                ->lockForUpdate() // giữ hàng để tránh race
+                ->exists();
+
+            if ($exists) {
+                DB::rollBack();
+                return back()->with('error', 'Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.');
+            }
+
+            // Lưu booking
+            $bookingId = DB::table('bookings')->insertGetId([
+                // Nếu booking_id là auto-increment, insertGetId sẽ trả về id
+                'invoice_detail_id' => $invoiceDetailId,
+                'user_id' => $userId,
+                'facility_id' => $facilityId,
+                'court_id' => $courtId,
+                'booking_date' => $bookingDate,
+                'time_slot_id' => $timeSlotId,
+                'unit_price' => $unitPrice,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+
+            // Redirect hoặc trả JSON tuỳ bạn muốn
+            return redirect()->back()->with('success', 'Đặt sân thành công. Mã đặt: ' . $bookingId);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // log lỗi nếu cần: \Log::error($e);
+            return back()->with('error', 'Có lỗi xảy ra khi đặt sân: ' . $e->getMessage());
+        }
     }
+
+    public function addSlot(Request $request)
+{
+    $slots = session('selected_slots', []);
+
+    $slotInfo = [
+        'court' => $request->court,
+        'date' => $request->date,
+        'slot' => $request->slot,
+        'price' => $request->price,
+        'start_time' => $request->start_time,
+        'end_time' => $request->end_time,
+    ];
+
+    // Toggle: nếu đã tồn tại thì xóa
+    $existsKey = null;
+    foreach($slots as $key => $s){
+        if($s['court']==$slotInfo['court'] && $s['date']==$slotInfo['date'] && $s['slot']==$slotInfo['slot']){
+            $existsKey = $key;
+            break;
+        }
+    }
+
+    if($existsKey !== null){
+        unset($slots[$existsKey]);
+        $slots = array_values($slots);
+    } else {
+        $slots[] = $slotInfo;
+    }
+
+    session(['selected_slots' => $slots]);
+    return response()->json($slots);
+}
+
+public function removeSlot(Request $request)
+{
+    $slots = session('selected_slots', []);
+    unset($slots[$request->index]);
+    session(['selected_slots' => array_values($slots)]);
+
+    return response()->json(array_values($slots));
+}
+
 }
