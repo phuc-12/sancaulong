@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Users extends Model
+class Users extends Authenticatable
 {
-    protected $table = 'users';
+    use Notifiable;
 
-    protected $primaryKey = 'user_id'; // ✅ thêm dòng này
-    public $timestamps = false; // Nếu bảng không dùng created_at / updated_at
+    protected $table = 'users';
+    protected $primaryKey = 'user_id';
+    public $timestamps = false;
+
     protected $fillable = [
-        'fullname',
-        'email',
+        'fullname', 'email', 'password',
+    ];
+
+    protected $hidden = [
         'password',
     ];
 }

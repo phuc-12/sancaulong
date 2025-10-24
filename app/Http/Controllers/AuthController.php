@@ -31,21 +31,32 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    // public function postLogin(LoginRequest $request)
+    // {
+    //     $credentials = $request->only('email','password');
+    //     if(Auth::attempt($credentials))
+    //     {
+    //         //login thanh cong
+    //         $request->session()->regenerate();
+    //         $userId = Auth::id();
+    //         return redirect()->intended('/');
+    //     }
+    //     return back()->withErrors([
+    //         'email'=>'The provided credentials do not match our records'
+    //     ]);
+    // }
+
     public function postLogin(LoginRequest $request)
     {
-        $credentials = $request->only('email','password');
-        if(Auth::attempt($credentials))
-        {
-            //login thanh cong
-            $request->session()->regenerate();
-            $userId = Auth::id();
-            return redirect()->intended('/');
-        }
-        return back()->withErrors([
-            'email'=>'The provided credentials do not match our records'
-        ]);
-    }
+        $credentials = $request->only('email', 'password');
 
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->route('trang_chu');
+        }
+
+        return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
+    }
     public function logout(Request $request)
     {
         Auth::logout();
