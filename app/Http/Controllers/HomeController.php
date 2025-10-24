@@ -159,18 +159,23 @@ class HomeController extends Controller
     //     return redirect()->route('venue.show', $request->maSan)->with('success', 'Gửi yêu cầu thuê dài hạn thành công!');
     // }
 
-    // public function profile($id)
-    // {
-    //     $user = Users::findOrFail($id);
-    //     if (auth()->id() !== $user->id) {
-    //         abort(403);
-    //     }
-    //     return view('user.profile', compact('user'));
-    // }
+    public function profile($id)
+    {
+        $user = Users::findOrFail($id);
 
-    // public function myCourts()
-    // {
-    //     $courts = auth()->user()->courts; // giả sử có quan hệ
-    //     return view('user.courts', compact('courts'));
-    // }
+        // Chỉ cho phép xem profile của chính mình
+        if (Auth::id() !== $user->user_id) {
+            abort(403, 'Bạn không có quyền truy cập.');
+        }
+
+        return view('user.profile', compact('user'));
+    }
+
+    public function myCourts()
+    {
+        $user = Auth::user(); // ← Đây là Users
+        $courts = $user->courts; // Quan hệ hasMany
+
+        return view('user.courts', compact('courts'));
+    }
 }
