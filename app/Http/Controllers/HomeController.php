@@ -124,7 +124,7 @@ class HomeController extends Controller
                 'ten' => 'Sân ' . $i
             ];
         }
-
+        // dd($customer->toArray());
         return view('venue-details', compact('thongtinsan', 'customer', 'timeSlots', 'dates', 'bookings', 'thuTiengViet', 'soLuongSan', 'dsSanCon'));
     }
 
@@ -241,4 +241,18 @@ public function removeSlot(Request $request)
     return response()->json(array_values($slots));
 }
 
+// Hàm nhận dữ liệu từ form và đưa đến trang thanh toán
+    public function checkout(Request $request)
+    {
+        // Dữ liệu slots gửi từ form, dưới dạng JSON
+        $slots = json_decode($request->slots, true);
+        $user_id = $request->input('user_id');
+        $facility_id = $request->input('facility_id');
+        // Truyền sang view thanh toán
+        return view('checkout', [
+            'slots' => $slots,
+            'user_id' => $user_id,
+            'facility_id' => $facility_id
+        ]);
+    }
 }

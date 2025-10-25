@@ -200,7 +200,7 @@
 @yield('venue-details_content')
 @yield('payments_content')
 @yield('login')
-
+@yield('payment_content')
 {{-- -------------------------------------- --}}
 
 <footer class="footer">
