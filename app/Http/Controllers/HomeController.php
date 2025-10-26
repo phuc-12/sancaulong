@@ -242,17 +242,43 @@ public function removeSlot(Request $request)
 }
 
 // Hàm nhận dữ liệu từ form và đưa đến trang thanh toán
-    public function checkout(Request $request)
+    public function payments(Request $request)
     {
         // Dữ liệu slots gửi từ form, dưới dạng JSON
         $slots = json_decode($request->slots, true);
-        $user_id = $request->input('user_id');
-        $facility_id = $request->input('facility_id');
+        // CHUYỂN MẢNG $slots SANG COLLECTION ĐỂ SỬ DỤNG CÁC HÀM CỦA LARAVEL
+        $slotCollection = collect($slots);
+
+        // LẤY CÁC GIÁ TRỊ DUY NHẤT
+        $uniqueCourts = $slotCollection->pluck('court')->unique()->implode(' , ');
+        $uniqueDates = $slotCollection->pluck('date')->unique()->implode(' / ');
+
+        // LẤY THỜI GIAN ĐẶT DUY NHẤT (start_time và end_time)
+        // Để giữ nguyên định dạng "start_time đến end_time", ta phải tạo một chuỗi tạm
+        $uniqueTimes = $slotCollection->map(function ($slot) {
+            return $slot['start_time'] . ' đến ' . $slot['end_time'];
+        })->unique()->implode(' / ');
+        $customer = Users::find($request->input('user_id'));
+        $facilities = Facilities::find($request->input('facility_id'));
+        $countSlots = count($slots);
+        if($countSlots % 2 === 0)
+        {
+            $result = ($countSlots/2).' tiếng';
+        }
+        else 
+        {
+            $result = (($countSlots - 1)/2).' tiếng rưỡi'; 
+        }
         // Truyền sang view thanh toán
-        return view('checkout', [
+        return view('payment', [
             'slots' => $slots,
-            'user_id' => $user_id,
-            'facility_id' => $facility_id
+            'result' => $result,
+            'customer' => $customer,
+            'facilities' => $facilities,
+            // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
+            'uniqueCourts' => $uniqueCourts,
+            'uniqueDates' => $uniqueDates,
+            'uniqueTimes' => $uniqueTimes,
         ]);
     }
 }

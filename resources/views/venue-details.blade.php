@@ -762,7 +762,6 @@
                     <th>Bắt đầu</th>
                     <th>Kết thúc</th>
                     <th>Ngày</th>
-                    <th>Giá</th>
                 </tr>
             </thead>
             <tbody >
@@ -819,7 +818,7 @@ function updateAsideTable() {
             <td>${slot.start_time}</td>
             <td>${slot.end_time}</td>
             <td>${slot.date}</td>
-            <td>${slot.price.toLocaleString()} đ</td>
+            
             <td><button type="button" class="btn btn-sm btn-danger remove-slot" data-index="${index}">X</button></td>
         `;
         tbody.appendChild(tr);
