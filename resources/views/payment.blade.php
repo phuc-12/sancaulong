@@ -1,10 +1,10 @@
 @extends('layouts.main')
 
-@section('payments_content')
+@section('payment_content')
 		<!-- Breadcrumb -->
 		<div class="breadcrumb mb-0">
 			<span class="primary-right-round"></span>
-			<div class="container">
+			<div class="container" style="margin-top: 40px;">
 				<h1 class="text-white">Hoàn Thành Đặt Sân</h1>
 				<ul>
 					<li><a href="index.html">Trang Chủ</a></li>
@@ -50,126 +50,113 @@
 					</div> -->
 					<div class="row checkout">
 						<div class="col-12 col-sm-12 col-md-12 col-lg-7">
-							<div class="card booking-details">
+							<div class="card booking-details" style="margin-bottom: 10px;">
 								<h3 class="border-bottom">Thông tin đặt sân</h3>
 								<ul>
-									<div style="float:left; width: 300px;">
-										<li><i class="feather-calendar me-2"></i><?php echo $layngaydat; ?></li>
-										<li><i class="feather-clock me-2"></i><?php echo $laygiobd.' Đến '.$laygiokt; ?> </li>
-										<li><i class="feather-users me-2"></i>Tổng thời gian : <?php echo $laytongtg.' Tiếng'; ?></li>
-									</div>
-									
-									<div style="float:left; width: 350px;">
-										<li><i class="feather-user me-2"></i>Tên: <?php echo $layten; ?></li>
-										<li><i class="feather-phone me-2"></i>SĐT: <?php echo $laysdt; ?></li>
-										<li><i class="feather-mail me-2"></i><?php echo $layemail; ?></li>
+									<div style="float:left;">
+										<ul>
+											{{-- SÂN SỐ DUY NHẤT --}}
+											<li style="color: red; font-weight: 700;">
+												<img src="{{ asset('img/icons/venue-type.svg') }}" alt="" class="me-2" width="54" style="background-color: green; border-radius: 100px;"> 
+												Địa điểm: {{ $facilities->facility_name }}<br>
+												Địa chỉ: {{ $facilities->address }} <br>
+												Sân số: {{ $uniqueCourts }}
+											</li>
+
+											{{-- NGÀY ĐẶT DUY NHẤT --}}
+											<li>
+												<i class="feather-calendar me-2"></i>
+												{{ $uniqueDates }}
+											</li>
+
+											{{-- THỜI GIAN DUY NHẤT --}}
+											<li>
+												<i class="feather-clock me-2"></i>
+												{{ $uniqueTimes }}
+											</li>
+
+											{{-- TỔNG THỜI GIAN --}}
+											<li>
+												<i class="feather-users me-2"></i>Tổng thời gian : {{ $result }}
+											</li>
+										</ul>
 									</div>
 								</ul>
 								
 							</div>
-							<div class="course_qr" align="center">
-								<img 
-									class="course_qr_img" style="width: 300px;"
-									src="">
-								<!-- <p>Nội dung chuyển khoản: <span id="paid_content"></span></p>
-								<p>Số tiền: <span id="paid_price"></span></p>
-								<p>Số tiền đã chuyển <span id="ketqua"></span></p> -->
+							<div class="card booking-details">
+								<h3 class="'border-bottom">Thông tin khách hàng</h3>
+								<ul>
+									<div style="float:left; width: 350px;">
+										<li><i class="feather-user me-2"></i>Tên: {{ $customer->fullname }}</li>
+										<li><i class="feather-phone me-2"></i>SĐT: {{ $customer->phone }}</li>
+										<li><i class="feather-mail me-2"></i>Email: {{ $customer->email }}</li>
+									</div>
+								</ul>
+								
 							</div>
+							
 						</div>
 						<div class="col-12 col-sm-12 col-md-12 col-lg-5">
 							<aside class="card payment-modes">
-								<h3 class="border-bottom">Thanh toán</h3>
-								<!-- <h6 class="mb-3">Chọn phương thức thanh toán</h6> -->
-								<div class="radio">
-									<!-- <div class="form-check form-check-inline mb-3">
-									  	<input class="form-check-input default-check me-2" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="Credit Card">
-									  	<label class="form-check-label" for="inlineRadio1">Chuyển khoản</label>
-									</div>
-									<div class="form-check form-check-inline mb-3">
-									  	<input class="form-check-input default-check me-2" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="Paypal">
-									  	<label class="form-check-label" for="inlineRadio2">Tiền mặt</label>
-									</div> -->
-									<!-- <div class="form-check form-check-inline">
-									  	<input class="form-check-input default-check me-2" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="Wallet">
-									  	<label class="form-check-label" for="inlineRadio3">Wallet</label>
-									</div> -->
-								</div>
-								<!-- <hr> -->
-								<!-- <ul class="order-sub-total">
-									<li>
-										<p>Sub total</p>
-										<h6>$250</h6>
-									</li>
-									<li>
-										<p>Additional Guest</p>
-										<h6>$25</h6>
-									</li>
-									<li>
-										<p>Service charge</p>
-										<h6>$70</h6>
-									</li>
-								</ul> -->
-								<div class="mb-10">
-									<div>
-										<form method="POST" action=""></form>
-											<table style="border: 1px solid grey; width: 100%;">
-												<thead>
-													<tr style="border: 1px solid grey">
-														<td style="border: 1px solid grey" align="center"><b>STT</b></td>
-														<td style="border: 1px solid grey" align="center"><b>Bắt đầu</b></td>
-														<td style="border: 1px solid grey" align="center"><b>Kết thúc</b></td>
-														<td style="border: 1px solid grey" align="center"><b>Giá</b></td>
-														<td style="border: 1px solid grey" align="center"><b>Số lượng</b></td>
-														<td style="border: 1px solid grey" align="center"></td>
-													</tr>
-												</thead>
-												<tbody>
-													<?php
-														include_once("assets/view/sancaulong/viewgiodat.php");
-													?>
-												</tbody>
-											</table>
-										</form>
-									</div>
-									
-									<div>
-										<?php
-											include_once('assets/model/mUser.php');
-											$k = new mUser();
-											
-											if (isset($_POST['btn_cn']) && isset($_POST['maDat'])) {
-												$maDat = $_POST['maDat'];
-												$soLuong = $_REQUEST['soLuong'];
-											if ($k->themxoasua("UPDATE bookings SET soLuong = '$soLuong' WHERE maDat = '$maDat' LIMIT 1") == 1) {
-													echo '<script>window.location.href="court-payment.php?maKH='.$layid.'";</script>';
-													exit();
-												}
-											}
+								<h3 class="border-bottom">Xác nhận thông tin thanh toán</h3>
+								
+								@if (!empty($slots))
+								<table class="table table-bordered">
+									<thead>
+										<tr class="bg-gray-100 text-center">
+											<th>Sân</th>
+											<th>Bắt đầu</th>
+											<th>Kết thúc</th>
+											<th>Ngày</th>
+											<th>Giá</th>
+										</tr>
+									</thead>
+									<tbody>
+										@php $total = 0; @endphp
 
-										?>
+										@foreach ($slots as $slot)
+											@php $total += $slot['price']; @endphp
+											<tr class="text-center">
+												<td>{{ $slot['court'] }}</td>
+												<td>{{ $slot['start_time'] }}</td>
+												<td>{{ $slot['end_time'] }}</td>
+												<td>{{ $slot['date'] }}</td>
+												<td>{{ number_format($slot['price']) }} đ</td>
+											</tr>
+										@endforeach
+									</tbody>
+								</table>
 
+								<div class="text-right mt-3">
+									<h3 class="text-lg font-semibold">Tổng tiền: {{ number_format($total) }} đ</h3>
+									<input type="hidden" id="tongtien" value="{{ $total }}">
+								</div>
 
-									</div>
-								</div>
-								<div class="order-total d-flex justify-content-between align-items-center">
-									<?php
-										include_once("assets/view/sancaulong/viewtongtien.php");
-									?>
-									<input type="hidden" id="maKH" value="<?php echo $layid; ?>">
-									<input type="hidden" id="tongtien" value="<?php echo $tongtien*1000; ?>">
-								</div>
+								{{-- <button class="btn btn-success mt-4">Xác nhận thanh toán</button> --}}
+							@else
+								<p>Không có dữ liệu khung giờ nào!</p>
+							@endif
 								<div class="form-check d-flex justify-content-start align-items-center policy">
-									<div class="d-inline-block">
+									{{-- <div class="d-inline-block">
 										<input class="form-check-input" type="checkbox" value="" id="policy">
-									</div>
-									<label class="form-check-label" for="policy">Bằng cách nhấp vào 'Gửi yêu cầu', tôi đồng ý với Chính sách bảo mật và Điều khoản sử dụng của Dreamsport</label>
+									</div> --}}
+									<label>Sau khi click vào "Chuyển khoản" sẽ hiển thị mã QR bên dưới. <br> Vui lòng quét mã để thanh toán.</label>
 								</div>
 								<!-- <div class="d-grid btn-block">
 									<button type="button" class="btn btn-primary course_item_btn">Thanh Toán</button>
 								</div> -->
 								<div class="d-flex justify-content-center gap-2">
-									<button type="button" class="btn btn-primary btn-sm w-100 course_item_btn" style="max-width: 150px;">Chuyển Khoản</button>
+									<button type="button" class="btn btn-primary btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">Chuyển Khoản</button>
 									<!-- <button type="button" class="btn btn-primary btn-sm w-100 " style="max-width: 150px;">Tiền Mặt</button> -->
+								</div>
+								<div class="course_qr mt-4" align="center">
+									<img 
+										class="course_qr_img" style="width: 300px;"
+										src="">
+									<!-- <p>Nội dung chuyển khoản: <span id="paid_content"></span></p>
+									<p>Số tiền: <span id="paid_price"></span></p>
+									<p>Số tiền đã chuyển <span id="ketqua"></span></p> -->
 								</div>
 							</aside>
 						</div>

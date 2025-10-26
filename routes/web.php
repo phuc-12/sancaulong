@@ -17,8 +17,7 @@ Route::prefix('/')->controller(HomeController::class)
     // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
     Route::get('/venue/{idSan}', 'show')->name('chi_tiet_san');
     Route::post('/booking-process', 'processBooking')->name('booking.process');
-    // Route::get('/payments','payments')->name('payment');
-    Route::post('/thanh-toan', 'checkout')->name('thanh.toan');
+    Route::post('/thanh-toan', 'payments')->name('thanh.toan');
     Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
     Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
 });

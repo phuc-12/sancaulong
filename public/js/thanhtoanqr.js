@@ -1,11 +1,3 @@
-// let courses = 
-// [
-//     {
-//         courseID: "Thanh toán tiền đặt sân",
-//         courseName: "Marketing",
-//         coursePrice: 10000,
-//     },
-// ];
 
 let MY_BANK = {
     BANK_ID: "VCB",
@@ -13,19 +5,6 @@ let MY_BANK = {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // const courseInner = document.querySelector(".courses_inner");
-    // let coursesRenderUI = "";
-    // courses.forEach((item, index) => {
-    //     coursesRenderUI += `
-    //         <div class="courses_item" style="float:left; margin: 20px; background-color: green; padding: 20px; border-radius: 20px;">
-    //             <img src="" alt="">
-    //             <p>${item.courseName}</p>
-    //             <p>${item.coursePrice}</p>
-    //             <a class="course_item_btn">Mua</a>
-    //         </div>
-    //     `;
-    // });
-    // courseInner.innerHTML = coursesRenderUI;
 
     const btns = document.querySelectorAll(".course_item_btn");
     const paid_content = document.getElementById("paid_content");
@@ -54,7 +33,7 @@ let isSucess = false;
 async function checkPaid(price) {
     if(isSucess)
     {
-        var maKH = document.getElementById("maKH").value;
+        var user_id = document.getElementById("user_id").value;
         window.location="pay-complete.php?maKH="+maKH;
         // window.location="user-complete.php?maKH="+maKH;
     }
