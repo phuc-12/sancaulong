@@ -1,0 +1,135 @@
+:root {
+    --sidebar-width: 280px;
+    --main-green: #198754;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* --- Sidebar --- */
+#sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background-color: rgba(40, 40, 40, 0.92) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    transition: all 0.3s;
+}
+
+#sidebar .nav-link {
+    color: #f8f9fa;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0.5rem;
+}
+
+#sidebar .nav-link i {
+    margin-right: 0.75rem;
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+#sidebar .nav-link.active {
+    color: #fff;
+    background-color: var(--main-green);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#sidebar .nav-link:hover:not(.active) {
+    background-color: #198754;
+}
+
+#sidebar .sidebar-header {
+    padding: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--main-green);
+}
+
+#sidebar .sidebar-header i {
+    margin-right: 0.5rem;
+}
+
+/* --- Main Content --- */
+#main-content {
+    margin-left: var(--sidebar-width);
+    padding: 2rem;
+    transition: all 0.3s;
+    
+}
+
+/* --- KPI Cards --- */
+.kpi-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-card .card-body {
+    padding: 1.5rem;
+}
+
+.kpi-card .kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.kpi-card .kpi-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.kpi-card .kpi-icon {
+    font-size: 2.5rem;
+    opacity: 0.3;
+}
+
+.kpi-card .kpi-growth {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* --- Chart & Table Cards --- */
+.chart-card,
+.table-card,
+.feed-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Activity Feed --- */
+.activity-feed .list-group-item {
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.activity-feed .feed-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    margin-right: 1rem;
+}
+
+.activity-feed .feed-time {
+    font-size: 0.85rem;
+    color: #999;
+}
