@@ -18,6 +18,8 @@
 
     <!-- Favicon -->
     <link rel="shortcut icon" href="{{ asset('img/favicon.png') }}">
+
+	<script src="{{ asset('js/thanhtoanqr.js') }}"></script>
 </head>
 <body>
 
@@ -201,7 +203,7 @@
 @yield('venue-details_content')
 @yield('payments_content')
 @yield('login')
-
+@yield('payment_content')
 {{-- -------------------------------------- --}}
 
 <footer class="footer">
