@@ -71,21 +71,22 @@
                             <i class="feather-check-circle"></i> Sân Của Bạn
                         </a>
                     </li>
-
                     <!-- Dropdown User -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center text-white"
                            href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <img src="{{ auth()->user()->avatar ?? asset('img/profiles/avatar-05.jpg') }}"
-                                 class="rounded-circle me-2" width="32" alt="Avatar">
+                            <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}" 
+                            	alt="{{ auth()->user()->fullname ?? 'Avatar' }}"
+                                class="rounded-circle me-2" width="32" alt="Avatar">
                             <span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <!-- Header -->
                             <li class="dropdown-header">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ auth()->user()->avatar ?? asset('img/profiles/avatar-05.jpg') }}"
-                                         class="rounded-circle me-2" width="40" alt="">
+                                    <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}" 
+                            			alt="{{ auth()->user()->fullname ?? 'Avatar' }}"
+                                        class="rounded-circle me-2" width="40" alt="">
                                     <div>
                                         <div class="fw-semibold">{{ auth()->user()->fullname }}</div>
                                         {{-- <small class="text-muted">{{ auth()->user()->email }}</small> --}}
