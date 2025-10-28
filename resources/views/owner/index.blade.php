@@ -1,8 +1,15 @@
 @extends('layouts.owner')
 
 @section('owner_content')
+    {{-- HIỂN THỊ THÔNG BÁO TRẠNG THÁI CƠ SỞ --}}
+    @if(isset($facilityStatusMessage) && $facilityStatusMessage)
+        <div class="alert alert-{{ $facilityStatusType }} alert-dismissible fade show" role="alert">
+            {{ $facilityStatusMessage }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    
     <h1 class="h3 mb-4">Tổng Quan (Cơ sở của bạn)</h1>
-
     <div class="row">
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card kpi-card border-start border-4 border-success h-100">
@@ -58,7 +65,7 @@
             </div>
         </div>
         <div class="col-lg-4 mb-4">
-             <div class="card h-100">
+            <div class="card h-100">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary"><b>Lịch đặt sắp tới</b></h6>
                 </div>

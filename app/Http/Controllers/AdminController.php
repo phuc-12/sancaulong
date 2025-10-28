@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Models\Invoice;
+use App\Models\Facility;
 
 class AdminController extends Controller
 {
@@ -84,18 +85,18 @@ class AdminController extends Controller
 
         // === ĐẾM SỐ DOANH NGHIỆP ===
         $totalOwners = Users::withoutGlobalScopes()
-            ->where('role_id', 2) // <-- Giả sử 2 = Doanh nghiệp
+            ->where('role_id', 2) // 2 = Doanh nghiệp
             ->count();
         // === ĐẾM SỐ ĐẶT SÂN HÔM NAY ===
         $totalBookingsToday = Bookings::whereDate('created_at', $today)
             ->count();
 
-        // === LẤY DANH SÁCH CHỜ DUYỆT ===
-        $pendingOwners = Users::where('role_id', 2) // Lấy các Doanh nghiệp
-            ->where('status', 'chờ duyệt') // (Hoặc 'pending', 'NULL',... tùy CSDL)
-            ->orderBy('created_at', 'asc') // Ưu tiên cái cũ nhất
+        // === LẤY DANH SÁCH CƠ SỞ CHỜ DUYỆT ===
+        $pendingFacilities = Facility::where('status', 'chờ duyệt')
+            ->with('owner') // Lấy kèm thông tin chủ sân (owner)
+            ->orderBy('created_at', 'asc') // Ưu tiên cái cũ (nếu có timestamps)
             ->get();
-
+        
         // --- 4. Trả dữ liệu về View ---
         return view('admin.index', [
             // Dữ liệu khách hàng
@@ -114,8 +115,8 @@ class AdminController extends Controller
             // Dữ liệu đặt sân
             'totalBookingsToday' => $totalBookingsToday,
 
-            // Danh sách chờ duyệt
-            'pendingOwners' => $pendingOwners,
+            // Danh sách cơ sở chờ duyệt
+            'pendingFacilities' => $pendingFacilities,
         ]);
     }
 
@@ -170,4 +171,29 @@ class AdminController extends Controller
             'data' => $data,
         ]);
     }
+
+    // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ===
+    public function approveFacility(Facility $facility) 
+    {
+        // Cập nhật trạng thái thành 'đã duyệt'
+        $facility->update(['status' => 'đã duyệt']); 
+        
+        // (Tùy chọn: Gửi email thông báo cho chủ sân)
+
+        // Quay lại trang admin với thông báo thành công
+        return redirect()->route('admin.index')->with('success', "Đã phê duyệt cơ sở '{$facility->facility_name}'.");
+    }
+
+    // === XỬ LÝ TỪ CHỐI 1 CƠ SỞ ===
+    public function denyFacility(Facility $facility) 
+    {
+        // Cập nhật trạng thái thành 'từ chối'
+        $facility->update(['status' => 'từ chối']); 
+        
+        // (Tùy chọn: Gửi email thông báo cho chủ sân)
+        
+        // Quay lại trang admin với thông báo thành công
+        return redirect()->route('admin.index')->with('success', "Đã từ chối cơ sở '{$facility->facility_name}'.");
+    }
+
 }

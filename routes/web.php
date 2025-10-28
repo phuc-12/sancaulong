@@ -57,18 +57,19 @@ Route::middleware('auth')->group(function () {
 });
 //=============================================================================================================
 //admin
-Route::get('/admin', [AdminController::class, 'index'])
-    ->name('admin.index');
-// Route này sẽ cung cấp dữ liệu JSON cho biểu đồ
-Route::get('/admin/revenue-chart-data', [AdminController::class, 'getRevenueData'])
-    ->name('admin.revenueChartData');
-// Route để DUYỆT (Approve)
-Route::post('/owners/approve/{id}', [AdminController::class, 'approveOwner'])
-    ->name('owner.approve');
-// Route để TỪ CHỐI (Deny)
-Route::post('/owners/deny/{id}', [AdminController::class, 'denyOwner'])
-    ->name('owner.deny');
-    
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('index');
+    Route::get('/revenue-chart-data', [AdminController::class, 'getRevenueData'])->name('revenueChartData');
+
+    // === ROUTE DUYỆT/TỪ CHỐI ===
+    // Route để DUYỆT (Approve Facility) - dùng {facility}
+    Route::post('/facilities/approve/{facility}', [AdminController::class, 'approveFacility'])
+        ->name('facility.approve');
+
+    // Route để TỪ CHỐI (Deny Facility) - dùng {facility}
+    Route::post('/facilities/deny/{facility}', [AdminController::class, 'denyFacility'])
+        ->name('facility.deny');
+});
 //=============================================================================================================
 //Chủ sân (owner)
 Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () {
@@ -94,15 +95,15 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
     // Quản lý sân bãi
     Route::get('/courts', [ManagerController::class, 'courts'])->name('courts');
     Route::put('/courts/{court}/status', [ManagerController::class, 'updateCourtStatus'])
-         ->name('courts.updateStatus');
+        ->name('courts.updateStatus');
 
     // GET: Cung cấp dữ liệu Bookings cho Calendar (JSON)
     Route::get('/bookings/data', [ManagerController::class, 'getBookingsData'])
-         ->name('bookings.data');
+        ->name('bookings.data');
     // PUT/PATCH: Xử lý cập nhật Booking (khi kéo-thả)
     // {booking} là route model binding
     Route::put('/bookings/update/{booking}', [ManagerController::class, 'updateBookingTime'])
-         ->name('bookings.updateTime');
+        ->name('bookings.updateTime');
 });
 
 //=============================================================================================================
