@@ -1,3 +1,6 @@
+@if(session('user_id'))
+    <p>User ID: {{ session('user_id') }}</p>
+@endif
 @extends('layouts.main')
 
 @section('venue-details_content')
@@ -328,85 +331,85 @@
                             <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-overview">
                                 <div class="accordion-body">
                                     @php
-    $soLuongSan = $thongtinsan->quantity_court;
-@endphp
-
-<ul class="nav nav-tabs" id="sanTabs" role="tablist">
-    @for ($i = 1; $i <= $soLuongSan; $i++)
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {{ $i == 1 ? 'active' : '' }}"
-                id="san{{ $i }}-tab" data-bs-toggle="tab"
-                data-bs-target="#san{{ $i }}" type="button" role="tab">
-                Sân {{ $i }}
-            </button>
-        </li>
-    @endfor
-</ul>
-
-<div class="tab-content" id="sanTabsContent">
-    @for ($i = 1; $i <= $soLuongSan; $i++)
-        <div class="tab-pane fade {{ $i == 1 ? 'show active' : '' }}" id="san{{ $i }}" role="tabpanel">
-
-            <div style="max-height: 500px; overflow-y: auto;">
-                <table class="fixed-table">
-                    <thead>
-                        <tr>
-                            <th class="sticky-col">Khung giờ</th>
-                            @foreach ($dates as $d)
-                                <th>{{ $thuTiengViet[date('D', strtotime($d))] }} {{ date('d/m', strtotime($d)) }}</th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($timeSlots as $slot)
-                            <tr>
-                                <td class="sticky-col">
-                                    {{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}
-                                </td>
-
-                                @foreach ($dates as $d)
-                                    @php
-                                        $now = \Carbon\Carbon::now('Asia/Ho_Chi_Minh');
-                                        $slotDateTime = \Carbon\Carbon::parse($d . ' ' . $slot->start_time, 'Asia/Ho_Chi_Minh');
-
-                                        $isPast = $slotDateTime->lt($now);
-                                        $isBooked = isset($bookings[$d][$slot->id][$i]);
-
-                                        $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
-                                            ? $thongtinsan->Court_prices->default_price
-                                            : $thongtinsan->Court_prices->special_price;
+                                        $soLuongSan = $thongtinsan->quantity_court;
                                     @endphp
 
-                                    <td>
-                                        @if ($isPast)
-                                            <span class="het-han">Quá hạn</span>
-                                        @elseif ($isBooked)
-                                            <span class="da-chon">Đã đặt</span>
-                                        @elseif (auth()->check())
-                                            <button type="button" class="slot-btn" 
-    data-user="{{ auth()->id() }}"
-    data-facility="{{ $thongtinsan->facility_id }}"
-    data-court="{{ $i }}"
-    data-date="{{ \Carbon\Carbon::parse($d)->format('d-m-Y') }}"
-    data-slot="{{ $slot->id }}"
-    data-price="{{ $unitPrice/2 }}"
-    data-start_time="{{ substr($slot->start_time,0,5) }}"
-    data-end_time="{{ substr($slot->end_time,0,5) }}">
-</button>
+                                    <ul class="nav nav-tabs" id="sanTabs" role="tablist">
+                                        @for ($i = 1; $i <= $soLuongSan; $i++)
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link {{ $i == 1 ? 'active' : '' }}"
+                                                    id="san{{ $i }}-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#san{{ $i }}" type="button" role="tab">
+                                                    Sân {{ $i }}
+                                                </button>
+                                            </li>
+                                        @endfor
+                                    </ul>
 
-                                        @else
-                                            <a href="{{ route('login') }}" onclick="alert('Vui lòng đăng nhập để đặt sân')">Đăng nhập</a>
-                                        @endif
-                                    </td>
-                                @endforeach
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endfor
-</div>
+                                    <div class="tab-content" id="sanTabsContent">
+                                        @for ($i = 1; $i <= $soLuongSan; $i++)
+                                            <div class="tab-pane fade {{ $i == 1 ? 'show active' : '' }}" id="san{{ $i }}" role="tabpanel">
+
+                                                <div style="max-height: 500px; overflow-y: auto;">
+                                                    <table class="fixed-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="sticky-col">Khung giờ</th>
+                                                                @foreach ($dates as $d)
+                                                                    <th>{{ $thuTiengViet[date('D', strtotime($d))] }} {{ date('d/m', strtotime($d)) }}</th>
+                                                                @endforeach
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach ($timeSlots as $slot)
+                                                                <tr>
+                                                                    <td class="sticky-col">
+                                                                        {{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}
+                                                                    </td>
+
+                                                                    @foreach ($dates as $d)
+                                                                        @php
+                                                                            $now = \Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                                                                            $slotDateTime = \Carbon\Carbon::parse($d . ' ' . $slot->start_time, 'Asia/Ho_Chi_Minh');
+
+                                                                            $isPast = $slotDateTime->lt($now);
+                                                                            $isBooked = isset($bookings[$d][$slot->id][$i]);
+
+                                                                            $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
+                                                                                ? $thongtinsan->Court_prices->default_price
+                                                                                : $thongtinsan->Court_prices->special_price;
+                                                                        @endphp
+
+                                                                        <td>
+                                                                            @if ($isPast)
+                                                                                <span class="het-han">Quá hạn</span>
+                                                                            @elseif ($isBooked)
+                                                                                <span class="da-chon">Đã đặt</span>
+                                                                            @elseif (auth()->check())
+                                                                                <button type="button" class="slot-btn" 
+                                                                                    data-user="{{ auth()->id() }}"
+                                                                                    data-facility="{{ $thongtinsan->facility_id }}"
+                                                                                    data-court="{{ $i }}"
+                                                                                    data-date="{{ \Carbon\Carbon::parse($d)->format('d-m-Y') }}"
+                                                                                    data-slot="{{ $slot->id }}"
+                                                                                    data-price="{{ $unitPrice/2 }}"
+                                                                                    data-start_time="{{ substr($slot->start_time,0,5) }}"
+                                                                                    data-end_time="{{ substr($slot->end_time,0,5) }}">
+                                                                                </button>
+
+                                                                            @else
+                                                                                <a href="{{ route('login') }}" onclick="alert('Vui lòng đăng nhập để đặt sân')">Đăng nhập</a>
+                                                                            @endif
+                                                                        </td>
+                                                                    @endforeach
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endfor
+                                    </div>
 
                                 </div>
                             </div>
@@ -465,6 +468,262 @@
                             </div>
                         </div>
                         <!-- Các accordion khác (rules, amenities, gallery, reviews, location) tương tự -->
+                        <div class="accordion-item mb-4" id="rules">
+							    <h4 class="accordion-header" id="panelsStayOpen-rules">
+							      	<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+							        	Quy Tắc
+							      	</button>
+							    </h4>
+							    <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-rules">
+							      	<div class="accordion-body">
+							        	<ul>
+							        		<li><p><i class="feather-alert-octagon"></i>Giày không để lại dấu được khuyến khích sử dụng nhưng không bắt buộc khi chơi cầu lông.</p></li>
+							        		<li><p><i class="feather-alert-octagon"></i>Số lượng thành viên tối đa cho mỗi lần đặt chỗ trên mỗi sân cầu lông được Nhà cung cấp địa điểm chấp nhận.</p></li>
+							        		<li><p><i class="feather-alert-octagon"></i>Không nuôi thú cưng, không hạt giống, không kẹo cao su, không thủy tinh, không đánh hoặc đu đưa bên ngoài lồng.</p></li>
+							        	</ul>
+							      	</div>
+							    </div>
+							</div>
+							<div class="accordion-item mb-4" id="amenities">
+							    <h4 class="accordion-header" id="panelsStayOpen-amenities">
+							      	<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
+							        	 Tiện Nghi
+							      	</button>
+							    </h4>
+							    <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-amenities">
+							      	<div class="accordion-body">
+							        	<ul class="d-md-flex justify-content-between align-items-center">
+							        		<li><i class="fa fa-check-circle" aria-hidden="true"></i>Bãi đậu xe</li>
+							        		<li><i class="fa fa-check-circle" aria-hidden="true"></i>Nước uống</li>
+							        		<li><i class="fa fa-check-circle" aria-hidden="true"></i>Sơ cứu</li>
+							        		<li><i class="fa fa-check-circle" aria-hidden="true"></i>Phòng thay đồ</li>
+							        		<li><i class="fa fa-check-circle" aria-hidden="true"></i>Vòi sen</li>
+							        	</ul>
+							      	</div>
+							    </div>
+							</div>
+							<div class="accordion-item mb-4" id="gallery">
+							    <h4 class="accordion-header" id="panelsStayOpen-gallery">
+							      	<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false" aria-controls="panelsStayOpen-collapseFive">
+							        	 Phòng Trưng Bày
+							      	</button>
+							    </h4>
+							    <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-gallery">
+							      	<div class="accordion-body">
+							        	<div class="owl-carousel gallery-slider owl-theme">
+							        		<a class="corner-radius-10" href="{{ asset('img/gallery/gallery2/gallery-thumb-01.jpg') }}" data-fancybox="gallery3">
+												<img class="img-fluid corner-radius-10" alt="Image" src="{{ asset('img/gallery/gallery2/gallery-01.jpg') }}">
+											</a>
+							        		<a class="corner-radius-10" href="{{ asset('img/gallery/gallery2/gallery-thumb-02.jpg') }}" data-fancybox="gallery3">
+												<img class="img-fluid corner-radius-10" alt="Image" src="{{ asset('img/gallery/gallery2/gallery-02.jpg') }}">
+											</a>
+							        		<a class="corner-radius-10" href="{{ asset('img/gallery/gallery2/gallery-thumb-03.jpg') }}" data-fancybox="gallery3">
+												<img class="img-fluid corner-radius-10" alt="Image" src="{{ asset('img/gallery/gallery2/gallery-03.jpg') }}">
+											</a>
+							        		{{-- <a class="corner-radius-10" href="{{ asset('img/gallery/gallery2/gallery-thumb-01.jpg') }}" data-fancybox="gallery3">
+												<img class="img-fluid corner-radius-10" alt="Image" src="{{ asset('img/gallery/gallery2/gallery-01.jpg') }}">
+											</a>
+							        		<a class="corner-radius-10" href="{{ asset('img/gallery/gallery2/gallery-thumb-02.jpg') }}" data-fancybox="gallery3">
+												<img class="img-fluid corner-radius-10" alt="Image" src="{{ asset('img/gallery/gallery2/gallery-02.jpg') }}">
+											</a>
+							        		<a class="corner-radius-10" href="{{ asset('img/gallery/gallery2/gallery-thumb-03.jpg') }}" data-fancybox="gallery3">
+												<img class="img-fluid corner-radius-10" alt="Image" src="{{ asset('img/gallery/gallery2/gallery-03.jpg') }}">
+											</a> --}}
+							        	</div>
+							      	</div>
+							    </div>
+							</div>
+							<div class="accordion-item mb-4" id="reviews">
+							    <div class="accordion-header" id="panelsStayOpen-reviews">
+							      	<div class="accordion-button d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseSix" aria-controls="panelsStayOpen-collapseSix">
+							        	<span class="w-75 mb-0">
+							        		 Đánh Giá
+							        	</span>
+							        	<a href="javascript:void(0);" class="btn btn-gradient pull-right write-review add-review" data-bs-toggle="modal" data-bs-target="#add-review">Viết một đánh giá</a>
+							      	</div>
+							    </div>
+							    <div id="panelsStayOpen-collapseSix" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-reviews">
+							      	<div class="accordion-body">
+							        	<div class="row review-wrapper">
+							        		<div class="col-lg-3">
+								        		<div class="ratings-info corner-radius-10 text-center">
+								        			<h3>4.8</h3>
+								        			<span>out of 5.0</span>
+								        			<div class="rating">
+														<i class="fas fa-star filled"></i>
+														<i class="fas fa-star filled"></i>
+														<i class="fas fa-star filled"></i>
+														<i class="fas fa-star filled"></i>
+														<i class="fas fa-star filled"></i>
+												   </div>
+								        		</div>
+								        	</div>
+								        	<div class="col-lg-9">
+								        		<div class="recommended">
+								        			<h5>Recommended by 97% of Players</h5>
+								        			<div class="row">
+								        				<div class="col-12 col-sm-12 col-md-4 col-lg-4 mb-3">
+								        					<p class="mb-0">Quality of service</p>
+								        					<ul>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><span>5.0</span></li>
+								        					</ul>
+								        				</div>
+								        				<div class="col-12 col-sm-12 col-md-4 col-lg-4 mb-3">
+								        					<p class="mb-0">Quality of service</p>
+								        					<ul>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><span>5.0</span></li>
+								        					</ul>
+								        				</div>
+								        				<div class="col-12 col-sm-12 col-md-4 col-lg-4 mb-3">
+								        					<p class="mb-0">Quality of service</p>
+								        					<ul>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><span>5.0</span></li>
+								        					</ul>
+								        				</div>
+								        				<div class="col-12 col-sm-12 col-md-4 col-lg-4">
+								        					<p class="mb-0">Quality of service</p>
+								        					<ul>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><span>5.0</span></li>
+								        					</ul>
+								        				</div>
+								        				<div class="col-12 col-sm-12 col-md-4 col-lg-4">
+								        					<p class="mb-0">Quality of service</p>
+								        					<ul>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><i></i></li>
+								        						<li><span>5.0</span></li>
+								        					</ul>
+								        				</div>
+								        			</div>
+								        		</div>
+								        	</div>
+							        	</div>
+							        	<!-- Review Box -->
+							        	<div class="review-box d-md-flex">
+							        		<div class="review-profile">
+							        			<img src="{{ asset('img/profiles/avatar-01.jpg') }}" alt="User">
+							        		</div>
+							        		<div class="review-info">
+							        			<h6 class="mb-2 tittle">Amanda Booked on 06/04/2023</h6>
+							        			<div class="rating">
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<span class="">5.0</span>
+											   </div>
+							        			<span class="success-text"><i class="feather-check"></i>Yes, I would book again.</span>
+							        			<h6>Absolutely perfect</h6>
+							        			<p>If you are looking for a perfect place for friendly matches with your friends or a competitive match, It is the best place.</p>
+							        			<ul class="review-gallery clearfix">
+							        				<li>
+														<a href="{{ asset('img/gallery/gallery-thumb-01.jpg') }}" data-fancybox="gallery">
+															<img class="img-fluid" alt="Image" src="{{ asset('img/gallery/gallery-01.jpg') }}">
+													  	</a>
+							        				</li>
+							        				<li>
+														<a href="{{ asset('img/gallery/gallery-thumb-02.jpg') }}" data-fancybox="gallery">
+															<img class="img-fluid" alt="Image" src="{{ asset('img/gallery/gallery-02.jpg') }}">
+													  	</a>
+							        				</li>
+							        				<li>
+														<a href="{{ asset('img/gallery/gallery-thumb-03.jpg') }}" data-fancybox="gallery">
+															<img class="img-fluid" alt="Image" src="{{ asset('img/gallery/gallery-03.jpg') }}">
+													  	</a>
+							        				</li>
+							        				<li>
+														<a href="{{ asset('img/gallery/gallery-thumb-04.jpg') }}" data-fancybox="gallery">
+															<img class="img-fluid" alt="Image" src="{{ asset('img/gallery/gallery-04.jpg') }}">
+													  	</a>
+							        				</li>
+							        				<li>
+														<a href="{{ asset('img/gallery/gallery-thumb-05.jpg') }}" data-fancybox="gallery">
+															<img class="img-fluid" alt="Image" src="{{ asset('img/gallery/gallery-05.jpg') }}">
+													  	</a>
+							        				</li>
+							        			</ul>
+							        			<span class="post-date">Sent on 11/03/2023</span>
+							        		</div>
+							        	</div>
+							        	<!-- /Review Box -->
+
+							        	<!-- Review Box -->
+							        	<div class="review-box d-md-flex">
+							        		<div class="review-profile">
+							        			<img src="{{ asset('img/profiles/avatar-06.jpg') }}" alt="User">
+							        		</div>
+							        		<div class="review-info">
+							        			<h6 class="mb-2 tittle">Amanda Booked on 06/04/2023</h6>
+							        			<div class="rating">
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<i class="fas fa-star filled"></i>
+													<span class="">5.0</span>
+											   </div>
+							        			<span class="warning-text"><i class="feather-x"></i>No, I dont want to book again.</span>
+							        			<h6>Awesome. Its very convenient to play.</h6>
+							        			<p>If you are looking for a perfect place for friendly matches with your friends or a competitive match, It is the best place.</p>
+							        			<div class="dull-bg">
+							        				<p>Experience badminton excellence at Badminton Academy. Top-notch facilities, well-maintained courts, and a friendly atmosphere. Highly recommended for an exceptional playing experience</p>
+							        			</div>
+							        		</div>
+							        	</div>
+							        	<!-- /Review Box -->
+							        	<div class="d-flex justify-content-center mt-1">
+							        		<button type="button" class="btn btn-load-more d-flex justify-content-center align-items-center">Load More<i class="feather-plus-square"></i></button>
+							        	</div>
+							      	</div>
+							    </div>
+							</div>
+							<div class="accordion-item" id="location">
+							    <h4 class="accordion-header" id="panelsStayOpen-location">
+							      	<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseSeven" aria-expanded="false" aria-controls="panelsStayOpen-collapseSeven">
+							        	 Địa Điểm
+							      	</button>
+							    </h4>
+							    <div id="panelsStayOpen-collapseSeven" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-location">
+							      	<div class="accordion-body">
+							        	<div class="google-maps">
+										    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2967.8862835683544!2d-73.98256668525309!3d41.93829486962529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89dd0ee3286615b7%3A0x42bfa96cc2ce4381!2s132%20Kingston%20St%2C%20Kingston%2C%20NY%2012401%2C%20USA!5e0!3m2!1sen!2sin!4v1670922579281!5m2!1sen!2sin" height="445" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+										</div>
+										<div class="dull-bg d-flex justify-content-start align-items-center mt-3">
+											<div class="white-bg me-2">
+												<i class="fas fa-location-arrow"></i>
+											</div>
+											<div class="">
+												<h6>Our Venue Location</h6>
+												<p>70 Bright St New York, USA</p>
+											</div>
+										</div>
+							      	</div>
+							    </div>
+							</div>
                     </div>
                 </div>
 
@@ -494,7 +753,7 @@
         <h4 style="text-align: center;">Thông tin đặt sân</h4>
         <div class="text-end mb-3">
             <strong>Tổng tiền: </strong>
-            <span id="total-price">0 đ</span>
+            <span id="total-price" style="color: red; font-size: 20px; font-weight: bold;"><b>0 đ</b></span>
         </div>
         <table class="table table-bordered">
             <thead>
@@ -503,7 +762,6 @@
                     <th>Bắt đầu</th>
                     <th>Kết thúc</th>
                     <th>Ngày</th>
-                    <th>Giá</th>
                 </tr>
             </thead>
             <tbody >
@@ -525,9 +783,16 @@
         </div>
 
         <div class="d-grid">
-            <a href="{{ route('payment') }}" class="btn btn-secondary d-flex justify-content-center align-items-center">
+            <form id="paymentForm" action="{{ route('thanh.toan') }}" method="POST">
+                @csrf
+                <input type="hidden" name="slots" id="slotsInput">
+                <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
+                <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
+                <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
+            </form>
+            {{-- <a href="{{ route('payment') }}" class="btn btn-secondary d-flex justify-content-center align-items-center">
                 Thanh Toán <i class="feather-arrow-right-circle ms-2"></i>
-            </a>
+            </a> --}}
         </div>
     </div>
 </aside>
@@ -553,7 +818,7 @@ function updateAsideTable() {
             <td>${slot.start_time}</td>
             <td>${slot.end_time}</td>
             <td>${slot.date}</td>
-            <td>${slot.price.toLocaleString()} đ</td>
+            
             <td><button type="button" class="btn btn-sm btn-danger remove-slot" data-index="${index}">X</button></td>
         `;
         tbody.appendChild(tr);
@@ -607,7 +872,10 @@ document.querySelectorAll('.slot-btn').forEach(btn => {
     });
 });
 
-
+// Gắn dữ liệu selectedSlots vào input ẩn khi bấm nút "Thanh toán"
+    document.getElementById('paymentForm').addEventListener('submit', function (e) {
+        document.getElementById('slotsInput').value = JSON.stringify(selectedSlots);
+    });
 </script>
 
 @endsection

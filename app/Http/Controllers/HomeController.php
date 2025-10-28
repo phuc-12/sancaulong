@@ -124,7 +124,7 @@ class HomeController extends Controller
                 'ten' => 'Sân ' . $i
             ];
         }
-
+        // dd($customer->toArray());
         return view('venue-details', compact('thongtinsan', 'customer', 'timeSlots', 'dates', 'bookings', 'thuTiengViet', 'soLuongSan', 'dsSanCon'));
     }
 
@@ -241,4 +241,44 @@ public function removeSlot(Request $request)
     return response()->json(array_values($slots));
 }
 
+// Hàm nhận dữ liệu từ form và đưa đến trang thanh toán
+    public function payments(Request $request)
+    {
+        // Dữ liệu slots gửi từ form, dưới dạng JSON
+        $slots = json_decode($request->slots, true);
+        // CHUYỂN MẢNG $slots SANG COLLECTION ĐỂ SỬ DỤNG CÁC HÀM CỦA LARAVEL
+        $slotCollection = collect($slots);
+
+        // LẤY CÁC GIÁ TRỊ DUY NHẤT
+        $uniqueCourts = $slotCollection->pluck('court')->unique()->implode(' , ');
+        $uniqueDates = $slotCollection->pluck('date')->unique()->implode(' / ');
+
+        // LẤY THỜI GIAN ĐẶT DUY NHẤT (start_time và end_time)
+        // Để giữ nguyên định dạng "start_time đến end_time", ta phải tạo một chuỗi tạm
+        $uniqueTimes = $slotCollection->map(function ($slot) {
+            return $slot['start_time'] . ' đến ' . $slot['end_time'];
+        })->unique()->implode(' / ');
+        $customer = Users::find($request->input('user_id'));
+        $facilities = Facilities::find($request->input('facility_id'));
+        $countSlots = count($slots);
+        if($countSlots % 2 === 0)
+        {
+            $result = ($countSlots/2).' tiếng';
+        }
+        else 
+        {
+            $result = (($countSlots - 1)/2).' tiếng rưỡi'; 
+        }
+        // Truyền sang view thanh toán
+        return view('payment', [
+            'slots' => $slots,
+            'result' => $result,
+            'customer' => $customer,
+            'facilities' => $facilities,
+            // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
+            'uniqueCourts' => $uniqueCourts,
+            'uniqueDates' => $uniqueDates,
+            'uniqueTimes' => $uniqueTimes,
+        ]);
+    }
 }
