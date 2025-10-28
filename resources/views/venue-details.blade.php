@@ -752,6 +752,9 @@
     <div class="white-bg" style="padding-top: 30px;">
         <h4 style="text-align: center;">Thông tin đặt sân</h4>
         <div class="text-end mb-3">
+            <div style="float: left;">
+                <a href="{{ route('chi_tiet_san', ['idSan' => $thongtinsan->facility_id]) }}" class="btn btn-success">Reset</a>
+            </div>
             <strong>Tổng tiền: </strong>
             <span id="total-price" style="color: red; font-size: 20px; font-weight: bold;"><b>0 đ</b></span>
         </div>
@@ -768,9 +771,7 @@
                 {{-- Body sẽ được JS render --}}
             </tbody>
         </table>
-
         
-
         {{-- THÔNG TIN NGƯỜI ĐẶT --}}
         <div class="mb-3" style="padding: 0px 10px;">
             <h6 class="form-label">Họ tên:</h6>
