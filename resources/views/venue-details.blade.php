@@ -373,7 +373,7 @@
                                                                             $slotDateTime = \Carbon\Carbon::parse($d . ' ' . $slot->start_time, 'Asia/Ho_Chi_Minh');
 
                                                                             $isPast = $slotDateTime->lt($now);
-                                                                            $isBooked = isset($bookings[$d][$slot->id][$i]);
+                                                                            $isBooked = isset($bookingsData[$d][$slot->time_slot_id][$i]);
 
                                                                             $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
                                                                                 ? $thongtinsan->Court_prices->default_price
@@ -391,7 +391,7 @@
                                                                                     data-facility="{{ $thongtinsan->facility_id }}"
                                                                                     data-court="{{ $i }}"
                                                                                     data-date="{{ \Carbon\Carbon::parse($d)->format('d-m-Y') }}"
-                                                                                    data-slot="{{ $slot->id }}"
+                                                                                    data-slot="{{ $slot->time_slot_id }}"
                                                                                     data-price="{{ $unitPrice/2 }}"
                                                                                     data-start_time="{{ substr($slot->start_time,0,5) }}"
                                                                                     data-end_time="{{ substr($slot->end_time,0,5) }}">
@@ -751,6 +751,17 @@
     {{-- THÔNG TIN ĐẶT SÂN --}}
     <div class="white-bg" style="padding-top: 30px;">
         <h4 style="text-align: center;">Thông tin đặt sân</h4>
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
         <div class="text-end mb-3">
             <div style="float: left;">
                 <a href="{{ route('chi_tiet_san', ['idSan' => $thongtinsan->facility_id]) }}" class="btn btn-success">Reset</a>
@@ -851,6 +862,7 @@ document.querySelectorAll('.slot-btn').forEach(btn => {
             date: this.dataset.date,
             start_time: this.dataset.start_time,
             end_time: this.dataset.end_time,
+            time_slot_id: this.dataset.slot,
             price: parseFloat(this.dataset.price),
             btnElement: this // Lưu nút để xóa class later
         };

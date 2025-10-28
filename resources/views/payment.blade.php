@@ -100,7 +100,10 @@
 						<div class="col-12 col-sm-12 col-md-12 col-lg-5">
 							<aside class="card payment-modes">
 								<h3 class="border-bottom">Xác nhận thông tin thanh toán</h3>
-								
+								@php 
+									$invoice_detail_id = $customer->user_id . '_' . $facilities->facility_id . '_' . date('Ymd_His') .'_'. rand(1000, 9999);
+								@endphp
+
 								@if (!empty($slots))
 								<table class="table table-bordered">
 									<thead>
@@ -158,6 +161,13 @@
 									<p>Số tiền: <span id="paid_price"></span></p>
 									<p>Số tiền đã chuyển <span id="ketqua"></span></p> -->
 								</div>
+								<form id="paymentCompleteForm" action="{{ route('payments_complete') }}" method="POST">
+									@csrf
+									<input type="hidden" name="slots" id="slots_input" value='@json($slots)'>
+									<input type="hidden" name="invoice_details_id" id="invoice_details_id" value="{{ $invoice_detail_id }}">
+									<input type="hidden" name="facility_id" id="facility_id" value="{{ $facilities->facility_id }}">
+									<input type="hidden" name="user_id" id="user_id" value="{{ auth()->id() }}">
+								</form>
 							</aside>
 						</div>
 					</div>
