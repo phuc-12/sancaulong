@@ -376,121 +376,133 @@
                 <div class="card feed-card">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Yêu Cầu Chờ Duyệt
-                            @if($pendingOwners->count() > 0)
-                                <span class="badge bg-danger ms-2">{{ $pendingOwners->count() }}</span>
+                            @if($pendingFacilities->count() > 0)
+                                <span class="badge bg-danger ms-2">{{ $pendingFacilities->count() }}</span>
                             @endif
                         </h6>
                     </div>
-                    <div class="card-body activity-feed" style="max-height: 300px; overflow-y: auto;">
-
-                        @forelse ($pendingOwners as $owner)
+                    <div class="card-body activity-feed" style="max-height: 400px; overflow-y: auto;"> {{-- Tăng chiều cao nếu cần --}}
+                        
+                        {{-- Lặp qua danh sách cơ sở chờ duyệt --}}
+                        @forelse ($pendingFacilities as $facility) 
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div class="d-flex">
-                                        <span class="feed-icon bg-warning"><i class="bi bi-building-add"></i></span>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3"> {{-- Tăng padding --}}
+                                    <div class="d-flex align-items-center"> {{-- Căn giữa icon và text --}}
+                                        <span class="feed-icon bg-warning flex-shrink-0"><i class="bi bi-building-add"></i></span>
                                         <div class="ms-3">
-                                            <strong>{{ $owner->fullname ?? 'Chưa có tên' }}</strong>
-                                            <div><small>Yêu cầu đăng ký: {{ $owner->email }}</small></div>
-                                            <div class="feed-time">{{ $owner->created_at->diffForHumans() }}</div>
+                                            <strong class="d-block">{{ $facility->facility_name }}</strong> {{-- Tên cơ sở --}}
+                                            <small class="text-muted d-block">Từ: {{ $facility->owner->email ?? 'N/A' }}</small> {{-- Email chủ sân --}}
+                                            @if($facility->created_at)
+                                            <small class="feed-time d-block">{{ $facility->created_at->diffForHumans() }}</small> {{-- Thời gian gửi --}}
+                                            @endif
                                         </div>
                                     </div>
-                                    {{-- Nút này sẽ mở Modal (popup) chi tiết --}}
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                        data-bs-target="#ownerDetailsModal-{{ $owner->user_id }}">
+                                    {{-- Nút mở Modal chi tiết --}}
+                                    <button class="btn btn-sm btn-outline-primary flex-shrink-0" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#facilityDetailsModal-{{ $facility->facility_id }}"> 
                                         Xem chi tiết
                                     </button>
                                 </li>
                             </ul>
                         @empty
-                            {{-- Nếu không có ai chờ duyệt --}}
-                            <div class="text-center text-muted p-3">
-                                <i class="bi bi-check-circle fs-3"></i>
-                                <p class="mt-2">Không có yêu cầu nào chờ duyệt.</p>
+                            {{-- Thông báo khi không có yêu cầu --}}
+                            <div class="text-center text-muted p-4">
+                                <i class="bi bi-check2-circle fs-3"></i>
+                                <p class="mt-2 mb-0">Không có yêu cầu nào chờ duyệt.</p>
                             </div>
                         @endforelse
 
                     </div>
-                    <div class="card-footer text-center">
-                        <a href="#" class="small text-decoration-none">Xem tất cả lịch sử duyệt &rarr;</a>
+                    <div class="card-footer text-center bg-light">
+                        <a href="#" class="small text-decoration-none text-secondary">Xem tất cả lịch sử duyệt &rarr;</a>
                     </div>
                 </div>
             </div>
         </div>
-                {{-- =============================================== --}}
-{{-- MODAL (POPUP) HIỂN THỊ CHI TIẾT DOANH NGHIỆP --}}
-
-@foreach ($pendingOwners as $owner)
-<div class="modal fade" id="ownerDetailsModal-{{ $owner->user_id }}" tabindex="-1" aria-labelledby="modalTitle-{{ $owner->user_id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+{{-- =============================================== --}}
+{{-- MODAL HIỂN THỊ CHI TIẾT DOANH NGHIỆP --}}
+@foreach ($pendingFacilities as $facility)
+<div class="modal fade" id="facilityDetailsModal-{{ $facility->facility_id }}" tabindex="-1" aria-labelledby="modalTitle-{{ $facility->facility_id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"> {{-- Thêm modal-dialog-scrollable nếu nội dung dài --}}
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle-{{ $owner->user_id }}">Duyệt Yêu Cầu: {{ $owner->fullname }}</h5>
+                <h5 class="modal-title" id="modalTitle-{{ $facility->facility_id }}">Duyệt Yêu Cầu Đăng Ký Cơ Sở</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                {{-- Thông báo trạng thái hiện tại --}}
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    <div>
+                        Yêu cầu này đang ở trạng thái <strong>Chờ Duyệt</strong>.
+                    </div>
+                </div>
+
                 <div class="row">
-                    {{-- THÔNG TIN TÀI KHOẢN--}}
-                    <div class="col-md-6">
-                        <h6><i class="bi bi-person-badge"></i> Thông tin Tài khoản (Chủ sân)</h6>
-                        <dl class="row">
-                            <dt class="col-sm-4">Họ và tên</dt>
-                            <dd class="col-sm-8">{{ $owner->fullname }}</dd>
-
-                            <dt class="col-sm-4">Email</dt>
-                            <dd class="col-sm-8">{{ $owner->email }}</dd>
-                            
-                            <dt class="col-sm-4">Số điện thoại</dt>
-                            <dd class="col-sm-8">{{ $owner->phone ?? '(Chưa cập nhật)' }}</dd>
-
-                            <dt class="col-sm-4">Số CCCD</dt>
-                            <dd class="col-sm-8">{{ $owner->CCCD ?? '(Chưa cập nhật)' }}</dd>
-                            
-                            <dt class="col-sm-4">Địa chỉ</dt>
-                            <dd class="col-sm-8">{{ $owner->address ?? '(Chưa cập nhật)' }}</dd>
+                    {{-- THÔNG TIN CHỦ SÂN --}}
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <h6><i class="bi bi-person-badge me-2"></i>Thông tin Chủ sân</h6>
+                        <hr class="mt-1 mb-2">
+                        @if($facility->owner) 
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Họ tên:</dt> <dd class="col-sm-8">{{ $facility->owner->fullname ?? 'N/A' }}</dd>
+                            <dt class="col-sm-4">Email:</dt> <dd class="col-sm-8">{{ $facility->owner->email ?? 'N/A' }}</dd>
+                            <dt class="col-sm-4">Số ĐT:</dt> <dd class="col-sm-8">{{ $facility->owner->phone ?? 'N/A' }}</dd>
+                            <dt class="col-sm-4">Địa chỉ:</dt> <dd class="col-sm-8">{{ $facility->owner->address ?? 'N/A' }}</dd>
+                            <dt class="col-sm-4">CCCD:</dt> <dd class="col-sm-8">{{ $facility->owner->CCCD ?? 'N/A' }}</dd>
                         </dl>
+                        @else
+                        <p class="text-danger small">Không tìm thấy thông tin chủ sân liên kết.</p>
+                        @endif
                     </div>
 
-                    {{-- THÔNG TIN SÂN--}}
+                    {{-- THÔNG TIN CƠ SỞ ĐĂNG KÝ --}}
                     <div class="col-md-6 border-start">
-                        <h6><i class="bi bi-building"></i> Thông tin Sân (Giả định)</h6>
-                        <p class="text-muted">(Lưu ý: Bạn cần thiết kế CSDL để lưu các thông tin này khi họ đăng ký)</p>
-                        
-                        <dl class="row">
-                            <dt class="col-sm-5">Tên cơ sở kinh doanh</dt>
-                            <dd class="col-sm-7">(Sân Ánh Dương)</dd>
-
-                            <dt class="col-sm-5">Địa chỉ sân</dt>
-                            <dd class="col-sm-7">(123 Nguyễn Văn Linh)</dd>
-                            
-                            <dt class="col-sm-5">Giấy phép KD</dt>
+                        <h6><i class="bi bi-building me-2"></i>Thông tin Cơ sở Đăng ký</h6>
+                        <hr class="mt-1 mb-2">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Tên cơ sở:</dt> <dd class="col-sm-7">{{ $facility->facility_name }}</dd>
+                            <dt class="col-sm-5">Địa chỉ sân:</dt> <dd class="col-sm-7">{{ $facility->address }}</dd>
+                            <dt class="col-sm-5">Số ĐT sân:</dt> <dd class="col-sm-7">{{ $facility->phone }}</dd>
+                            <dt class="col-sm-5">Giờ hoạt động:</dt> <dd class="col-sm-7">{{ \Carbon\Carbon::parse($facility->open_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($facility->close_time)->format('H:i') }}</dd>
+                            <dt class="col-sm-5">Mô tả:</dt> <dd class="col-sm-7">{{ $facility->description ?? '(Không có)' }}</dd>
+                            <dt class="col-sm-5">Giấy phép KD:</dt> 
                             <dd class="col-sm-7">
-                                {{-- Giả sử bạn lưu tên file --}}
-                                <a href="#" target="_blank">Xem file đính kèm</a> 
+                                @if($facility->business_license_path)
+                                    {{-- Link đến file trong storage/app/public --}}
+                                    <a href="{{ Storage::url($facility->business_license_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-file-earmark-text me-1"></i> Xem File
+                                    </a>
+                                @else
+                                    <span class="text-muted">(Không có file)</span>
+                                @endif
                             </dd>
                         </dl>
                     </div>
                 </div>
             </div>
-            {{-- NÚT DUYỆT / TỪ CHỐI (Use Case) --}}
-            <div class="modal-footer">
-                <form action="{{ route('admin.owner.deny', $owner->user_id) }}" method="POST">
+            
+            {{-- NÚT DUYỆT / TỪ CHỐI --}}
+            <div class="modal-footer justify-content-center"> {{-- Căn giữa nút --}}
+                <form action="{{ route('admin.facility.deny', $facility->facility_id) }}" method="POST" class="me-2">
                     @csrf
-                    <button type="submit" class="btn btn-outline-danger">
-                        <i class="bi bi-x-circle"></i> Từ chối
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-1"></i> Từ chối Yêu cầu
                     </button>
                 </form>
 
-                <form action="{{ route('admin.owner.approve', $owner->user_id) }}" method="POST">
+                <form action="{{ route('admin.facility.approve', $facility->facility_id) }}" method="POST">
                     @csrf
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle"></i> Phê duyệt
+                        <i class="bi bi-check2-circle me-1"></i> Chấp nhận Hoạt động
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-@endforeach                            
+@endforeach                          
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

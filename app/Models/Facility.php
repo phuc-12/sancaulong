@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\User;
 class Facility extends Model
 {
     use HasFactory;
-    // Bổ sung $fillable để updateOrCreate hoạt động
+
+    protected $primaryKey = 'facility_id'; // Khóa chính
     protected $fillable = [
         'owner_id', 
         'facility_name', 
@@ -20,5 +21,10 @@ class Facility extends Model
         'business_license_path', 
         'status'
     ];
-    protected $primaryKey = 'facility_id';
+    public function owner()
+    {
+        // belongsTo(User::class, 'foreign_key', 'owner_key')
+        // Liên kết cột 'owner_id' (của bảng facilities) với cột 'user_id' (của bảng users)
+        return $this->belongsTo(User::class, 'owner_id', 'user_id'); 
+    }
 }

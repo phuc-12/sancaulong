@@ -90,6 +90,27 @@
                             <div class="form-text">Giới thiệu về cơ sở vật chất, số lượng sân, tiện ích...</div>
                         </div>
 
+                        <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Chủ Sở Hữu (Sẽ hiển thị cho Admin duyệt)</h5>
+                        {{-- Lấy thông tin từ Auth::user() để điền vào value --}}
+                        @php $ownerUser = Auth::user(); @endphp 
+
+                        <div class="row">
+                             <div class="col-md-6 mb-3">
+                                <label for="owner_phone" class="form-label">Số điện thoại Chủ sân</label>
+                                <input type="tel" class="form-control" id="owner_phone" name="owner_phone" 
+                                       value="{{ old('owner_phone', $ownerUser->phone ?? '') }}">
+                            </div>
+                             <div class="col-md-6 mb-3">
+                                <label for="owner_cccd" class="form-label">Số CCCD Chủ sân</label>
+                                <input type="text" class="form-control" id="owner_cccd" name="owner_cccd" 
+                                       value="{{ old('owner_cccd', $ownerUser->CCCD ?? '') }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="owner_address" class="form-label">Địa chỉ liên hệ Chủ sân</label>
+                            <input type="text" class="form-control" id="owner_address" name="owner_address" 
+                                   value="{{ old('owner_address', $ownerUser->address ?? '') }}">
+                        </div>
                         <div class="mb-4">
                             <label for="business_license" class="form-label">Giấy phép kinh doanh (PDF, JPG, PNG)</label>
                             <input class="form-control" type="file" id="business_license" name="business_license"
