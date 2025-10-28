@@ -70,7 +70,7 @@
                 @auth
                     <li class="nav-item">
                         <a class="nav-link btn btn-outline-light btn-sm" href="{{ route('user.courts') }}">
-                            <i class="feather-check-circle"></i> Sân Của Bạn
+                            <i class="feather-check-circle"></i> Lịch Đặt Của Bạn
                         </a>
                     </li>
 
