@@ -147,7 +147,8 @@
 												<span class="tag tag-blue">Đang Hoạt Động</span>	
 												
 													<h5 class="tag tag-primary">
-														{{ number_format($thongtin->Court_prices->default_price) }}
+														<!-- $thongtin->Court_prices -->
+														  {{ number_format($thongtin->courtPrices?->default_price ?? 0) }}
 														<span>/Giờ</span>
 													</h5>
 
