@@ -79,7 +79,19 @@ Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () 
     Route::post('/facility', [OwnerController::class, 'storeFacility'])->name('facility.store');
     // Trang Quản lý Nhân viên
     Route::get('/staff', [OwnerController::class, 'staff'])->name('staff');
-    // Route::post('/staff', [OwnerController::class, 'storeStaff'])->name('staff.store');
+    
+    // POST: Lưu nhân viên mới
+    Route::post('/staff', [OwnerController::class, 'storeStaff'])->name('staff.store'); 
+    
+    // GET: Lấy dữ liệu nhân viên để sửa (cho AJAX hoặc form riêng)
+    // Route::get('/staff/{staff}/edit', [OwnerController::class, 'editStaff'])->name('staff.edit'); 
+    
+    // PUT/PATCH: Cập nhật thông tin nhân viên
+    // {staff} sẽ là User model nhờ Route Model Binding (cần khai báo binding nếu tên model khác User)
+    Route::put('/staff/{staff}', [OwnerController::class, 'updateStaff'])->name('staff.update'); 
+    
+    // DELETE: Xóa nhân viên
+    Route::delete('/staff/{staff}', [OwnerController::class, 'destroyStaff'])->name('staff.destroy');
 });
 
 //=============================================================================================================
