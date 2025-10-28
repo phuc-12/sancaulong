@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btns.forEach((item,index) => {
         item.addEventListener("click", () => {
             const paidContent = `Thanh Toán Tổng Tiền Sân`;
-            // const paidPrice = document.getElementById();
             var paidPrice = parseInt(document.getElementById("tongtien").value);
             let QR = `https://img.vietqr.io/image/${MY_BANK.BANK_ID}-${MY_BANK.ACCOUNT_NO}-compact2.png?amount=${paidPrice}&addInfo=${paidContent}`;
             course_qr_img.src = QR;
@@ -24,24 +23,22 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                     setInterval(() => {
                         checkPaid(paidPrice);
-                }, 2000);
-            }, 5000);
+                }, 10000);
+            }, 1000);
         });
     });
 });
 let isSucess = false;
 async function checkPaid(price) {
-    if(isSucess)
-    {
-        var user_id = document.getElementById("user_id").value;
-        window.location="pay-complete.php?maKH="+maKH;
-        // window.location="user-complete.php?maKH="+maKH;
+    if (isSucess) {
+        console.log("Thanh toán thành công — gửi dữ liệu lên server...");
+        document.getElementById("paymentCompleteForm").submit();
     }
     else 
     {
         try {
             const response = await fetch(
-                "https://script.google.com/macros/s/AKfycbxUquYh2WxhPZPyCjSY4nyKlaqlnaiYgdD8Gkq4vtnD0iIzURn4WQmOoY9faYTMFyF4/exec"
+                "https://script.google.com/macros/s/AKfycbwIKNqvZftMggqULAy8J-rPGwEsw1HVvJbJK5jfKkNJJ-EMf6km5_xJibYyLs04wM0xFQ/exec"
             );
             const data = await response.json();
             const lastPaid = data.data[data.data.length - 1];

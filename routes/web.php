@@ -24,10 +24,11 @@ Route::prefix('/')->controller(HomeController::class)
     Route::get('/api/load-more-san','load_more_san')->name('api.load_san');
     // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
     Route::get('/venue/{idSan}', 'show')->name('chi_tiet_san');
-    Route::post('/booking-process', 'processBooking')->name('booking.process');
+    // Route::post('/booking-process', 'processBooking')->name('booking.process');
     Route::post('/thanh-toan', 'payments')->name('thanh.toan');
     Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
     Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
+    Route::post('/thanh-toan/thanh-toan-complete','payments_complete')->name('payments_complete');
 });
 
 Route::prefix('users')->controller(UserController::class)
