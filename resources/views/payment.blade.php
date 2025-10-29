@@ -144,7 +144,7 @@
 									{{-- <div class="d-inline-block">
 										<input class="form-check-input" type="checkbox" value="" id="policy">
 									</div> --}}
-									<label>Sau khi click vào "Chuyển khoản" sẽ hiển thị mã QR bên dưới. <br> Vui lòng quét mã để thanh toán.</label>
+									<label>Sau khi click vào "Chuyển Khoản" sẽ hiển thị mã QR bên dưới. <br> Vui lòng quét mã để thanh toán.</label>
 								</div>
 								<!-- <div class="d-grid btn-block">
 									<button type="button" class="btn btn-primary course_item_btn">Thanh Toán</button>
