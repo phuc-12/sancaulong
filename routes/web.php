@@ -29,6 +29,7 @@ Route::prefix('/')->controller(HomeController::class)
     Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
     Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
     Route::post('/thanh-toan/thanh-toan-complete','payments_complete')->name('payments_complete');
+    Route::get('/contract_bookings','contract_bookings')->name('contract_bookings');
 });
 
 Route::prefix('users')->controller(UserController::class)

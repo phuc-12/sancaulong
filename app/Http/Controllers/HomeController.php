@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\facilities;
 use App\Models\Users;
 use App\Models\Time_slots;
+use App\Models\Court;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
@@ -219,43 +220,150 @@ public function removeSlot(Request $request)
     }
 
     public function payments_complete(Request $request)
-{
-    $slots = json_decode($request->input('slots'), true);
-    $invoiceDetailId = $request->input('invoice_details_id');
-    $userId = $request->input('user_id');
-    $facility_id = $request->input('facility_id');
-
-    $total = 0;
-    foreach ($slots as $slot)
     {
-        $total += $slot['price'];
-    }
-    
-    DB::table(table: 'invoice_details')->insert([
-            'invoice_detail_id' => $invoiceDetailId,
-            'sub_total' => $total
-        ]);  
-    if (!$slots || !is_array($slots)) {
-        return back()->with('error', 'Không có dữ liệu đặt sân!');
-    }
-    
-    // dd($slots, $invoiceDetailId, $userId, $facility_id);
-    foreach ($slots as $slot) {
-        DB::table(table: 'bookings')->insert([
-            'invoice_detail_id' => $invoiceDetailId,
-            'user_id' => $userId,
-            'facility_id' => $facility_id,
-            'court_id' => $slot['court'],
-            'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
-            'time_slot_id' => $slot['time_slot_id'],
-            'unit_price' => $slot['price'],
-        ]);
+        $slots = json_decode($request->input('slots'), true);
+        $invoiceDetailId = $request->input('invoice_details_id');
+        $userId = $request->input('user_id');
+        $facility_id = $request->input('facility_id');
+
+        $total = 0;
+        foreach ($slots as $slot)
+        {
+            $total += $slot['price'];
+        }
+        
+        DB::table(table: 'invoice_details')->insert([
+                'invoice_detail_id' => $invoiceDetailId,
+                'sub_total' => $total
+            ]);  
+        if (!$slots || !is_array($slots)) {
+            return back()->with('error', 'Không có dữ liệu đặt sân!');
+        }
+        
+        // dd($slots, $invoiceDetailId, $userId, $facility_id);
+        foreach ($slots as $slot) {
+            DB::table(table: 'bookings')->insert([
+                'invoice_detail_id' => $invoiceDetailId,
+                'user_id' => $userId,
+                'facility_id' => $facility_id,
+                'court_id' => $slot['court'],
+                'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
+                'time_slot_id' => $slot['time_slot_id'],
+                'unit_price' => $slot['price'],
+            ]);
+        }
+
+        
+
+        return redirect()->route('chi_tiet_san', ['idSan' => $facility_id])
+            ->with('success', 'Thanh toán và đặt sân thành công!');
     }
 
-    
+    // public function contract_bookings(Request $request)
+    // {
+    //     $idSan = $request->user_id;
+    //     // Lấy thông tin sân
+    //     $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
 
-    return redirect()->route('chi_tiet_san', ['idSan' => $facility_id])
-        ->with('success', 'Thanh toán và đặt sân thành công!');
+    //     // Lấy thông tin khách hàng (nếu đã đăng nhập)
+    //     $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
+
+    //     // Lấy danh sách khung giờ
+    //     $timeSlots = Time_slots::all();
+
+    //     // Lấy danh sách ngày (7 ngày tiếp theo, ví dụ)
+    //     $dates = [];
+    //     for ($i = 0; $i < 7; $i++) {
+    //         $dates[] = now()->addDays($i)->format('Y-m-d');
+    //     }
+
+    //     // Lấy danh sách đặt sân từ DB
+    //     $bookings = Bookings::where('facility_id', $idSan)
+    //         ->whereIn('booking_date', $dates)
+    //         ->get(['booking_date', 'time_slot_id', 'court_id']);
+
+    //     $bookingsData = [];
+    //     foreach ($bookings as $b) {
+    //         $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
+    //     }
+
+        
+    //     // Từ điển chuyển đổi thứ sang tiếng Việt
+    //     $thuTiengViet = [
+    //         'Mon' => 'Thứ hai',
+    //         'Tue' => 'Thứ ba',
+    //         'Wed' => 'Thứ tư',
+    //         'Thu' => 'Thứ năm',
+    //         'Fri' => 'Thứ sáu',
+    //         'Sat' => 'Thứ bảy',
+    //         'Sun' => 'Chủ nhật',
+    //     ];
+
+    //     // Số sân con
+    //     $soLuongSan = $thongtinsan->quantity_court;
+
+    //     // Tạo danh sách sân con như: San 1, San 2, San 3...
+    //     $dsSanCon = [];
+    //     for ($i = 1; $i <= $soLuongSan; $i++) {
+    //         $dsSanCon[] = [
+    //             'id' => $thongtinsan->facility_id . '-' . $i,   // Ví dụ SAN001-1
+    //             'ten' => 'Sân ' . $i
+    //         ];
+    //     }
+    //     // dd($customer->toArray());
+    //     return view('contract', compact('thongtinsan', 'customer', 'timeSlots', 'dates', 'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon'));
+    // }
+
+    public function contract_bookings(Request $request)
+{
+    $idSan = $request->user_id;
+    $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
+    $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
+    $timeSlots = Time_slots::all();
+
+    // ⚙️ Lấy ngày bắt đầu và kết thúc từ form
+    $dateStart = $request->input('date_start') ?? now()->format('Y-m-d');
+    $dateEnd = $request->input('date_end') ?? now()->addDays(7)->format('Y-m-d');
+
+    // ✅ Sinh mảng ngày từ date_start → date_end
+    $dates = [];
+    $current = \Carbon\Carbon::parse($dateStart);
+    $end = \Carbon\Carbon::parse($dateEnd);
+
+    while ($current->lte($end)) {
+        $dates[] = $current->format('Y-m-d');
+        $current->addDay();
+    }
+
+    // Lấy danh sách đặt sân
+    $bookings = Bookings::where('facility_id', $idSan)
+        ->whereBetween('booking_date', [$dateStart, $dateEnd])
+        ->get(['booking_date', 'time_slot_id', 'court_id']);
+
+    $bookingsData = [];
+    foreach ($bookings as $b) {
+        $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
+    }
+
+    $thuTiengViet = [
+        'Mon' => 'Thứ hai', 'Tue' => 'Thứ ba', 'Wed' => 'Thứ tư',
+        'Thu' => 'Thứ năm', 'Fri' => 'Thứ sáu', 'Sat' => 'Thứ bảy', 'Sun' => 'Chủ nhật',
+    ];
+
+    $soLuongSan = $thongtinsan->quantity_court;
+    $dsSanCon = [];
+    for ($i = 1; $i <= $soLuongSan; $i++) {
+        $dsSanCon[] = [
+            'id' => $thongtinsan->facility_id . '-' . $i,
+            'ten' => 'Sân ' . $i
+        ];
+    }
+    $courts = Court::where('facility_id', $idSan)->get();
+    return view('contract', compact(
+        'thongtinsan', 'customer', 'timeSlots', 'dates',
+        'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon',
+        'dateStart', 'dateEnd', 'courts'
+    ));
 }
 
 }
