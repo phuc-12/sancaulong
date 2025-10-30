@@ -30,19 +30,15 @@
         <hr>
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
-                <a href="#" class="nav-link active" aria-current="page">
+                <a href="{{ route('admin.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.index') ? 'active' : '' }}">
                     <i class="bi bi-grid-fill"></i>
                     Tổng Quan
                 </a>
             </li>
             <li>
-                <a href="#" class="nav-link">
-                    <i class="bi bi-calendar-check-fill"></i>
-                    Duyệt yêu cầu
-                </a>
-            </li>
-            <li>
-                <a href="#" class="nav-link">
+                <a href="{{ route('admin.facilities.index') }}" 
+                class="nav-link {{ request()->routeIs('admin.facilities.index') ? 'active' : '' }}">
                     <i class="bi bi-building-fill"></i>
                     Quản lý Doanh Nghiệp
                 </a>
@@ -232,7 +228,6 @@
                             <div class="col">
                                 <div class="kpi-label text-warning">Doanh Nghiệp</div>
 
-                                {{-- Sửa dòng "5" này thành biến: --}}
                                 <div class="kpi-value mb-1">{{ $totalOwners ?? 0 }}</div>
 
                                 <div class="kpi-growth text-muted small">
@@ -254,9 +249,7 @@
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
 
                         {{-- Tiêu đề biểu đồ (sẽ được JS cập nhật) --}}
-                        <h6 id="revenueChartTitle" class="m-0 font-weight-bold text-primary">Tổng Quan Doanh Thu (30
-                            Ngày)</h6>
-
+                        <h6 id="revenueChartTitle" class="m-0 font-weight-bold text-primary">Tổng Quan Doanh Thu (30 Ngày)</h6>
                         {{-- Dropdown menu --}}
                         <div class="dropdown no-arrow">
                             <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -381,13 +374,13 @@
                             @endif
                         </h6>
                     </div>
-                    <div class="card-body activity-feed" style="max-height: 400px; overflow-y: auto;"> {{-- Tăng chiều cao nếu cần --}}
+                    <div class="card-body activity-feed" style="max-height: 400px; overflow-y: auto;"> 
                         
                         {{-- Lặp qua danh sách cơ sở chờ duyệt --}}
                         @forelse ($pendingFacilities as $facility) 
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center py-3"> {{-- Tăng padding --}}
-                                    <div class="d-flex align-items-center"> {{-- Căn giữa icon và text --}}
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3"> 
+                                    <div class="d-flex align-items-center"> 
                                         <span class="feed-icon bg-warning flex-shrink-0"><i class="bi bi-building-add"></i></span>
                                         <div class="ms-3">
                                             <strong class="d-block">{{ $facility->facility_name }}</strong> {{-- Tên cơ sở --}}
@@ -424,7 +417,7 @@
 {{-- MODAL HIỂN THỊ CHI TIẾT DOANH NGHIỆP --}}
 @foreach ($pendingFacilities as $facility)
 <div class="modal fade" id="facilityDetailsModal-{{ $facility->facility_id }}" tabindex="-1" aria-labelledby="modalTitle-{{ $facility->facility_id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"> {{-- Thêm modal-dialog-scrollable nếu nội dung dài --}}
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle-{{ $facility->facility_id }}">Duyệt Yêu Cầu Đăng Ký Cơ Sở</h5>
@@ -469,14 +462,13 @@
                             <dt class="col-sm-5">Mô tả:</dt> <dd class="col-sm-7">{{ $facility->description ?? '(Không có)' }}</dd>
                             <dt class="col-sm-5">Giấy phép KD:</dt> 
                             <dd class="col-sm-7">
-                                @if($facility->business_license_path)
-                                    {{-- Link đến file trong storage/app/public --}}
+                                <!-- @if($facility->business_license_path)
                                     <a href="{{ Storage::url($facility->business_license_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-file-earmark-text me-1"></i> Xem File
                                     </a>
                                 @else
                                     <span class="text-muted">(Không có file)</span>
-                                @endif
+                                @endif -->
                             </dd>
                         </dl>
                     </div>
@@ -484,7 +476,7 @@
             </div>
             
             {{-- NÚT DUYỆT / TỪ CHỐI --}}
-            <div class="modal-footer justify-content-center"> {{-- Căn giữa nút --}}
+            <div class="modal-footer justify-content-center"> 
                 <form action="{{ route('admin.facility.deny', $facility->facility_id) }}" method="POST" class="me-2">
                     @csrf
                     <button type="submit" class="btn btn-danger">
@@ -511,7 +503,6 @@
     {{-- Thư viện Chart.js PHẢI được tải trước --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
-    {{-- File JS của bạn tải SAU --}}
     <script src="{{ asset('js/admin-dashboard.js') }}"></script>
 </body>
 </html>

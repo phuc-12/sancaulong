@@ -96,7 +96,7 @@ class AdminController extends Controller
             ->with('owner') // Lấy kèm thông tin chủ sân (owner)
             ->orderBy('created_at', 'asc') // Ưu tiên cái cũ (nếu có timestamps)
             ->get();
-        
+
         // --- 4. Trả dữ liệu về View ---
         return view('admin.index', [
             // Dữ liệu khách hàng
@@ -172,28 +172,51 @@ class AdminController extends Controller
         ]);
     }
 
-    // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ===
-    public function approveFacility(Facility $facility) 
+    // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ ===
+    public function approveFacility(Facility $facility)
     {
         // Cập nhật trạng thái thành 'đã duyệt'
-        $facility->update(['status' => 'đã duyệt']); 
-        
-        // (Tùy chọn: Gửi email thông báo cho chủ sân)
+        $facility->update(['status' => 'đã duyệt']);
 
         // Quay lại trang admin với thông báo thành công
         return redirect()->route('admin.index')->with('success', "Đã phê duyệt cơ sở '{$facility->facility_name}'.");
     }
 
     // === XỬ LÝ TỪ CHỐI 1 CƠ SỞ ===
-    public function denyFacility(Facility $facility) 
+    public function denyFacility(Facility $facility)
     {
         // Cập nhật trạng thái thành 'từ chối'
-        $facility->update(['status' => 'từ chối']); 
-        
-        // (Tùy chọn: Gửi email thông báo cho chủ sân)
-        
+        $facility->update(['status' => 'từ chối']);
+
         // Quay lại trang admin với thông báo thành công
         return redirect()->route('admin.index')->with('success', "Đã từ chối cơ sở '{$facility->facility_name}'.");
     }
 
+    //Hiển thị trang Quản lý Cơ sở (Doanh nghiệp)
+    public function manageFacilities()
+    {
+        $facilities = Facility::with('owner')
+            ->orderBy('status', 'asc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+        return view('admin.facilities.index', compact('facilities'));
+    }
+    //TẠM KHÓA CƠ SỞ
+    public function suspendFacility(Facility $facility)
+    {
+        // (Kiểm tra quyền Admin)
+        $facility->update(['status' => 'tạm khóa']); // Đặt trạng thái là 'tạm khóa'
+        return redirect()->route('admin.facilities.index')
+            ->with('success', "Đã tạm khóa hoạt động của cơ sở '{$facility->facility_name}'.");
+    }
+    
+    //KÍCH HOẠT LẠI CƠ SỞ
+    public function activateFacility(Facility $facility)
+    {
+         // (Kiểm tra quyền Admin)
+        // Kích hoạt lại đồng nghĩa với việc duyệt lại
+        $facility->update(['status' => 'đã duyệt']); // Đặt trạng thái là 'đã duyệt'
+        return redirect()->route('admin.facilities.index')
+                         ->with('success', "Đã kích hoạt lại hoạt động cho cơ sở '{$facility->facility_name}'.");
+    }
 }

@@ -4,139 +4,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Owner Dashboard | DreamSports</title>
+    <title>Admin Dashboard | DreamSports</title> 
+
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
-    <style>
-        :root {
-            --sidebar-width: 280px;
-            --sidebar-bg: #212529;
-            --sidebar-text: #adb5bd;
-            --sidebar-text-active: #ffffff;
-            --sidebar-active-bg: #198754;
-        }
+    <link rel="shortcut icon" href="{{ asset('img/favicon.png') }}">
 
-        body {
-            background-color: #f8f9fa;
-        }
-
-        #sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background-color: var(--sidebar-bg);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            padding: 1rem;
-        }
-
-        #sidebar .nav-link {
-            color: var(--sidebar-text);
-            font-weight: 500;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.25rem;
-            border-radius: 0.5rem;
-        }
-
-        #sidebar .nav-link i {
-            margin-right: 0.75rem;
-            font-size: 1.1rem;
-            width: 20px;
-            text-align: center;
-        }
-
-        #sidebar .nav-link.active {
-            color: var(--sidebar-text-active);
-            background-color: var(--sidebar-active-bg);
-        }
-
-        #sidebar .nav-link:hover:not(.active) {
-            background-color: #198754;
-            color: var(--sidebar-text-active);
-        }
-
-        #sidebar .sidebar-header {
-            padding: 1rem 0.5rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        #sidebar .sidebar-header i {
-            margin-right: 0.5rem;
-        }
-
-        #main-content {
-            margin-left: var(--sidebar-width);
-            padding: 2rem;
-        }
-        .card {
-            border: none;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-    </style>
+    
 </head>
 
 <body>
 
-    <div id="sidebar" class="d-flex flex-column">
-        <a href="{{ route('owner.index') }}" class="sidebar-header text-decoration-none">
+     <div id="sidebar" class="d-flex flex-column p-3">
+        <a href="#" class="sidebar-header text-decoration-none">
             <img src="{{ asset('img/logo.svg') }}" class="img-fluid" alt="Logo">
             <span>DreamSports</span>
         </a>
-        <hr style="border-color: #495057;">
-
-        {{-- MENU CỦA CHỦ SÂN --}}
+        <hr>
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
-                <a href="{{ route('owner.index') }}"
-                    class="nav-link {{ request()->routeIs('owner.index') ? 'active' : '' }}">
+                <a href="{{ route('admin.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.index') ? 'active' : '' }}">
                     <i class="bi bi-grid-fill"></i>
                     Tổng Quan
                 </a>
             </li>
-            <li class="nav-item">
+            <li>
+                <a href="{{ route('admin.facilities.index') }}" 
+                class="nav-link {{ request()->routeIs('admin.facilities.index') ? 'active' : '' }}">
+                    <i class="bi bi-building-fill"></i>
+                    Quản lý Doanh Nghiệp
+                </a>
+            </li>
+            <li>
                 <a href="#" class="nav-link">
-                    <i class="bi bi-calendar-check-fill"></i>
-                    Quản lý Đặt Sân
-                </a>
-            </li>
-            <li class="nav-item">
-                {{-- Trang "Đăng ký" --}}
-                <a href="{{ route('owner.facility') }}"
-                    class="nav-link {{ request()->routeIs('owner.facility') ? 'active' : '' }}">
-                    <i class="bi bi-building-fill-gear"></i>
-                    Cơ Sở Của Tôi
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="bi bi-bounding-box"></i>
-                    Quản lý Hợp đồng
-                </a>
-            </li>
-            <li class="nav-item">
-                {{-- Trang "Phân quyền" --}}
-                <a href="{{ route('owner.staff') }}"
-                    class="nav-link {{ request()->routeIs('owner.staff') ? 'active' : '' }}">
                     <i class="bi bi-people-fill"></i>
-                    Quản lý Nhân Viên
+                    Quản lý Khách Hàng
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-bell-fill"></i>
+                    Yêu cầu & Hỗ trợ
+                </a>
+            </li> -->
+            <li>
                 <a href="#" class="nav-link">
                     <i class="bi bi-receipt-cutoff"></i>
                     Tài chính & Hóa đơn
                 </a>
             </li>
         </ul>
-        <hr style="border-color: #495057;">
+        <hr>
         <ul class="nav header-navbar-rht">
             @auth
                 <!-- Dropdown User -->
@@ -189,20 +116,15 @@
             @endauth
         </ul>
     </div>
-    <!-- --------------------------------------------- -->
-    <!-- Noi dung chinh  -->
-    <main id="main-content">
-        @yield('owner_content')
-        @yield('admin_content')
-    </main>
-    <!-- --------------------------------------------- -->
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-
     
+    {{-- =================================== --}}
+    <main id="main-content">
+        @yield('index_content')
+        @yield('facilities_content') 
+    </main>
+    {{-- =================================== --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     @stack('scripts')
 </body>
-
 </html>
