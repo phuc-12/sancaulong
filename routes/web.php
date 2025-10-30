@@ -58,7 +58,9 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');
     Route::get('/revenue-chart-data', [AdminController::class, 'getRevenueData'])->name('revenueChartData');
-
+    // GET: Hiển thị trang danh sách cơ sở
+    Route::get('/facilities', [AdminController::class, 'manageFacilities'])->name('facilities.index');
+    
     // === ROUTE DUYỆT/TỪ CHỐI ===
     // Route để DUYỆT (Approve Facility) - dùng {facility}
     Route::post('/facilities/approve/{facility}', [AdminController::class, 'approveFacility'])
@@ -67,6 +69,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // Route để TỪ CHỐI (Deny Facility) - dùng {facility}
     Route::post('/facilities/deny/{facility}', [AdminController::class, 'denyFacility'])
         ->name('facility.deny');
+
+    // POST: Tạm khóa cơ sở
+    Route::post('/facilities/suspend/{facility}', [AdminController::class, 'suspendFacility'])
+         ->name('facility.suspend');
+
+    // POST: Kích hoạt lại cơ sở
+    Route::post('/facilities/activate/{facility}', [AdminController::class, 'activateFacility'])
+         ->name('facility.activate');
 });
 //=============================================================================================================
 //Chủ sân (owner)
