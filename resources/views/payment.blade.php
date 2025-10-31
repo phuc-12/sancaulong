@@ -12,42 +12,11 @@
 				</ul>
 			</div>
 		</div>
-		<!-- /Breadcrumb -->
-		<!-- <section class="booking-steps py-30">
-			<div class="container">
-				<ul class="d-xl-flex justify-content-center align-items-center">
-					<li><h5><a href="coach-details.html"><span>1</span>Type of Booking</a></h5></li>
-					<li><h5><a href="coach-timedate.html"><span>2</span>Time & Date</a></h5></li>
-					<li><h5><a href="coach-personalinfo.html"><span>3</span>Personal Information</a></h5></li>
-					<li><h5><a href="coach-order-confirm.html"><span>4</span>Order Confirmation</a></h5></li>
-					<li class="active"><h5><a href="coach-payment.html"><span>5</span>Payment</a></h5></li>
-				</ul>
-			</div>
-		</section> -->
 
 		<!-- Page Content -->
 		<div class="content">
 			<div class="container">
 				<section>
-					<!-- <div class="text-center mb-40">
-						<h3 class="mb-1">THANH TOÁN</h3>
-						<p class="sub-title">Thanh toán an toàn cho đặt phòng của bạn.</p>
-					</div> -->
-					<!-- <div class="master-academy dull-whitesmoke-bg card mb-40">
-						<div class="d-flex justify-content-between align-items-center">
-							<div class="d-sm-flex justify-content-start align-items-center">
-								<a href="javascript:void(0);"><img class="corner-radius-10" src="assets/img/profiles/avatar-02.png" alt="User"></a>
-								<div class="info">
-									<div class="d-flex justify-content-start align-items-center mb-3">
-										<span class="text-white dark-yellow-bg color-white me-2 d-flex justify-content-center align-items-center">4.5</span>
-										<span>300 Reviews</span>
-									</div>
-									<h3 class="mb-2">Kevin Anderson</h3>
-									<p>Certified Badminton Coach with a deep understanding of the sport's  strategies.</p>
-								</div>
-							</div>
-						</div>
-					</div> -->
 					<div class="row checkout">
 						<div class="col-12 col-sm-12 col-md-12 col-lg-7">
 							<div class="card booking-details" style="margin-bottom: 10px;">
@@ -141,25 +110,15 @@
 								<p>Không có dữ liệu khung giờ nào!</p>
 							@endif
 								<div class="form-check d-flex justify-content-start align-items-center policy">
-									{{-- <div class="d-inline-block">
-										<input class="form-check-input" type="checkbox" value="" id="policy">
-									</div> --}}
 									<label>Sau khi click vào "Chuyển Khoản" sẽ hiển thị mã QR bên dưới. <br> Vui lòng quét mã để thanh toán.</label>
 								</div>
-								<!-- <div class="d-grid btn-block">
-									<button type="button" class="btn btn-primary course_item_btn">Thanh Toán</button>
-								</div> -->
 								<div class="d-flex justify-content-center gap-2">
 									<button type="button" class="btn btn-primary btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">Chuyển Khoản</button>
-									<!-- <button type="button" class="btn btn-primary btn-sm w-100 " style="max-width: 150px;">Tiền Mặt</button> -->
 								</div>
 								<div class="course_qr mt-4" align="center">
 									<img 
 										class="course_qr_img" style="width: 300px;"
 										src="">
-									<!-- <p>Nội dung chuyển khoản: <span id="paid_content"></span></p>
-									<p>Số tiền: <span id="paid_price"></span></p>
-									<p>Số tiền đã chuyển <span id="ketqua"></span></p> -->
 								</div>
 								<form id="paymentCompleteForm" action="{{ route('payments_complete') }}" method="POST">
 									@csrf

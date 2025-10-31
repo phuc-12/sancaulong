@@ -205,6 +205,7 @@
 @yield('login')
 @yield('payment_content')
 @yield('contract_content')
+@yield('payment_contract_content')
 {{-- -------------------------------------- --}}
 
 <footer class="footer">
