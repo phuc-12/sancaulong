@@ -426,7 +426,7 @@
                                 class="accordion-collapse collapse show" 
                                 aria-labelledby="panelsStayOpen-includes">
                                 <div class="accordion-body">
-                                    <form action="{{ route('contract_bookings') }}">
+                                    <form method="POST" action="{{ route('contract_bookings') }}">
                                         @csrf
                                         <div class="mb-10">
                                             <label for="name" class="form-label">Họ tên</label>
@@ -458,7 +458,7 @@
                                             </label>
                                         </div>
                                         <div class="d-grid btn-block">
-                                            <input type="hidden" name="user_id" id="user_id" value="{{ $thongtinsan->facility_id }}">
+                                            <input type="hidden" name="facility_id" id="facility_id" value="{{ $thongtinsan->facility_id }}">
                                             <button type="submit"
                                                 class="btn btn-secondary d-inline-flex justify-content-center align-items-center"
                                                 name="btnthemyeucau">

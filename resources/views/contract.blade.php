@@ -221,7 +221,58 @@
         transform: translateY(-1px);
     }
 
-            
+            .container {
+    background: #006d3b;
+    padding: 20px;
+    border-radius: 15px;
+}
+.slot-btn {
+    margin: 3px;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    padding: 8px 14px;
+    background: white;
+    color: #000;
+}
+.slot-btn.selected { background: #1976d2; color: white; }
+.slot-btn.booked { background: #f44336; color: white; }
+.slot-btn.pending { background: #ffc107; color: white; }
+.slot-btn.locked { background: #9e9e9e; color: white; }
+
+/* Nút chọn sân */
+.court-btn {
+    border-radius: 10px;
+    background: white;
+    color: #000;
+    border: 2px solid #ccc;
+    padding: 10px 20px;
+    transition: 0.2s;
+}
+.court-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.court-btn.selected {
+    background: #1976d2;
+    color: white;
+    border-color: #1976d2;
+}
+
+.legend-item {
+    display: inline-block;
+    width: 20px; height: 20px;
+    margin-right: 6px; border-radius: 4px;
+}
+.legend-item.trống { background: white; border: 1px solid #ccc; }
+.legend-item.chọn { background: #1976d2; }
+.legend-item.xácnhận { background: #ffc107; }
+.legend-item.đặt { background: #f44336; }
+.legend-item.khóa { background: #9e9e9e; }
+
+.slot-btn:hover, .court-btn:hover {
+    transform: scale(1.05);
+    transition: 0.2s ease;
+}
     </style>
 <div class="venue-info white-bg py-4">
     <div class="container">
@@ -287,96 +338,250 @@
     </div>
 </div>
 <div class="container">
-    <h3 class="mb-3 text-white">Lịch đặt sân</h3>
+    <form id="bookingForm" method="POST" action="{{ route('contracts.preview') }}">
+    @csrf
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="start_date" class="text-white">Ngày bắt đầu:</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ $dateStart }}" readonly>
+                
+            </div>
+            <div class="col-md-6">
+                <label for="end_date" class="text-white">Ngày kết thúc:</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ $dateEnd }}" readonly>
+            </div>
+        </div>
 
-    {{-- Chọn thứ trong tuần --}}
-    <div class="mb-3 text-white">
-        <label><input type="checkbox" name="dayofweek[]" value="2"> Thứ 2</label>
-        <label><input type="checkbox" name="dayofweek[]" value="3"> Thứ 3</label>
-        <label><input type="checkbox" name="dayofweek[]" value="4"> Thứ 4</label>
-        <label><input type="checkbox" name="dayofweek[]" value="5"> Thứ 5</label>
-        <label><input type="checkbox" name="dayofweek[]" value="6"> Thứ 6</label>
-        <label><input type="checkbox" name="dayofweek[]" value="7"> Thứ 7</label>
-        <label><input type="checkbox" name="dayofweek[]" value="8"> CN</label>
-    </div>
+        <h3 class="mb-3 text-white">Lịch đặt sân</h3>
+        {{-- Chọn thứ trong tuần --}}
+        <div class="mb-3 text-white">
+            <label><input type="checkbox" name="dayofweek[]" value="2"> Thứ 2</label>
+            <label><input type="checkbox" name="dayofweek[]" value="3"> Thứ 3</label>
+            <label><input type="checkbox" name="dayofweek[]" value="4"> Thứ 4</label>
+            <label><input type="checkbox" name="dayofweek[]" value="5"> Thứ 5</label>
+            <label><input type="checkbox" name="dayofweek[]" value="6"> Thứ 6</label>
+            <label><input type="checkbox" name="dayofweek[]" value="7"> Thứ 7</label>
+            <label><input type="checkbox" name="dayofweek[]" value="8"> Chủ Nhật</label>
+        </div>
 
-    {{-- Lưới chọn khung giờ --}}
-    <div class="court-grid">
-        @foreach ($timeSlots as $slot)
-            <button class="slot-btn" 
-                data-start="{{ $slot->start_time }}" 
-                data-end="{{ $slot->end_time }}">
-                {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}
-            </button>
-        @endforeach
-    </div>
-
-    {{-- Chọn sân --}}
-    <div class="mt-3">
-        <h5 class="text-white">Chọn sân</h5>
-        <div class="d-flex flex-wrap">
-            @foreach ($courts as $court)
-                <div class="court-item text-center mx-2">
-                    <button class="court-btn" data-court="{{ $court->court_id }}">
-                        🏸 Sân {{ $court->court_name }}
-                    </button>
-                    <p class="text-white mt-1">{{ number_format($thongtinsan->time_slot_id, 0) }}đ/h</p>
-                </div>
+        {{-- Lưới chọn khung giờ --}}
+        <div class="court-grid">
+            @foreach ($timeSlots as $slot)
+                <button type="button" class="slot-btn"
+                    data-start="{{ $slot->start_time }}"
+                    data-end="{{ $slot->end_time }}"
+                    data-timeslotid="{{ $slot->time_slot_id }}">
+                    {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}
+                </button>
             @endforeach
         </div>
-    </div>
 
-    {{-- Ghi chú --}}
-    <div class="mt-4 legend text-white">
-        <span class="legend-item trống"></span> Trống
-        <span class="legend-item chọn"></span> Lịch của bạn chọn
-        <span class="legend-item xácnhận"></span> Đang xác nhận
-        <span class="legend-item đặt"></span> Đã đặt
-        <span class="legend-item khóa"></span> Khóa
-    </div>
-
-    <div class="text-center mt-4">
-        <button class="btn btn-warning px-5 py-2">TIẾP TỤC THANH TOÁN</button>
-    </div>
+        {{-- Chọn sân --}}
+        <div class="mt-3">
+            <h5 class="text-white">Chọn sân</h5>
+            <div class="d-flex flex-wrap justify-content-start">
+                @foreach ($courts as $court)
+                    <div class="court-item text-center mx-2">
+                        <button type="button" class="court-btn" data-court="{{ $court->court_id }}">
+                            🏸 {{ $court->court_name }}
+                        </button>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <input type="hidden" name="default_price" id="default_price" value="{{ $thongtinsan->Court_prices->default_price }}">
+            <input type="hidden" name="special_price" id="special_price" value="{{ $thongtinsan->Court_prices->special_price  }}">
+            <input type="hidden" name="facility_id" id="facility_id" value="{{ $thongtinsan->facility_id }}">
+            <input type="hidden" name="user_id" id="user_id" value="{{ $customer->user_id }}">
+            <button type="submit" class="btn btn-warning px-5 py-2">XÁC NHẬN VÀ THANH TOÁN</button>
+        </div>
+    </form>
 </div>
-
-<style>
-.container {
-    background: #006d3b;
-    padding: 20px;
-    border-radius: 15px;
-}
-.slot-btn {
-    margin: 3px;
-    border-radius: 8px;
-    border: 2px solid #ccc;
-    padding: 8px 14px;
-    background: white;
-    color: #000;
-}
-.slot-btn.selected { background: #1976d2; color: white; }
-.slot-btn.booked { background: #f44336; color: white; }
-.slot-btn.pending { background: #ffc107; color: white; }
-.slot-btn.locked { background: #9e9e9e; color: white; }
-.legend-item {
-    display: inline-block;
-    width: 20px; height: 20px;
-    margin-right: 6px; border-radius: 4px;
-}
-.legend-item.trống { background: white; border: 1px solid #ccc; }
-.legend-item.chọn { background: #1976d2; }
-.legend-item.xácnhận { background: #ffc107; }
-.legend-item.đặt { background: #f44336; }
-.legend-item.khóa { background: #9e9e9e; }
-</style>
-
 <script>
-document.querySelectorAll('.slot-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        btn.classList.toggle('selected');
+    const timeSlots = @json($timeSlots); 
+    document.addEventListener('DOMContentLoaded', () => {
+    const msg = localStorage.getItem('conflict_message');
+    const conflicts = localStorage.getItem('conflicts');
+
+    if (conflicts) {
+        const parsed = JSON.parse(conflicts);
+
+        const form = document.getElementById('bookingForm');
+        const h3 = form.querySelector('h3');
+        let conflictContainer = document.getElementById('conflictContainer');
+
+        if (!conflictContainer) {
+            conflictContainer = document.createElement('div');
+            conflictContainer.id = 'conflictContainer';
+            h3.insertAdjacentElement('afterend', conflictContainer);
+        }
+
+        const alert = document.createElement('div');
+        alert.classList.add('alert', 'alert-danger', 'mt-3');
+        alert.innerHTML = `<strong>${msg}</strong>`;
+
+        // 💥 Tạo bảng hiển thị khung giờ trùng
+        const table = document.createElement('table');
+        table.classList.add('table', 'table-bordered', 'table-sm', 'mt-2');
+        table.innerHTML = `
+            <thead class="table-dark">
+                <tr>
+                    <th>Ngày</th>
+                    <th>Sân</th>
+                    <th>Khung giờ</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${parsed.map(item => {
+                    // Lấy thông tin khung giờ tương ứng từ biến timeSlots (JS)
+                    const slot = timeSlots.find(s => s.time_slot_id == item.time_slot_id);
+                    const timeRange = slot ? `${slot.start_time} - ${slot.end_time}` : 'N/A';
+                    return `
+                        <tr>
+                            <td>${item.date}</td>
+                            <td>Sân số ${item.court_id}</td>
+                            <td>${timeRange}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        `;
+
+        alert.appendChild(table);
+        conflictContainer.innerHTML = '';
+        conflictContainer.appendChild(alert);
+
+        localStorage.removeItem('conflicts');
+        localStorage.removeItem('conflict_message');
+    }
+});
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('bookingForm');
+    const btnSubmit = document.querySelector('.btn-warning');
+
+    // Toggle chọn khung giờ
+    document.querySelectorAll('.slot-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('selected');
+        });
     });
+
+    // Toggle chọn sân (nhiều sân)
+    document.querySelectorAll('.court-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('selected');
+        });
+    });
+
+    // Lưu chọn thứ
+    const selectedDays = () => Array.from(document.querySelectorAll('input[name="dayofweek[]"]:checked')).map(c => c.value);
+
+    // Lưu khung giờ
+    const selectedSlots = () => Array.from(document.querySelectorAll('.slot-btn.selected')).map(btn => ({
+        start: btn.dataset.start,
+        end: btn.dataset.end,
+        timeslotid: btn.dataset.timeslotid
+    }));
+
+    // Lưu sân
+    const selectedCourts = () => Array.from(document.querySelectorAll('.court-btn.selected')).map(btn => btn.dataset.court);
+
+    // Khi bấm "TIẾP TỤC THANH TOÁN"
+    btnSubmit.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        const startDate = new Date(document.getElementById('start_date').value);
+        const endDate = new Date(document.getElementById('end_date').value);
+        const facility_id = document.getElementById('facility_id').value;
+        const user_id = document.getElementById('user_id').value;
+        const default_price = parseFloat(document.getElementById('default_price').value) || 0;
+        const special_price = parseFloat(document.getElementById('special_price').value) || 0;
+        const days = selectedDays();
+        const slots = selectedSlots();
+        const courts = selectedCourts();
+
+        if (!startDate || !endDate || days.length === 0 || slots.length === 0 || courts.length === 0) {
+            alert('Vui lòng chọn đầy đủ ngày, thứ, khung giờ và sân!');
+            return;
+        }
+
+        // ✅ Sinh ra các ngày thực tế theo thứ người dùng chọn (kèm slot & court)
+        let actualDates = [];
+        let current = new Date(startDate);
+
+        while (current <= endDate) {
+            const dayOfWeek = current.getDay() === 0 ? 8 : current.getDay() + 1;
+            if (days.includes(dayOfWeek.toString())) {
+                actualDates.push({
+                    date: current.toISOString().split('T')[0],
+                    time_slots: slots.slice(0, -1).map(s => s.timeslotid ?? null),
+                    courts: courts.map(c => parseInt(c))
+                });
+            }
+            current.setDate(current.getDate() + 1);
+        }
+
+        console.log({
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            selectedDays: days,
+            selectedSlots: slots,
+            selectedCourts: courts,
+            actualDates: actualDates,
+            default_price: default_price,
+            special_price: special_price,
+            facility_id: facility_id,
+            user_id: user_id
+        });
+
+        // ✅ Gửi dữ liệu sang server
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                start_date: startDate.toISOString().split('T')[0],
+                end_date: endDate.toISOString().split('T')[0],
+                day_of_weeks: days,
+                time_slots: slots,
+                courts: courts,
+                actual_dates: actualDates,
+                default_price: default_price,
+                special_price: special_price,
+                facility_id: facility_id,
+                user_id: user_id
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('✅ Server trả về:', data);
+
+            if (data.reload) {
+                // 🧠 Lưu dữ liệu trùng tạm vào localStorage
+                localStorage.setItem('conflicts', JSON.stringify(data.conflicts));
+                localStorage.setItem('conflict_message', data.message);
+
+                // 🔁 Reload lại trang
+                window.location.reload();
+            } else {
+                console.log('Không có xung đột');
+            }
+        })
+        .catch(err => {
+            console.error('❌ Lỗi gửi dữ liệu:', err);
+        });
+    });
+
 });
 </script>
+
+
 <!-- Page Content -->
     <div class="content">
         <div class="container">
