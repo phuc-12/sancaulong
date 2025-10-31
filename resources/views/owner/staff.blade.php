@@ -258,12 +258,11 @@
                                 <b>Xem Tài chính</b> (Xem doanh thu, xem hóa đơn)
                             </label>
                         </div>
-                        {{-- Thêm các checkbox quyền khác nếu cần --}}
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-primary" id="saveStaffButton">Lưu Thông Tin</button> {{-- Đổi
-                        text nút Lưu --}}
+                        <button type="submit" class="btn btn-primary" id="saveStaffButton">Lưu Thông Tin</button> 
                     </div>
                 </form>
             </div>
@@ -271,7 +270,6 @@
     </div>
 
     <div class="modal fade" id="deleteStaffModal" tabindex="-1" aria-labelledby="deleteStaffModalLabel" aria-hidden="true">
-        {{-- ... (Code Modal Xóa - Giữ nguyên như trước) ... --}}
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
@@ -318,18 +316,18 @@
         // Hàm chuẩn bị modal cho việc THÊM MỚI
         function prepareAddModal() {
             staffForm.reset(); // Xóa sạch dữ liệu cũ trên form
-            modalTitle.innerText = 'Thêm Nhân Viên / Quản Lý Mới'; // Đặt tiêu đề
-            staffForm.action = '{{ route("owner.staff.store") }}'; // Đặt action về route store
-            formMethodInput.value = 'POST'; // Đặt phương thức là POST
-            passwordInput.required = true; // Mật khẩu bắt buộc khi thêm
-            passwordConfirmInput.required = true; // Xác nhận mật khẩu cũng bắt buộc
-            passwordConfirmRow.style.display = 'block'; // Hiện ô xác nhận mk
-            passwordRequiredSpan.style.display = 'inline'; // Hiện dấu * ở mật khẩu
-            passwordHelpText.innerText = 'Ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số.';
+            modalTitle.innerText = 'Thêm Nhân Viên / Quản Lý Mới'; 
+            staffForm.action = '{{ route("owner.staff.store") }}';
+            formMethodInput.value = 'POST'; 
+            passwordInput.required = true; 
+            passwordConfirmInput.required = true; 
+            passwordConfirmRow.style.display = 'block'; 
+            passwordRequiredSpan.style.display = 'inline'; 
+            passwordHelpText.innerText = 'Ít nhất 8 ký tự';
             statusRow.style.display = 'none'; // Ẩn trạng thái (mặc định active trên server)
-            avatarPreview.style.display = 'none'; // Ẩn ảnh preview
+            avatarPreview.style.display = 'none'; 
             avatarInput.value = ''; // Xóa file đã chọn (nếu có)
-            saveStaffButton.innerText = 'Thêm Mới'; // Đổi text nút submit
+            saveStaffButton.innerText = 'Thêm Mới';
 
             // Bỏ check tất cả quyền
             document.querySelectorAll('#staffForm input[name="permissions[]"]').forEach(checkbox => checkbox.checked = false);
@@ -340,15 +338,15 @@
         // Hàm chuẩn bị modal cho việc SỬA
         function prepareEditModal(staffData) {
             staffForm.reset(); // Xóa sạch dữ liệu cũ
-            modalTitle.innerText = 'Sửa Thông Tin: ' + staffData.fullname; // Đặt tiêu đề + tên NV
-            // Tạo URL cho route update, thay thế :staff bằng user_id
+            modalTitle.innerText = 'Sửa Thông Tin: ' + staffData.fullname; 
+           
             let updateUrl = '{{ route("owner.staff.update", ["staff" => ":staff"]) }}';
             staffForm.action = updateUrl.replace(':staff', staffData.user_id);
-            formMethodInput.value = 'PUT'; // Đặt phương thức là PUT
-            passwordInput.required = false; // Mật khẩu KHÔNG bắt buộc khi sửa
-            passwordConfirmInput.required = false; // Xác nhận cũng không bắt buộc
-            // passwordConfirmRow.style.display = 'none'; // Có thể ẩn nếu muốn
-            passwordRequiredSpan.style.display = 'none'; // Ẩn dấu *
+            formMethodInput.value = 'PUT'; 
+            passwordInput.required = false; 
+            passwordConfirmInput.required = false; 
+            // passwordConfirmRow.style.display = 'none'; 
+            passwordRequiredSpan.style.display = 'none';
             passwordHelpText.innerText = 'Bỏ trống nếu không muốn thay đổi mật khẩu.';
             statusRow.style.display = 'block'; // Hiện lựa chọn trạng thái
             saveStaffButton.innerText = 'Lưu Thay Đổi'; // Đổi text nút submit
@@ -420,10 +418,9 @@
 
             if (isEditMode) {
                 modalTitle.innerText = 'Sửa Thông Tin Nhân Viên - Có lỗi xảy ra';
-                // Logic điền lại form SỬA phức tạp hơn vì cần ID để tạo đúng action URL
-                // Bạn có thể cần lấy ID từ route cũ hoặc 1 input ẩn để gọi lại prepareEditModal
+
                 console.error("Lỗi validation ở chế độ sửa. Cần thêm logic điền lại dữ liệu 'old()' và action.");
-                // Tạm thời chỉ đặt lại action và method
+                
                 let failedEditAction = staffForm.action; // Lấy action URL đã được đặt bởi prepareEditModal trước đó
                 formMethodInput.value = 'PUT';
                 saveStaffButton.innerText = 'Thử Lưu Lại';

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
 {
     Schema::table('users', function (Blueprint $table) {
-        $table->json('permissions')->nullable()->after('status'); // Thêm cột permissions kiểu JSON
+        $table->json('permissions')->nullable()->after('status'); 
     });
 }
 public function down(): void

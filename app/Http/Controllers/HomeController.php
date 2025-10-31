@@ -18,7 +18,7 @@ class HomeController extends Controller
     {
         $sancaulong = Facilities::with('Court_prices')->take(3)->get();
         // dd($sancaulong->toArray());
-        return view('index',compact('sancaulong'));
+        return view('index', compact('sancaulong'));
     }
 
     public function listing_grid()
@@ -33,7 +33,7 @@ class HomeController extends Controller
             ->where('status', '1')
             ->take($limit)
             ->get();
-        
+
         // 3. Kiểm tra trạng thái còn dữ liệu để tải nữa hay không
         // Nếu số lượng sân lấy được bằng LIMIT, thì chắc chắn còn dữ liệu tiếp theo.
         $hasMoreData = $danhsachsan->count() === $limit;
@@ -41,7 +41,7 @@ class HomeController extends Controller
         // 4. Truyền các biến cần thiết sang Blade
         return view('listing-grid', compact('danhsachsan', 'hasMoreData', 'total_count', 'limit'));
     }
-    
+
     // HÀM MỚI: Xử lý request AJAX/Fetch (Trả về JSON)
     public function load_more_san(Request $request)
     {
@@ -51,17 +51,17 @@ class HomeController extends Controller
         // Query cơ sở dữ liệu với skip và take
         $sans = Facilities::query()
             ->where('status', '1') // Dùng cùng trạng thái với hàm trên
-            ->skip($offset) 
+            ->skip($offset)
             ->take($limit)
             ->get();
-        
+
         // Kiểm tra còn dữ liệu để tải nữa hay không
         $hasMore = $sans->count() === $limit;
 
         // Trả về dữ liệu dưới dạng JSON
         return response()->json([
-            'data'    => $sans,
-            'offset'  => (int)$offset + $limit, // Cập nhật offset mới cho JS
+            'data' => $sans,
+            'offset' => (int) $offset + $limit, // Cập nhật offset mới cho JS
             'hasMore' => $hasMore,
         ]);
     }
@@ -76,7 +76,7 @@ class HomeController extends Controller
             return response()->json(['error' => 'Không tìm thấy sản phẩm'], 404);
         }
 
-        return view('venue-details',compact('thongtinsan'));
+        return view('venue-details', compact('thongtinsan'));
     }
 
     public function show($idSan)
@@ -106,7 +106,7 @@ class HomeController extends Controller
             $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
         }
 
-        
+
         // Từ điển chuyển đổi thứ sang tiếng Việt
         $thuTiengViet = [
             'Mon' => 'Thứ hai',
@@ -148,14 +148,14 @@ class HomeController extends Controller
 
         // Toggle: nếu đã tồn tại thì xóa
         $existsKey = null;
-        foreach($slots as $key => $s){
-            if($s['court']==$slotInfo['court'] && $s['date']==$slotInfo['date'] && $s['slot']==$slotInfo['slot']){
+        foreach ($slots as $key => $s) {
+            if ($s['court'] == $slotInfo['court'] && $s['date'] == $slotInfo['date'] && $s['slot'] == $slotInfo['slot']) {
                 $existsKey = $key;
                 break;
             }
         }
 
-        if($existsKey !== null){
+        if ($existsKey !== null) {
             unset($slots[$existsKey]);
             $slots = array_values($slots);
         } else {
@@ -166,16 +166,16 @@ class HomeController extends Controller
         return response()->json($slots);
     }
 
-public function removeSlot(Request $request)
-{
-    $slots = session('selected_slots', []);
-    unset($slots[$request->index]);
-    session(['selected_slots' => array_values($slots)]);
+    public function removeSlot(Request $request)
+    {
+        $slots = session('selected_slots', []);
+        unset($slots[$request->index]);
+        session(['selected_slots' => array_values($slots)]);
 
-    return response()->json(array_values($slots));
-}
+        return response()->json(array_values($slots));
+    }
 
-// Hàm nhận dữ liệu từ form và đưa đến trang thanh toán
+    // Hàm nhận dữ liệu từ form và đưa đến trang thanh toán
     public function payments(Request $request)
     {
         // Dữ liệu slots gửi từ form, dưới dạng JSON
@@ -197,13 +197,10 @@ public function removeSlot(Request $request)
         $facilities = Facilities::find($request->input('facility_id'));
         $countSlots = count($slots);
 
-        if($countSlots % 2 === 0)
-        {
-            $result = ($countSlots/2).' tiếng';
-        }
-        else 
-        {
-            $result = (($countSlots - 1)/2).' tiếng rưỡi'; 
+        if ($countSlots % 2 === 0) {
+            $result = ($countSlots / 2) . ' tiếng';
+        } else {
+            $result = (($countSlots - 1) / 2) . ' tiếng rưỡi';
         }
         // Truyền sang view thanh toán
         return view('payment', [
@@ -219,43 +216,49 @@ public function removeSlot(Request $request)
     }
 
     public function payments_complete(Request $request)
-{
-    $slots = json_decode($request->input('slots'), true);
-    $invoiceDetailId = $request->input('invoice_details_id');
-    $userId = $request->input('user_id');
-    $facility_id = $request->input('facility_id');
-
-    $total = 0;
-    foreach ($slots as $slot)
     {
-        $total += $slot['price'];
-    }
-    
-    DB::table(table: 'invoice_details')->insert([
+        $slots = json_decode($request->input('slots'), true);
+        $invoiceDetailId = $request->input('invoice_details_id');
+        $userId = $request->input('user_id');
+        $facility_id = $request->input('facility_id');
+
+        $total = 0;
+        foreach ($slots as $slot) {
+            $total += $slot['price'];
+        }
+
+        DB::table(table: 'invoice_details')->insert([
             'invoice_detail_id' => $invoiceDetailId,
             'sub_total' => $total
-        ]);  
-    if (!$slots || !is_array($slots)) {
-        return back()->with('error', 'Không có dữ liệu đặt sân!');
-    }
-    
-    // dd($slots, $invoiceDetailId, $userId, $facility_id);
-    foreach ($slots as $slot) {
-        DB::table(table: 'bookings')->insert([
-            'invoice_detail_id' => $invoiceDetailId,
-            'user_id' => $userId,
-            'facility_id' => $facility_id,
-            'court_id' => $slot['court'],
-            'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
-            'time_slot_id' => $slot['time_slot_id'],
-            'unit_price' => $slot['price'],
         ]);
+        if (!$slots || !is_array($slots)) {
+            return back()->with('error', 'Không có dữ liệu đặt sân!');
+        }
+
+        // dd($slots, $invoiceDetailId, $userId, $facility_id);
+        foreach ($slots as $slot) {
+            DB::table(table: 'bookings')->insert([
+                'invoice_detail_id' => $invoiceDetailId,
+                'user_id' => $userId,
+                'facility_id' => $facility_id,
+                'court_id' => $slot['court'],
+                'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
+                'time_slot_id' => $slot['time_slot_id'],
+                'unit_price' => $slot['price'],
+            ]);
+        }
+
+
+
+        return redirect()->route('chi_tiet_san', ['idSan' => $facility_id])
+            ->with('success', 'Thanh toán và đặt sân thành công!');
     }
 
-    
-
-    return redirect()->route('chi_tiet_san', ['idSan' => $facility_id])
-        ->with('success', 'Thanh toán và đặt sân thành công!');
-}
-
+    public function profile($id) // Tham số $id từ URL
+    {
+        $user = Users::findOrFail($id); // Tìm user theo ID
+        
+        // Bạn cần một view để hiển thị hồ sơ này
+        return view('user.profile_page', compact('user')); 
+    }
 }

@@ -75,6 +75,7 @@
             margin-left: var(--sidebar-width);
             padding: 2rem;
         }
+
         .card {
             border: none;
             border-radius: 0.75rem;
@@ -139,22 +140,22 @@
         <hr style="border-color: #495057;">
         <ul class="nav header-navbar-rht">
             @auth
-                <!-- Dropdown User -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#" id="userDropdown"
                         role="button" data-bs-toggle="dropdown">
-                        <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}"
-                            alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="32"
-                            alt="Avatar">
+
+                        <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
+                            alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="32">
+
                         <span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <!-- Header -->
                         <li class="dropdown-header">
                             <div class="d-flex align-items-center">
-                                <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}"
-                                    alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="40"
-                                    alt="">
+
+                                <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
+                                    alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="40">
+
                                 <div>
                                     <div class="fw-semibold">{{ auth()->user()->fullname }}</div>
                                 </div>
@@ -163,11 +164,11 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('user.profile', auth()->id()) }}">
+                        <!-- <li>
+                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                 <i class="fas fa-user me-2"></i> Hồ sơ
                             </a>
-                        </li>
+                        </li> -->
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
@@ -201,7 +202,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
-    
+
     @stack('scripts')
 </body>
 

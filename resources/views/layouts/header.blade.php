@@ -1,5 +1,8 @@
 @yield('login')
 @yield('register')
+@yield('edit_cus_content')
+
+<!-- ============================================================================================================= -->
 <!DOCTYPE html>
 <html lang="vi" data-bs-theme="light">
 <head>
@@ -34,7 +37,28 @@
                         <a id="mobile_btn" href="javascript:void(0);" class="text-white">
                             <span class="bar-icon"><span></span><span></span><span></span></span>
                         </a>
-                        <a href="{{ route('trang_chu') }}" class="navbar-brand logo">
+                        <a href="
+                            @auth {{-- Kiểm tra đã đăng nhập chưa --}}
+                                @switch(Auth::user()->role_id)
+                                    @case(1) {{-- Admin --}}
+                                        {{ route('admin.index') }}
+                                        @break
+                                    @case(2) {{-- Owner --}}
+                                        {{ route('owner.index') }}
+                                        @break
+                                    @case(4) {{-- Manager --}}
+                                        {{ route('manager.index') }}
+                                        @break
+                                    @case(3) {{-- Staff --}}
+                                        {{ route('staff.index') }}
+                                        @break
+                                    @case(5) {{-- Customer --}}
+                                    @default {{-- Mặc định (bao gồm Customer) --}}
+                                        {{ route('trang_chu') }}
+                                @endswitch
+                            @else {{-- Nếu là Guest (Khách) --}}
+                                {{ route('trang_chu') }}
+                            @endauth" class="navbar-brand logo">
                             <img src="{{ asset('img/logo.svg') }}" class="img-fluid" alt="Logo">
                         </a>
                     </div>
