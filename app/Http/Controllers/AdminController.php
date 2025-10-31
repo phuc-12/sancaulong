@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Models\Invoice;
 use App\Models\Facility;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -52,7 +55,8 @@ class AdminController extends Controller
             $growthStatus = 'down';
         }
         $percentageChangeAbs = abs($percentageChange);
-
+//=============================================================================================================
+//CART
 
         // === TÍNH TOÁN DOANH THU ===
         // --- 1. Lấy doanh thu (Tháng này) ---
@@ -81,7 +85,6 @@ class AdminController extends Controller
         elseif ($revenuePercentageChange < 0)
             $revenueGrowthStatus = 'down';
         $revenuePercentageChangeAbs = abs($revenuePercentageChange);
-
 
         // === ĐẾM SỐ DOANH NGHIỆP ===
         $totalOwners = Users::withoutGlobalScopes()
@@ -119,6 +122,8 @@ class AdminController extends Controller
             'pendingFacilities' => $pendingFacilities,
         ]);
     }
+//=============================================================================================================
+//BIỂU ĐỒ
 
     // === CUNG CẤP DỮ LIỆU CHO BIỂU ĐỒ ===
     public function getRevenueData(Request $request)
@@ -172,6 +177,9 @@ class AdminController extends Controller
         ]);
     }
 
+//=============================================================================================================
+//DOANH NGHIỆP
+
     // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ ===
     public function approveFacility(Facility $facility)
     {
@@ -209,14 +217,85 @@ class AdminController extends Controller
         return redirect()->route('admin.facilities.index')
             ->with('success', "Đã tạm khóa hoạt động của cơ sở '{$facility->facility_name}'.");
     }
-    
+
     //KÍCH HOẠT LẠI CƠ SỞ
     public function activateFacility(Facility $facility)
     {
-         // (Kiểm tra quyền Admin)
+        // (Kiểm tra quyền Admin)
         // Kích hoạt lại đồng nghĩa với việc duyệt lại
         $facility->update(['status' => 'đã duyệt']); // Đặt trạng thái là 'đã duyệt'
         return redirect()->route('admin.facilities.index')
-                         ->with('success', "Đã kích hoạt lại hoạt động cho cơ sở '{$facility->facility_name}'.");
+            ->with('success', "Đã kích hoạt lại hoạt động cho cơ sở '{$facility->facility_name}'.");
+    }
+
+//=============================================================================================================
+//KHÁCH HÀNG
+
+    // === HIỂN THỊ DANH SÁCH KHÁCH HÀNG ===
+    public function listCustomers()
+    {
+        // Lấy tất cả user có role_id = 5 (Customer)
+        $customers = Users::where('role_id', 5)
+            ->orderBy('fullname', 'asc')
+            ->paginate(15); // Phân trang
+
+        // Trả về view mới, truyền danh sách khách hàng
+        return view('admin.customers.index', compact('customers'));
+    }
+
+    // === HÀM MỚI: HIỂN THỊ FORM SỬA KHÁCH HÀNG ===
+    public function editCustomer(Users $user) // Laravel tự động tìm User (Users)
+    {
+        // Kiểm tra lại để chắc chắn đây là khách hàng
+        if ($user->role_id != 5) {
+            abort(404, 'Không phải tài khoản khách hàng.');
+        }
+
+        // Trả về view form sửa, truyền thông tin $user
+        return view('admin.customers.edit', compact('user'));
+    }
+
+    // === HÀM MỚI: XỬ LÝ CẬP NHẬT KHÁCH HÀNG ===
+    public function updateCustomer(Request $request, Users $user)
+    {
+        // Kiểm tra lại
+        if ($user->role_id != 5) {
+            abort(404);
+        }
+
+        // --- VALIDATION DỮ LIỆU ---
+        $validatedData = $request->validate([
+            'fullname' => 'required|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'CCCD' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore($user->user_id, 'user_id')],
+            // Email phải duy nhất, ngoại trừ chính user này
+            'email' => ['required', 'string', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user->user_id, 'user_id')],
+            'status' => 'required|boolean',
+            'password' => ['nullable', 'confirmed', Password::min(8)], 
+        ]);
+
+        // --- CHUẨN BỊ DỮ LIỆU CẬP NHẬT ---
+        $updateData = [
+            'fullname' => $validatedData['fullname'],
+            'email' => $validatedData['email'],
+            'phone' => $validatedData['phone'],
+            'address' => $validatedData['address'],
+            'CCCD' => $validatedData['CCCD'],
+            'status' => $validatedData['status'],
+        ];
+
+        // --- CẬP NHẬT MẬT KHẨU (NẾU ADMIN NHẬP) ---
+        if (!empty($validatedData['password'])) {
+            $updateData['password'] = Hash::make($validatedData['password']);
+        }
+
+        // --- CẬP NHẬT VÀO CSDL ---
+        $user->update($updateData);
+
+        // --- PHẢN HỒI ---
+        // Quay lại trang danh sách khách hàng
+        return redirect()->route('admin.customers.index')
+            ->with('success', "Đã cập nhật thông tin khách hàng '{$user->fullname}' thành công!");
     }
 }

@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="vi" data-bs-theme="light">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DreamSports</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>DreamSports</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/owl-carousel/owl.carousel.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/owl-carousel/owl.theme.default.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/aos/aos.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/fontawesome/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/feather.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    {{-- <link rel="stylesheet" href="{{ asset('css/chatbox.css') }}"> --}}
+	<!-- CSS -->
+	<link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/owl-carousel/owl.carousel.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/owl-carousel/owl.theme.default.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/aos/aos.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/fontawesome/css/all.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('css/feather.css') }}">
+	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+	{{--
+	<link rel="stylesheet" href="{{ asset('css/chatbox.css') }}"> --}}
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="{{ asset('img/favicon.png') }}">
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="{{ asset('img/favicon.png') }}">
 
 	<script src="{{ asset('js/thanhtoanqr.js') }}"></script>
 </head>
+
 <body>
 
 <div class="main-wrapper">
@@ -209,15 +212,17 @@
 {{-- -------------------------------------- --}}
 
 <footer class="footer">
+
 			<div class="container">
 				<!-- Footer Join -->
 				<div class="footer-join aos" data-aos="fade-up">
 					<h2>We Welcome Your Passion And Expertise</h2>
 					<p class="sub-title">Join our empowering sports community today and grow with us.</p>
-					<a href="register.php" class="btn btn-primary"><i class="feather-user-plus"></i> Tham gia cùng chúng tôi</a>
+					<a href="register.php" class="btn btn-primary"><i class="feather-user-plus"></i> Tham gia cùng chúng
+						tôi</a>
 				</div>
 				<!-- /Footer Join -->
-			
+
 				<!-- Footer Top -->
 				<div class="footer-top">
 					<div class="row">
@@ -232,22 +237,30 @@
 									</div>
 									<div class="footer-call">
 										<span>Need Live Suppot</span>
-										<p><a href="https://dreamsports.dreamstechnologies.com/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="94f0e6f1f5f9e7e4fbe6e0e7d4f1ecf5f9e4f8f1baf7fbf9">[email&#160;protected]</a></p>
+										<p><a href="https://dreamsports.dreamstechnologies.com/cdn-cgi/l/email-protection"
+												class="__cf_email__"
+												data-cfemail="94f0e6f1f5f9e7e4fbe6e0e7d4f1ecf5f9e4f8f1baf7fbf9">[email&#160;protected]</a>
+										</p>
 									</div>
 								</div>
 								<div class="social-icon">
 									<ul>
 										<li>
-											<a href="javascript:void(0);" class="facebook" ><i class="fab fa-facebook-f"></i> </a>
+											<a href="javascript:void(0);" class="facebook"><i
+													class="fab fa-facebook-f"></i>
+											</a>
 										</li>
 										<li>
-											<a href="javascript:void(0);" class="twitter" ><i class="fab fa-twitter"></i> </a>
+											<a href="javascript:void(0);" class="twitter"><i class="fab fa-twitter"></i>
+											</a>
 										</li>
 										<li>
-											<a href="javascript:void(0);" class="instagram" ><i class="fab fa-instagram"></i></a>
+											<a href="javascript:void(0);" class="instagram"><i
+													class="fab fa-instagram"></i></a>
 										</li>
 										<li>
-											<a href="javascript:void(0);" class="linked-in" ><i class="fab fa-linkedin-in"></i></a>
+											<a href="javascript:void(0);" class="linked-in"><i
+													class="fab fa-linkedin-in"></i></a>
 										</li>
 									</ul>
 								</div>
@@ -359,7 +372,8 @@
 										<a href="#"><img src="{{ asset('img/icons/icon-apple.svg') }}" alt="Apple"></a>
 									</li>
 									<li>
-										<a href="#"><img src="{{ asset('img/icons/google-icon.svg') }}" alt="Google"></a>
+										<a href="#"><img src="{{ asset('img/icons/google-icon.svg') }}"
+												alt="Google"></a>
 									</li>
 								</ul>
 							</div>
@@ -369,7 +383,7 @@
 				</div>
 				<!-- /Footer Top -->
 			</div>
-			
+
 			<!-- Footer Bottom -->
 			<div class="footer-bottom">
 				<div class="container">
@@ -378,7 +392,7 @@
 						<div class="row align-items-center">
 							<div class="col-md-6">
 								<div class="copyright-text">
-									<p class="mb-0">&copy; 2023 DreamSports  - All rights reserved.</p>
+									<p class="mb-0">&copy; 2023 DreamSports - All rights reserved.</p>
 								</div>
 							</div>
 							<div class="col-md-6">
@@ -414,59 +428,73 @@
 				</div>
 			</div>
 			<!-- /Footer Bottom -->
-			
+
 		</footer>
 		<!-- /Footer -->
 		<!-- chatbox -->
-		
+
 		<!-- /chatbox -->
-	</div>
-	<!-- /Main Wrapper -->
+		</div>
+		<!-- /Main Wrapper -->
 
-	<!-- scrollToTop start -->
-	<div class="progress-wrap active-progress">
-		<svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
-		<path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919px, 307.919px; stroke-dashoffset: 228.265px;"></path>
-		</svg>
-	</div>
-	<!-- scrollToTop end -->
+		<!-- scrollToTop start -->
+		<div class="progress-wrap active-progress">
+			<svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
+				<path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98"
+					style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919px, 307.919px; stroke-dashoffset: 228.265px;">
+				</path>
+			</svg>
+		</div>
+		<!-- scrollToTop end -->
 
-	
 
-	<!-- jQuery -->
-	<script data-cfasync="false" src="../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{ asset('') }}js/jquery-3.7.1.min.js" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
 
-	<!-- Bootstrap Core JS -->
-	<script src="{{ asset('js/bootstrap.bundle.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+		<!-- jQuery -->
+		<script data-cfasync="false" src="../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+		<script src="{{ asset('js/jquery-3.7.1.min.js') }}" type=""></script>
 
-	<!-- Select JS -->
-	<script src="{{ asset('plugins/select2/js/select2.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+		<!-- Bootstrap Core JS -->
+		<script src="{{ asset('js/bootstrap.bundle.min.js') }}"
+			type=""></script>
 
-	<!-- Owl Carousel JS -->
-	<script src="{{ asset('plugins/owl-carousel/owl.carousel.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+		<!-- Select JS -->
+		<script src="{{ asset('plugins/select2/js/select2.min.js') }}"
+			type="e4c26da156d9fcc"></script>
 
-	<!-- Aos -->
-	<script src="{{ asset('plugins/aos/aos.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+		<!-- Owl Carousel JS -->
+		<script src="{{ asset('plugins/owl-carousel/owl.carousel.min.js') }}"
+			type=""></script>
 
-	<!-- Counterup JS -->
-	<script src="{{ asset('js/jquery.waypoints.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
-	<script src="{{ asset('js/jquery.counterup.min.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+		<!-- Aos -->
+		<script src="{{ asset('plugins/aos/aos.js') }}" type=""></script>
 
-	<!-- Top JS -->
-	<script src="{{ asset('js/backToTop.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+		<!-- Counterup JS -->
+		<script src="{{ asset('js/jquery.waypoints.js') }}" type=""></script>
+		<script src="{{ asset('js/jquery.counterup.min.js') }}"
+			type=""></script>
 
-	<!-- Custom JS -->
-	<script src="{{ asset('js/script.js') }}" type="e4c26da156d9fccf88a221dd-text/javascript"></script>
+		<!-- Top JS -->
+		<script src="{{ asset('js/backToTop.js') }}" type=""></script>
 
-<script src="../cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="e4c26da156d9fccf88a221dd-|49" defer></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"92a5cc7dff1f1a5b","version":"2025.3.0","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"token":"3ca157e612a14eccbb30cf6db6691c29","b":1}' crossorigin="anonymous"></script>
+		<!-- Custom JS -->
+		<script src="{{ asset('js/script.js') }}" type=""></script>
 
-<!-- AOS JS -->
-<script src="{{ asset('plugins/aos/aos.js') }}"></script>
-<script>
-	AOS.init();
-</script>
+		<script src="../cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js"
+			data-cf-settings="e4c26da156d9fccf88a221dd-|49" defer></script>
+		<script defer
+			src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+			integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+			data-cf-beacon='{"rayId":"92a5cc7dff1f1a5b","version":"2025.3.0","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"token":"3ca157e612a14eccbb30cf6db6691c29","b":1}'
+			crossorigin="anonymous"></script>
+
+		<!-- AOS JS -->
+		<script src="{{ asset('plugins/aos/aos.js') }}"></script>
+		<script>
+			AOS.init();
+		</script>
+		
 </body>
 
 <!-- Mirrored from dreamsports.dreamstechnologies.com/html/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 03 Apr 2025 04:28:07 GMT -->
-</html>
 
+</html>

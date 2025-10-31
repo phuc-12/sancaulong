@@ -97,15 +97,15 @@
         {{-- MENU CỦA NHÂN VIEN --}}
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
-                <a href="{{ route('staff.index') }}" 
-                   class="nav-link {{ request()->routeIs('staff.index') ? 'active' : '' }}">
+                <a href="{{ route('staff.index') }}"
+                    class="nav-link {{ request()->routeIs('staff.index') ? 'active' : '' }}">
                     <i class="bi bi-calendar-day"></i>
                     Lịch Đặt Sân (Hôm nay)
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('staff.payment') }}" 
-                   class="nav-link {{ request()->routeIs('staff.payment') ? 'active' : '' }}">
+                <a href="{{ route('staff.payment') }}"
+                    class="nav-link {{ request()->routeIs('staff.payment') ? 'active' : '' }}">
                     <i class="bi bi-cash-coin"></i>
                     Thanh Toán & Hóa Đơn
                 </a>
@@ -114,22 +114,22 @@
         <hr style="border-color: #495057;">
         <ul class="nav header-navbar-rht">
             @auth
-                <!-- Dropdown User -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#" id="userDropdown"
                         role="button" data-bs-toggle="dropdown">
-                        <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}"
-                            alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="32"
-                            alt="Avatar">
+
+                        <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
+                            alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="32">
+                        
                         <span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <!-- Header -->
                         <li class="dropdown-header">
                             <div class="d-flex align-items-center">
-                                <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}"
-                                    alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="40"
-                                    alt="">
+
+                                <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
+                                    alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="40">
+                                
                                 <div>
                                     <div class="fw-semibold">{{ auth()->user()->fullname }}</div>
                                 </div>
@@ -139,9 +139,9 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li>
-                            <a class="dropdown-item" href="{{ route('user.profile', auth()->id()) }}">
+                            <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
                                 <i class="fas fa-user me-2"></i> Hồ sơ
-                            </a>
+                            </a>    
                         </li>
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"
