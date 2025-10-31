@@ -164,11 +164,11 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <!-- <li>
-                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                        <li>
+                            <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
                                 <i class="fas fa-user me-2"></i> Hồ sơ
-                            </a>
-                        </li> -->
+                            </a>    
+                        </li>
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
