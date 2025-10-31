@@ -459,6 +459,7 @@
                                         </div>
                                         <div class="d-grid btn-block">
                                             <input type="hidden" name="facility_id" id="facility_id" value="{{ $thongtinsan->facility_id }}">
+                                            <input type="hidden" name="user_id" id="user_id" value="{{ $customer->user_id }}">
                                             <button type="submit"
                                                 class="btn btn-secondary d-inline-flex justify-content-center align-items-center"
                                                 name="btnthemyeucau">
@@ -753,17 +754,9 @@
     {{-- THÔNG TIN ĐẶT SÂN --}}
     <div class="white-bg" style="padding-top: 30px;">
         <h4 style="text-align: center;">Thông tin đặt sân</h4>
-        @if(session('success'))
             <div class="alert alert-success">
-                {{ session('success') }}
+                <p>{{ $success_message }}</p>
             </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger">
-                {{ session('error') }}
-            </div>
-        @endif
         <div class="text-end mb-3">
             <div style="float: left;">
                 <a href="{{ route('chi_tiet_san', ['idSan' => $thongtinsan->facility_id]) }}" class="btn btn-success">Reset</a>

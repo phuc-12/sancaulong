@@ -26,417 +26,193 @@
 
 <body>
 
+<div class="main-wrapper">
 
-	<div class="main-wrapper">
-		<!-- Header -->
-		<header class="header header-trans" id="site-header">
-			<div class="container-fluid">
-				<nav class="navbar navbar-expand-lg header-nav">
-					<div class="navbar-header">
-						<a id="mobile_btn" href="javascript:void(0);">
-							<span class="bar-icon"><span></span><span></span><span></span></span>
-						</a>
-						<a href="{{ route('trang_chu') }}" class="navbar-brand logo">
-							<img src="{{ asset('img/logo.svg') }}" class="img-fluid" alt="Logo">
-						</a>
-					</div>
+<!-- Header -->
+<!-- Header -->
+<header class="header header-trans" id="site-header">
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg header-nav">
+            <!-- Logo và Mobile menu -->
+            <div class="navbar-header">
+                <a id="mobile_btn" href="javascript:void(0);" class="text-white">
+                    <span class="bar-icon"><span></span><span></span><span></span></span>
+                </a>
+                <a href="{{ route('trang_chu') }}" class="navbar-brand logo">
+                    <img src="{{ asset('img/logo.svg') }}" class="img-fluid" alt="Logo">
+                </a>
+            </div>
 
-					<div class="main-menu-wrapper">
-						<div class="menu-header">
-							<a href="{{ route('trang_chu') }}" class="menu-logo">
-								<img src="{{ asset('img/logo-black.svg') }}" class="img-fluid" alt="Logo">
-							</a>
-							<a id="menu_close" class="menu-close" href="javascript:void(0);">
-								<i class="fas fa-times"></i>
-							</a>
-						</div>
-						<ul class="main-nav">
-							<li class="{{ request()->is('/') ? 'active' : '' }}">
-								<a href="{{ route('trang_chu') }}">Trang Chủ</a>
-							</li>
-							<li class="has-submenu">
-								<a href="#">Sân Cầu Lông <i class="fas fa-chevron-down"></i></a>
-								<ul class="submenu">
-									<li><a href="#">Book a Court</a></li>
-									<li><a href="#">Profile Settings</a></li>
-								</ul>
-							</li>
-							<li><a href="#">Liên Hệ</a></li>
-						</ul>
-					</div>
+            <!-- Menu -->
+            <div class="main-menu-wrapper">
+                <div class="menu-header">
+                    <a href="{{ route('trang_chu') }}" class="menu-logo">
+                        <img src="{{ asset('img/logo-black.svg') }}" class="img-fluid" alt="Logo">
+                    </a>
+                    <a id="menu_close" class="menu-close" href="javascript:void(0);">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+                <ul class="main-nav">
+                    <li class="{{ request()->is('/') ? 'active' : '' }}">
+                        <a href="{{ route('trang_chu') }}">Trang Chủ</a>
+                    </li>
+                    <li class="has-submenu">
+                        <a href="#">Sân Cầu Lông <i class="fas fa-chevron-down"></i></a>
+                        <ul class="submenu">
+                            <li><a href="#">Book a Court</a></li>
+                            <li><a href="#">Profile Settings</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">Liên Hệ</a></li>
+                </ul>
+            </div>
 
-					<ul class="nav header-navbar-rht">
-						@auth
-							<li class="nav-item">
-								<a class="nav-link btn btn-outline-light btn-sm" href="{{-- route('user.courts') --}}">
-									<i class="feather-check-circle"></i> Lịch Đặt Của Bạn
-								</a>
-							</li>
-							<li class="nav-item dropdown">
-								{{-- Nút Dropdown --}}
-								<a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
-									id="userDropdown" role="button" data-bs-toggle="dropdown">
+            <!-- User -->
+            <ul class="nav header-navbar-rht">
+                @auth
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light btn-sm" href="{{ route('user.courts') }}">
+                            <i class="feather-check-circle"></i> Lịch Đặt Của Bạn
+                        </a>
+                    </li>
+                    <!-- Dropdown User -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center text-white"
+                           href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}" 
+                            	alt="{{ auth()->user()->fullname ?? 'Avatar' }}"
+                                class="rounded-circle me-2" width="32" alt="Avatar">
+                            <span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <!-- Header -->
+                            <li class="dropdown-header">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ asset('img/profiles/' . (auth()->user()->avatar ?? 'avatar-05.jpg')) }}" 
+                            			alt="{{ auth()->user()->fullname ?? 'Avatar' }}"
+                                        class="rounded-circle me-2" width="40" alt="">
+                                    <div>
+                                        <div class="fw-semibold">{{ auth()->user()->fullname }}</div>
+                                        {{-- <small class="text-muted">{{ auth()->user()->email }}</small> --}}
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('user.profile', auth()->id()) }}">
+                                    <i class="fas fa-user me-2"></i> Hồ sơ
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="javascript:void(0)"
+                                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                                </a>
+                                <form id="logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
+                                    @csrf
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                @else
+                    <li class="nav-item">
+                        <div class="nav-link btn btn-outline-light log-register">
+                            <a href="{{ route('login') }}"><i class="feather-users"></i> Đăng Nhập</a> /
+                            <a href="{{ route('register') }}">Đăng Ký</a>
+                        </div>
+                    </li>
+                @endauth
+            </ul>
+        </nav>
+    </div>
+</header>
+<!-- /Header -->
 
-									<img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
-										alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2"
-										width="32">
+<!-- CSS Fix Dropdown -->
+<style>
+    .header-trans {
+        background: rgba(40, 40, 40, 0.92) !important;
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        transition: background 0.3s ease;
+    }
+    .header-trans.scrolled {
+        background: rgba(30, 30, 30, 0.98) !important;
+    }
+    /* Không ép toàn bộ * thành màu trắng nữa */
+    .header-trans .navbar-nav .nav-link,
+    .header-trans .navbar-brand,
+    .header-trans .main-nav > li > a {
+        color: #ffffff !important;
+    }
 
-									<span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
-								</a>
-								{{-- Nội dung Dropdown --}}
-								<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-									<li class="dropdown-header">
-										<div class="d-flex align-items-center">
-
-											<img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
-												alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2"
-												width="40">
-
-											<div>
-												<div class="fw-semibold">{{ auth()->user()->fullname }}</div>
-											</div>
-										</div>
-									</li>
-									<li>
-										<hr class="dropdown-divider">
-									</li>
-									<li>
-										{{-- SỬA LỖI Ở ĐÂY: Xóa 1 dấu ) bị thừa --}}
-										<a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
-											<i class="fas fa-user me-2"></i> Hồ sơ
-										</a>
-									</li>
-									<li>
-										<a class="dropdown-item text-danger" href="javascript:void(0)"
-											onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-											<i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
-										</a>
-										<form id="logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
-											@csrf
-										</form>
-									</li>
-								</ul>
-							</li>
-						@else {{-- Nếu là Guest --}}
-							<li class="nav-item">
-								<div class="nav-link btn btn-outline-light log-register">
-									<a href="{{ route('login') }}"><i class="feather-users"></i> Đăng Nhập</a> /
-									<a href="{{ route('register') }}">Đăng Ký</a>
-								</div>
-							</li>
-						@endauth
-					</ul>
-				</nav>
-			</div>
-		</header>
-		<!-- /Header -->
-
-		<!-- CSS Fix Dropdown -->
-		<style>
-			.header-trans {
-				background: rgba(40, 40, 40, 0.92) !important;
-				backdrop-filter: blur(8px);
-				border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-				transition: background 0.3s ease;
-			}
-
-			.header-trans.scrolled {
-				background: rgba(30, 30, 30, 0.98) !important;
-			}
-
-			/* Không ép toàn bộ * thành màu trắng nữa */
-			.header-trans .navbar-nav .nav-link,
-			.header-trans .navbar-brand,
-			.header-trans .main-nav>li>a {
-				color: #ffffff !important;
-			}
-
-			/* Dropdown sửa màu */
-			.dropdown-menu {
-				background-color: #ffffff;
-				color: #333 !important;
-				border-radius: 10px;
-				min-width: 220px;
-				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-				z-index: 1055;
-			}
-
-			.dropdown-menu .dropdown-item {
-				color: #333 !important;
-				font-size: 0.95rem;
-				padding: 0.5rem 1rem;
-			}
-
-			.dropdown-menu .dropdown-item:hover {
-				background-color: #f1f1f1;
-			}
-
-			.dropdown-item.text-danger:hover {
-				background: rgba(220, 53, 69, 0.1);
-			}
-		</style>
+    /* Dropdown sửa màu */
+    .dropdown-menu {
+        background-color: #ffffff;
+        color: #333 !important;
+        border-radius: 10px;
+        min-width: 220px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        z-index: 1055;
+    }
+    .dropdown-menu .dropdown-item {
+        color: #333 !important;
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+    }
+    .dropdown-menu .dropdown-item:hover {
+        background-color: #f1f1f1;
+    }
+    .dropdown-item.text-danger:hover {
+        background: rgba(220, 53, 69, 0.1);
+    }
+</style>
 
 
-	</div> <!-- /.main-wrapper -->
+</div> <!-- /.main-wrapper -->
 
-	<!-- Bootstrap JS -->
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-	<script>
-		// CHẠY SAU KHI DOM LOAD XONG
-		document.addEventListener("DOMContentLoaded", function () {
-			feather.replace();
-		});
-	</script>
-	<script>
-		document.addEventListener("DOMContentLoaded", function () {
-			const header = document.getElementById('site-header');
-			let ticking = false;
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<script>
+    // CHẠY SAU KHI DOM LOAD XONG
+    document.addEventListener("DOMContentLoaded", function () {
+        feather.replace();
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const header = document.getElementById('site-header');
+        let ticking = false;
 
-			function updateHeader() {
-				header.classList.toggle('scrolled', window.scrollY > 30);
-				ticking = false;
-			}
+        function updateHeader() {
+            header.classList.toggle('scrolled', window.scrollY > 30);
+            ticking = false;
+        }
 
-			window.addEventListener('scroll', function () {
-				if (!ticking) {
-					window.requestAnimationFrame(updateHeader);
-					ticking = true;
-				}
-			});
-		});
-	</script>
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                window.requestAnimationFrame(updateHeader);
+                ticking = true;
+            }
+        });
+    });
+</script>
 
-	{{-- -------------------------------------- --}}
-	@yield('index_content')
-	@yield('listing-grid_content')
-	@yield('venue-details_content')
-	@yield('payments_content')
-	@yield('login')
-	@yield('payment_content')
-	@yield('contract_content')
-	{{-- -------------------------------------- --}}
+{{-- -------------------------------------- --}}
+@yield('index_content')
+@yield('listing-grid_content')
+@yield('venue-details_content')
+@yield('payments_content')
+@yield('login')
+@yield('payment_content')
+@yield('contract_content')
+@yield('payment_contract_content')
+{{-- -------------------------------------- --}}
 
-	<footer class="footer">
-		<div class="container">
-			<!-- Footer Join -->
-			<div class="footer-join aos" data-aos="fade-up">
-				<h2>We Welcome Your Passion And Expertise</h2>
-				<p class="sub-title">Join our empowering sports community today and grow with us.</p>
-				<a href="register.php" class="btn btn-primary"><i class="feather-user-plus"></i> Tham gia cùng chúng
-					tôi</a>
-			</div>
-			<!-- /Footer Join -->
+<footer class="footer">
 
-			<!-- Footer Top -->
-			<div class="footer-top">
-				<div class="row">
-					<div class="col-lg-2 col-md-6">
-						<!-- Footer Widget -->
-						<div class="footer-widget footer-menu">
-							<h4 class="footer-title">Contact us</h4>
-							<div class="footer-address-blk">
-								<div class="footer-call">
-									<span>Toll free Customer Care</span>
-									<p>+017 123 456 78</p>
-								</div>
-								<div class="footer-call">
-									<span>Need Live Suppot</span>
-									<p><a href="https://dreamsports.dreamstechnologies.com/cdn-cgi/l/email-protection"
-											class="__cf_email__"
-											data-cfemail="94f0e6f1f5f9e7e4fbe6e0e7d4f1ecf5f9e4f8f1baf7fbf9">[email&#160;protected]</a>
-									</p>
-								</div>
-							</div>
-							<div class="social-icon">
-								<ul>
-									<li>
-										<a href="javascript:void(0);" class="facebook"><i class="fab fa-facebook-f"></i>
-										</a>
-									</li>
-									<li>
-										<a href="javascript:void(0);" class="twitter"><i class="fab fa-twitter"></i>
-										</a>
-									</li>
-									<li>
-										<a href="javascript:void(0);" class="instagram"><i
-												class="fab fa-instagram"></i></a>
-									</li>
-									<li>
-										<a href="javascript:void(0);" class="linked-in"><i
-												class="fab fa-linkedin-in"></i></a>
-									</li>
-								</ul>
-							</div>
-						</div>
-						<!-- /Footer Widget -->
-
-					</div>
-					<ul class="main-nav">
-						<li class="{{ request()->is('/') ? 'active' : '' }}">
-							<a href="{{ route('trang_chu') }}">Trang Chủ</a>
-						</li>
-						<li class="has-submenu">
-							<a href="#">Sân Cầu Lông <i class="fas fa-chevron-down"></i></a>
-							<ul class="submenu">
-								<li><a href="#">Book a Court</a></li>
-								<li><a href="#">Profile Settings</a></li>
-							</ul>
-						</li>
-						<li><a href="#">Liên Hệ</a></li>
-					</ul>
-				</div>
-
-				<!-- User -->
-				<ul class="nav header-navbar-rht">
-					@auth
-						<li class="nav-item">
-							<a class="nav-link btn btn-outline-light btn-sm" href="{{ route('user.courts') }}">
-								<i class="feather-check-circle"></i> Lịch Đặt Của Bạn
-							</a>
-						</li>
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
-								id="userDropdown" role="button" data-bs-toggle="dropdown">
-
-								<img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
-									alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="32">
-
-								<span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
-							</a>
-							<ul class="dropdown-menu dropdown-menu-end">
-								<li class="dropdown-header">
-									<div class="d-flex align-items-center">
-
-										<img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
-											alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2"
-											width="40">
-
-										<div>
-											<div class="fw-semibold">{{ auth()->user()->fullname }}</div>
-										</div>
-									</div>
-								</li>
-								<li>
-									<hr class="dropdown-divider">
-								</li>
-								<li>
-									<a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
-										<i class="fas fa-user me-2"></i> Hồ sơ
-									</a>
-								</li>
-								<li>
-									<a class="dropdown-item text-danger" href="javascript:void(0)"
-										onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-										<i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
-									</a>
-									<form id="logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
-										@csrf
-									</form>
-								</li>
-							</ul>
-						</li>
-					@else
-						<li class="nav-item">
-							<div class="nav-link btn btn-outline-light log-register">
-								<a href="{{ route('login') }}"><i class="feather-users"></i> Đăng Nhập</a> /
-								<a href="{{ route('register') }}">Đăng Ký</a>
-							</div>
-						</li>
-					@endauth
-				</ul>
-				</nav>
-			</div>
-			</header>
-			<!-- /Header -->
-
-			<!-- CSS Fix Dropdown -->
-			<style>
-				.header-trans {
-					background: rgba(40, 40, 40, 0.92) !important;
-					backdrop-filter: blur(8px);
-					border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-					transition: background 0.3s ease;
-				}
-
-				.header-trans.scrolled {
-					background: rgba(30, 30, 30, 0.98) !important;
-				}
-
-				/* Không ép toàn bộ * thành màu trắng nữa */
-				.header-trans .navbar-nav .nav-link,
-				.header-trans .navbar-brand,
-				.header-trans .main-nav>li>a {
-					color: #ffffff !important;
-				}
-
-				/* Dropdown sửa màu */
-				.dropdown-menu {
-					background-color: #ffffff;
-					color: #333 !important;
-					border-radius: 10px;
-					min-width: 220px;
-					box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-					z-index: 1055;
-				}
-
-				.dropdown-menu .dropdown-item {
-					color: #333 !important;
-					font-size: 0.95rem;
-					padding: 0.5rem 1rem;
-				}
-
-				.dropdown-menu .dropdown-item:hover {
-					background-color: #f1f1f1;
-				}
-
-				.dropdown-item.text-danger:hover {
-					background: rgba(220, 53, 69, 0.1);
-				}
-			</style>
-
-
-		</div> <!-- /.main-wrapper -->
-
-		<!-- Bootstrap JS -->
-		<script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
-		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-		<script>
-			// CHẠY SAU KHI DOM LOAD XONG
-			document.addEventListener("DOMContentLoaded", function () {
-				feather.replace();
-			});
-		</script>
-		<script>
-			document.addEventListener("DOMContentLoaded", function () {
-				const header = document.getElementById('site-header');
-				let ticking = false;
-
-				function updateHeader() {
-					header.classList.toggle('scrolled', window.scrollY > 30);
-					ticking = false;
-				}
-
-				window.addEventListener('scroll', function () {
-					if (!ticking) {
-						window.requestAnimationFrame(updateHeader);
-						ticking = true;
-					}
-				});
-			});
-		</script>
-
-		{{-- -------------------------------------- --}}
-		@yield('index_content')
-		@yield('listing-grid_content')
-		@yield('venue-details_content')
-		@yield('payments_content')
-		@yield('login')
-		@yield('payment_content')
-		{{-- -------------------------------------- --}}
-
-		<footer class="footer">
 			<div class="container">
 				<!-- Footer Join -->
 				<div class="footer-join aos" data-aos="fade-up">

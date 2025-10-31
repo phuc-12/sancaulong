@@ -137,12 +137,15 @@
 							<!-- Featured Item -->
 							@isset($sancaulong)
 								@forelse ($sancaulong as $thongtin)
-									<div class="featured-venues-item aos" data-aos="fade-up" style="width: 380px; height: 582.8px; margin: 10px; display:inline-block">
-									<div class="listing-item mb-0">										
+									<form method="POST" action="{{ route('chi_tiet_san') }}">
+									@csrf
+										<div class="featured-venues-item aos" data-aos="fade-up" style="width: 380px; height: 582.8px; margin: 10px; float: left;">
+										<div class="listing-item mb-0">										
 										<div class="listing-img">
-											<a href="{{ route('chi_tiet_san', ['idSan' => $thongtin->facility_id]) }}">
+											<button type="submit">
+												<input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
 												<img src="{{ asset('img/venues/'.$thongtin->image) }}" alt="">
-											</a>
+											</button>
 											<div class="fav-item-venues">
 												<span class="tag tag-blue">Đang Hoạt Động</span>	
 												
@@ -189,6 +192,7 @@
 										</div>
 									</div>
 								</div>
+									</form>
 								@empty
 									<tr>
 										<td colspan="7" class="text-center">Danh sách hiện tại đang trống</td>

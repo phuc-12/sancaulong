@@ -343,26 +343,78 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="start_date" class="text-white">Ngày bắt đầu:</label>
-                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ $dateStart }}" readonly>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ old('start_date', $dateStart) }}" readonly>
                 
             </div>
             <div class="col-md-6">
                 <label for="end_date" class="text-white">Ngày kết thúc:</label>
-                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ $dateEnd }}" readonly>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ old('end_date', $dateEnd) }}" readonly>
             </div>
         </div>
 
         <h3 class="mb-3 text-white">Lịch đặt sân</h3>
+        @if(!empty($conflicts))
+            <div class="alert alert-danger">
+                <strong>{{ $message ?? 'Có khung giờ trùng!' }}</strong>
+                <table class="table table-bordered mt-2">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Sân</th>
+                            <th>Khung giờ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($conflicts as $c)
+                            @php
+                                $slot = collect($timeSlots)->firstWhere('time_slot_id', $c['time_slot_id']);
+                            @endphp
+                            <tr>
+                                <td>{{ $c['date'] }}</td>
+                                <td>Sân số {{ $c['court_id'] }}</td>
+                                <td>{{ $slot ? $slot->start_time.' - '.$slot->end_time : 'N/A' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+
+
+
+
         {{-- Chọn thứ trong tuần --}}
         <div class="mb-3 text-white">
-            <label><input type="checkbox" name="dayofweek[]" value="2"> Thứ 2</label>
-            <label><input type="checkbox" name="dayofweek[]" value="3"> Thứ 3</label>
-            <label><input type="checkbox" name="dayofweek[]" value="4"> Thứ 4</label>
-            <label><input type="checkbox" name="dayofweek[]" value="5"> Thứ 5</label>
-            <label><input type="checkbox" name="dayofweek[]" value="6"> Thứ 6</label>
-            <label><input type="checkbox" name="dayofweek[]" value="7"> Thứ 7</label>
-            <label><input type="checkbox" name="dayofweek[]" value="8"> Chủ Nhật</label>
-        </div>
+    <label>
+        <input type="checkbox" name="dayofweek[]" value="2"
+            {{ in_array('2', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 2
+    </label>
+    <label>
+        <input type="checkbox" name="dayofweek[]" value="3"
+            {{ in_array('3', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 3
+    </label>
+    <label>
+        <input type="checkbox" name="dayofweek[]" value="4"
+            {{ in_array('4', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 4
+    </label>
+    <label>
+        <input type="checkbox" name="dayofweek[]" value="5"
+            {{ in_array('5', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 5
+    </label>
+    <label>
+        <input type="checkbox" name="dayofweek[]" value="6"
+            {{ in_array('6', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 6
+    </label>
+    <label>
+        <input type="checkbox" name="dayofweek[]" value="7"
+            {{ in_array('7', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 7
+    </label>
+    <label>
+        <input type="checkbox" name="dayofweek[]" value="8"
+            {{ in_array('8', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Chủ Nhật
+    </label>
+</div>
+
 
         {{-- Lưới chọn khung giờ --}}
         <div class="court-grid">
@@ -399,7 +451,8 @@
     </form>
 </div>
 <script>
-    const timeSlots = @json($timeSlots); 
+    const oldSlots = @json(old('time_slots', []));
+    const oldCourts = @json(old('courts', []));
     document.addEventListener('DOMContentLoaded', () => {
     const msg = localStorage.getItem('conflict_message');
     const conflicts = localStorage.getItem('conflicts');
@@ -470,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Toggle chọn sân (nhiều sân)
+    // Toggle chọn sân
     document.querySelectorAll('.court-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             btn.classList.toggle('selected');
@@ -490,14 +543,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // Lưu sân
     const selectedCourts = () => Array.from(document.querySelectorAll('.court-btn.selected')).map(btn => btn.dataset.court);
 
-    // Khi bấm "TIẾP TỤC THANH TOÁN"
+    // Khi bấm "XÁC NHẬN VÀ THANH TOÁN"
     btnSubmit.addEventListener('click', (e) => {
         e.preventDefault();
-        
-        const startDate = new Date(document.getElementById('start_date').value);
-        const endDate = new Date(document.getElementById('end_date').value);
-        const facility_id = document.getElementById('facility_id').value;
-        const user_id = document.getElementById('user_id').value;
+
+        const startDate = document.getElementById('start_date').value;
+        const endDate   = document.getElementById('end_date').value;
+        const facility_id = parseInt(document.getElementById('facility_id').value) || 0;
+        const user_id = parseInt(document.getElementById('user_id').value) || 0;
         const default_price = parseFloat(document.getElementById('default_price').value) || 0;
         const special_price = parseFloat(document.getElementById('special_price').value) || 0;
         const days = selectedDays();
@@ -509,11 +562,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // ✅ Sinh ra các ngày thực tế theo thứ người dùng chọn (kèm slot & court)
-        let actualDates = [];
+        // Tạo actualDates
+        const actualDates = [];
         let current = new Date(startDate);
-
-        while (current <= endDate) {
+        while (current <= new Date(endDate)) {
             const dayOfWeek = current.getDay() === 0 ? 8 : current.getDay() + 1;
             if (days.includes(dayOfWeek.toString())) {
                 actualDates.push({
@@ -525,60 +577,33 @@ document.addEventListener('DOMContentLoaded', function () {
             current.setDate(current.getDate() + 1);
         }
 
-        console.log({
-            startDate: startDate.toISOString().split('T')[0],
-            endDate: endDate.toISOString().split('T')[0],
-            selectedDays: days,
-            selectedSlots: slots,
-            selectedCourts: courts,
-            actualDates: actualDates,
+        // Tạo input ẩn để gửi dữ liệu
+        const hiddenFields = {
+            start_date: startDate,
+            end_date: endDate,
+            day_of_weeks: days,
+            time_slots: slots,
+            courts: courts,
+            actual_dates: actualDates,
             default_price: default_price,
             special_price: special_price,
             facility_id: facility_id,
             user_id: user_id
-        });
+        };
 
-        // ✅ Gửi dữ liệu sang server
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                start_date: startDate.toISOString().split('T')[0],
-                end_date: endDate.toISOString().split('T')[0],
-                day_of_weeks: days,
-                time_slots: slots,
-                courts: courts,
-                actual_dates: actualDates,
-                default_price: default_price,
-                special_price: special_price,
-                facility_id: facility_id,
-                user_id: user_id
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log('✅ Server trả về:', data);
+        for (const key in hiddenFields) {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = JSON.stringify(hiddenFields[key]);
+            form.appendChild(input);
+        }
 
-            if (data.reload) {
-                // 🧠 Lưu dữ liệu trùng tạm vào localStorage
-                localStorage.setItem('conflicts', JSON.stringify(data.conflicts));
-                localStorage.setItem('conflict_message', data.message);
-
-                // 🔁 Reload lại trang
-                window.location.reload();
-            } else {
-                console.log('Không có xung đột');
-            }
-        })
-        .catch(err => {
-            console.error('❌ Lỗi gửi dữ liệu:', err);
-        });
+        form.submit(); // submit form trực tiếp
     });
-
 });
+
+
 </script>
 
 
