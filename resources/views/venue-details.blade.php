@@ -5,227 +5,227 @@
 
 @section('venue-details_content')
     <style>
-    .venue-info h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: #333;
-    }
-    .venue-info ul li {
-        list-style: none;
-        margin-right: 20px;
-        color: #555;
-        font-size: 14px;
-    }
-    .venue-info ul li i {
-        color: #28a745;
-        margin-right: 6px;
-    }
-    .bannergallery-section img {
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .showphotos a {
-        background: #fff;
-        border: 1px solid #ddd;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 14px;
-        color: #333;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .details li {
-        display: flex;
-        align-items: center;
-        margin-right: 25px;
-    }
-    .primary-text {
-        color: #28a745;
-        font-weight: bold;
-    }
-    .social-options li a{
-        font-size:15px;
-        color:#555;
-        margin-right:15px;
-    }
-    .hero-banner {
-        position: relative;
-        width: 100%;
-        height: 320px; /* Bạn chỉnh thấp/cao hơn tùy thích */
-        background: url('{{ asset('img/venues/' . $thongtinsan->image) }}') center/cover no-repeat;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .hero-banner::after {
-        content: '';
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%; /* Làm tối hình 1 chút để chữ rõ */
-    }
-
-    .hero-content {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: #fff;
-        text-align: center;
-    }
-
-    .hero-content h1 {
-        font-size: 32px;
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: white;
-    }
-
-    .hero-content p {
-        font-size: 15px;
-        margin: 0;
-    }
-
-    table.fixed-table {
-            min-width: 1000px;
-            border-collapse: collapse;
+        .venue-info h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
         }
-
-        table.fixed-table th,
-        table.fixed-table td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        thead th {
-            position: sticky;
-            top: 0;
-            background-color: white;
-            z-index: 2;
-        }
-
-        
-
-        thead .sticky-col {
-            z-index: 4; /* để cột đầu của thead nổi hơn */
-        }
-
-		/* Cố định cột đầu tiên (Khung giờ) */
-		.sticky-col {
-			position: sticky;
-			left: 0;
-			background: white;
-			z-index: 2;
-			font-weight: bold;
-		}
-
-		/* Ô đã quá hạn */
-		td span.het-han {
-			color: gray;
-			font-weight: 500;
-		}
-
-		/* Ô đã được chọn */
-		td span.da-chon {
-			color: red;
-			font-weight: bold;
-		}
-
-		/* Button đặt giờ */
-		td form button {
-			background-color: white;
-			border: 2px solid #007F7F;
-			color: #007F7F;
-			padding: 6px 10px;
-			font-weight: bold;
-			border-radius: 8px;
-			cursor: pointer;
-			transition: all 0.2s ease-in-out;
-			width: 100%;
-		}
-
-		/* Hover hiệu ứng */
-		td form button:hover {
-			background-color: #007F7F;
-			color: white;
-		}
-
-		/* Trạng thái nhấn */
-		td form button:active {
-			transform: scale(0.98);
-			background-color: #005f5f;
-		}
-
-        /* Container cho các nút ở hàng đầu tiên */
-        .venue-options-styled {
-            display: flex;
-            gap: 10px; /* Khoảng cách giữa các nút */
-            margin-bottom: 10px; /* Khoảng cách với hàng thứ hai */
-        }
-
-        /* Container cho nút ở hàng thứ hai */
-        .venue-options-styled-row2 {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* Định kiểu chung cho tất cả các nút */
-        .option-button {
-            /* Đặt màu chữ và nền mặc định (Trắng) */
-            color: #000;
-            background-color: #fff;
-            border: 1px solid #e0e0e0; /* Viền rất nhạt */
-            border-radius: 6px; /* Bo góc */
-            padding: 8px 15px; /* Đệm bên trong */
-            text-decoration: none;
+        .venue-info ul li {
+            list-style: none;
+            margin-right: 20px;
+            color: #555;
             font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease; /* Hiệu ứng chuyển đổi mượt */
-            white-space: nowrap;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Bóng đổ nhẹ */
+        }
+        .venue-info ul li i {
+            color: #28a745;
+            margin-right: 6px;
+        }
+        .bannergallery-section img {
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .showphotos a {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .details li {
+            display: flex;
+            align-items: center;
+            margin-right: 25px;
+        }
+        .primary-text {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .social-options li a{
+            font-size:15px;
+            color:#555;
+            margin-right:15px;
+        }
+        .hero-banner {
+            position: relative;
+            width: 100%;
+            height: 320px; /* Bạn chỉnh thấp/cao hơn tùy thích */
+            background: url('{{ asset('img/venues/' . $thongtinsan->image) }}') center/cover no-repeat;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        /* Nút slot mặc định */
-.slot-btn {
-    width: 100%;
-    height: 35px;
-    border: 1px solid #ddd;
-    background-color: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
-}
+        .hero-banner::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%; /* Làm tối hình 1 chút để chữ rõ */
+        }
 
-/* Hover trên slot chưa chọn */
-.slot-btn:not(.selected):hover {
-    background-color: #f7f7f7; /* nền xám nhạt */
-    border-color: #ccc;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+        .hero-content {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+        }
 
-/* Khi nhấn giữ chuột */
-.slot-btn:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+        .hero-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: white;
+        }
 
-/* Khi đã chọn */
-.slot-btn.selected {
-    background-color: #28a745;
-    color: #fff;
-    border-color: #28a745;
-}
+        .hero-content p {
+            font-size: 15px;
+            margin: 0;
+        }
 
-/* Hover trên slot đã chọn (nếu muốn) */
-.slot-btn.selected:hover {
-    background-color: #218838; /* màu xanh đậm hơn khi hover */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    transform: translateY(-1px);
-}
+        table.fixed-table {
+                min-width: 1000px;
+                border-collapse: collapse;
+            }
 
-        
-</style>
+            table.fixed-table th,
+            table.fixed-table td {
+                border: 1px solid #ccc;
+                padding: 10px;
+                text-align: center;
+                white-space: nowrap;
+            }
+
+            thead th {
+                position: sticky;
+                top: 0;
+                background-color: white;
+                z-index: 2;
+            }
+
+            
+
+            thead .sticky-col {
+                z-index: 4; /* để cột đầu của thead nổi hơn */
+            }
+
+            /* Cố định cột đầu tiên (Khung giờ) */
+            .sticky-col {
+                position: sticky;
+                left: 0;
+                background: white;
+                z-index: 2;
+                font-weight: bold;
+            }
+
+            /* Ô đã quá hạn */
+            td span.het-han {
+                color: gray;
+                font-weight: 500;
+            }
+
+            /* Ô đã được chọn */
+            td span.da-chon {
+                color: red;
+                font-weight: bold;
+            }
+
+            /* Button đặt giờ */
+            td form button {
+                background-color: white;
+                border: 2px solid #007F7F;
+                color: #007F7F;
+                padding: 6px 10px;
+                font-weight: bold;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s ease-in-out;
+                width: 100%;
+            }
+
+            /* Hover hiệu ứng */
+            td form button:hover {
+                background-color: #007F7F;
+                color: white;
+            }
+
+            /* Trạng thái nhấn */
+            td form button:active {
+                transform: scale(0.98);
+                background-color: #005f5f;
+            }
+
+            /* Container cho các nút ở hàng đầu tiên */
+            .venue-options-styled {
+                display: flex;
+                gap: 10px; /* Khoảng cách giữa các nút */
+                margin-bottom: 10px; /* Khoảng cách với hàng thứ hai */
+            }
+
+            /* Container cho nút ở hàng thứ hai */
+            .venue-options-styled-row2 {
+                display: flex;
+                gap: 10px;
+            }
+
+            /* Định kiểu chung cho tất cả các nút */
+            .option-button {
+                /* Đặt màu chữ và nền mặc định (Trắng) */
+                color: #000;
+                background-color: #fff;
+                border: 1px solid #e0e0e0; /* Viền rất nhạt */
+                border-radius: 6px; /* Bo góc */
+                padding: 8px 15px; /* Đệm bên trong */
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s ease; /* Hiệu ứng chuyển đổi mượt */
+                white-space: nowrap;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Bóng đổ nhẹ */
+            }
+
+            /* Nút slot mặc định */
+    .slot-btn {
+        width: 100%;
+        height: 35px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    /* Hover trên slot chưa chọn */
+    .slot-btn:not(.selected):hover {
+        background-color: #f7f7f7; /* nền xám nhạt */
+        border-color: #ccc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Khi nhấn giữ chuột */
+    .slot-btn:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Khi đã chọn */
+    .slot-btn.selected {
+        background-color: #28a745;
+        color: #fff;
+        border-color: #28a745;
+    }
+
+    /* Hover trên slot đã chọn (nếu muốn) */
+    .slot-btn.selected:hover {
+        background-color: #218838; /* màu xanh đậm hơn khi hover */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transform: translateY(-1px);
+    }
+
+            
+    </style>
 
 <!-- Banner Full Width + Header nhỏ -->
 <div class="container-fluid px-0 mb-4">
@@ -418,29 +418,30 @@
                         <!-- Long-term Booking Form -->
                         <div class="accordion-item mb-4" id="includes">
                             <h4 class="accordion-header" id="panelsStayOpen-includes">
-                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
                                     Thuê Dài Hạn
                                 </button>
                             </h4>
-                            <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-includes">
+                            <div id="panelsStayOpen-collapseTwo"
+                                class="accordion-collapse collapse show" 
+                                aria-labelledby="panelsStayOpen-includes">
                                 <div class="accordion-body">
-                                    <form method="POST" action="" enctype="multipart/form-data">
+                                    <form method="POST" action="{{ route('contract_bookings') }}">
                                         @csrf
                                         <div class="mb-10">
                                             <label for="name" class="form-label">Họ tên</label>
-                                            <input type="text" class="form-control" id="name" name="name" value="{{ $customer->fullname ?? '' }}">
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                value="{{ $customer->fullname ?? '' }}">
                                         </div>
                                         <div class="mb-10">
                                             <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" value="{{ $customer->email ?? '' }}">
+                                            <input type="email" class="form-control" id="email" name="email"
+                                                value="{{ $customer->email ?? '' }}">
                                         </div>
                                         <div class="mb-10">
                                             <label for="phonenumber" class="form-label">Số điện thoại</label>
-                                            <input type="text" class="form-control" id="phonenumber" name="phonenumber" value="{{ $customer->phone ?? '' }}">
-                                        </div>
-                                        <div class="mb-10">
-                                            <label for="soluong" class="form-label">Số lượng sân</label>
-                                            <input type="text" class="form-control" id="soluong" name="soluong" placeholder="... sân">
+                                            <input type="text" class="form-control" id="phonenumber" name="phonenumber"
+                                                value="{{ $customer->phone ?? '' }}">
                                         </div>
                                         <div class="mb-10">
                                             <label for="date_start" class="form-label">Ngày bắt đầu</label>
@@ -450,10 +451,6 @@
                                             <label for="date_end" class="form-label">Ngày kết thúc</label>
                                             <input type="date" class="form-control" id="date_end" name="date_end">
                                         </div>
-                                        <div class="mb-10">
-                                            <label for="comments" class="form-label">Ghi chú</label>
-                                            <textarea class="form-control" id="comments" name="comments" rows="3" placeholder="Nhập các thứ trong tuần"></textarea>
-                                        </div>
                                         <div class="form-check d-flex justify-content-start align-items-center policy">
                                             <input class="form-check-input" type="checkbox" value="1" id="policy" name="policy" checked>
                                             <label class="form-check-label" for="policy">
@@ -461,7 +458,12 @@
                                             </label>
                                         </div>
                                         <div class="d-grid btn-block">
-                                            <button type="submit" class="btn btn-secondary d-inline-flex justify-content-center align-items-center" name="btnthemyeucau">Gửi Yêu Cầu</button>
+                                            <input type="hidden" name="facility_id" id="facility_id" value="{{ $thongtinsan->facility_id }}">
+                                            <button type="submit"
+                                                class="btn btn-secondary d-inline-flex justify-content-center align-items-center"
+                                                name="btnthemyeucau">
+                                                Gửi Yêu Cầu
+                                            </button>
                                         </div>
                                     </form>
                                 </div>
@@ -800,7 +802,7 @@
                 <input type="hidden" name="slots" id="slotsInput">
                 <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
                 <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
-                <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
+                <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
             </form>
             {{-- <a href="{{ route('payment') }}" class="btn btn-secondary d-flex justify-content-center align-items-center">
                 Thanh Toán <i class="feather-arrow-right-circle ms-2"></i>
