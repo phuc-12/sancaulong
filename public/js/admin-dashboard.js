@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }]
             },
             options: {
-                // ... (toàn bộ options của bạn, giữ nguyên) ...
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
@@ -43,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         beginAtZero: true,
                         ticks: {
                             callback: function (value) {
-                                return value.toLocaleString('vi-VN') + 'đ';
+                                return value.toLocaleString('vi-VN');
                             }
                         }
                     }
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     label += ': ';
                                 }
                                 if (context.parsed.y !== null) {
-                                    label += context.parsed.y.toLocaleString('vi-VN') + 'đ';
+                                    label += context.parsed.y.toLocaleString('vi-VN');
                                 }
                                 return label;
                             }
@@ -70,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2. Hàm gọi API và cập nhật biểu đồ
         async function fetchRevenueData(filter, title) {
             try {
-                // --- SỬA Ở ĐÂY (PHẦN 2) ---
+                
                 // Thay thế {{ route(...) }} bằng biến revenueChartUrl
                 const response = await fetch(`${revenueChartUrl}?filter=${filter}`);
 
