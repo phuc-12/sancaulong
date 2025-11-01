@@ -244,7 +244,8 @@ class HomeController extends Controller
         $payment_status = 'Chuyển khoản';
         DB::table(table: 'invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
-                'sub_total' => $total
+                'sub_total' => $total,
+                'facility_id' => $facility_id,
             ]);
 
         DB::table(table: 'invoices')->insert([
@@ -587,6 +588,7 @@ class HomeController extends Controller
             DB::table('invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
                 'sub_total' => $total,
+                'facility_id' => $facility_id,
             ]);
         }
         $promotion_id = null;
@@ -638,8 +640,20 @@ class HomeController extends Controller
     {
         $user_id = $request->user_id;
 
-        $invoices = DB::table('invoices')->where('customer_id',$user_id)->get();
-        
+        $invoices = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+        ->where('invoices.customer_id', $user_id)
+        ->select(
+            'invoices.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'invoices.issue_date as issue_date',
+            'invoices.final_amount as final_amount'
+        )
+        ->orderBy('invoices.invoice_id', 'asc')
+        ->get();
         return view('my_bookings',compact('user_id', 'invoices'));
     }
 

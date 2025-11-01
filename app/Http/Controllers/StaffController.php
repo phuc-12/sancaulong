@@ -12,6 +12,7 @@ use App\Models\Court;
 use App\Models\TimeSlot;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
+use Illuminate\Support\Facades\Log;
 
 class StaffController extends Controller
 {

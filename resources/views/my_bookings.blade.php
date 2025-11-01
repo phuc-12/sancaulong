@@ -1,6 +1,7 @@
 @extends('layouts.main')
 
 @section('my_bookings_content')
+
 		<!-- Breadcrumb -->
 		<section class="breadcrumb breadcrumb-list mb-0">
 			<span class="primary-right-round"></span>
@@ -12,105 +13,9 @@
 				</ul>
 			</div>
 		</section>
-		<!-- /Breadcrumb -->
 
-		<!-- Dashboard Menu -->
-		<!-- <div class="dashboard-section">
-			<div class="container">
-				<div class="row">
-					<div class="col-lg-12">
-						<div class="dashboard-menu">
-							<ul>
-								<li>
-									<a href="user-dashboard.html">
-										<img src="assets/img/icons/dashboard-icon.svg" alt="Icon">
-										<span>Dashboard</span>
-									</a>
-								</li>
-								<li>
-									<a href="user-bookings.html" class="active">
-										<img src="assets/img/icons/booking-icon.svg" alt="Icon">
-										<span>My Bookings</span>
-									</a>
-								</li>
-								<li>
-									<a href="user-chat.html">
-										<img src="assets/img/icons/chat-icon.svg" alt="Icon">
-										<span>Chat</span>
-									</a>
-								</li>
-								<li>
-									<a href="user-invoice.html">
-										<img src="assets/img/icons/invoice-icon.svg" alt="Icon">
-										<span>Invoices</span>
-									</a>
-								</li>
-								<li>
-									<a href="user-wallet.html">
-										<img src="assets/img/icons/wallet-icon.svg" alt="Icon">
-										<span>Wallet</span>
-									</a>
-								</li>
-								<li>
-									<a href="user-profile.html">
-										<img src="assets/img/icons/profile-icon.svg" alt="Icon">
-										<span>Profile Setting</span>
-									</a>
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div> -->
-		<!-- /Dashboard Menu -->
-
-		<!-- Page Content -->
 		<div class="content court-bg">
 			<div class="container">
-
-				<!-- Sort By -->
-				{{-- <div class="row">
-					<div class="col-lg-12">
-						<div class="sortby-section court-sortby-section">
-							<div class="sorting-info">
-								<div class="row d-flex align-items-center">
-									<div class="col-xl-7 col-lg-7 col-sm-12 col-12">
-										<div class="coach-court-list">
-											<ul class="nav">
-												<!-- <li><a href="user-bookings.html">Upcoming</a></li> -->
-												
-											</ul>
-										</div>
-									</div>
-									<div class="col-xl-5 col-lg-5 col-sm-12 col-12">
-										<div class="sortby-filter-group court-sortby">
-											<div class="sortbyset week-bg">
-												<div class="sorting-select">
-													<select class="form-control select">
-														<option>This Week</option>
-														<option>One Day</option>
-													</select>
-												</div>
-											</div>
-											<div class="sortbyset">
-												<span class="sortbytitle">Sort By</span>
-												<div class="sorting-select">
-													<select class="form-control select">
-														<option>Relevance</option>
-														<option>Price</option>
-													</select>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								
-							</div>
-						</div>
-					</div>
-				</div> --}}
-				<!-- Sort By -->
 
 				<div class="row">
 					<div class="col-sm-12">
@@ -126,19 +31,6 @@
 												</div>
 											</div>
 											<div class="col-md-7">
-												<!-- <div class="table-search-top">
-													<div id="tablefilter"></div>
-													<div class="request-coach-list">
-														<div class="card-header-btns">
-															<nav>
-																<div class="nav nav-tabs" role="tablist">
-																	<button class="nav-link active" id="nav-Recent-tab" data-bs-toggle="tab" data-bs-target="#nav-Recent" type="button" role="tab" aria-controls="nav-Recent" aria-selected="true">Courts</button>
-																	<button class="nav-link" id="nav-RecentCoaching-tab" data-bs-toggle="tab" data-bs-target="#nav-RecentCoaching" type="button" role="tab" aria-controls="nav-RecentCoaching" aria-selected="false">Coaches</button>
-																</div>
-															</nav>
-														</div>
-													</div>
-												</div> -->
 											</div>
 										</div>
 									</div>
@@ -149,8 +41,11 @@
                                                 <thead>
                                                     <tr>
                                                         <th>STT</th>
-                                                        <th>Lastname</th>
-                                                        <th>Email</th>
+                                                        <th>Tên sân</th>
+                                                        <th>Khách hàng</th>
+                                                        <th>Ngày đặt</th>
+                                                        <th>Tổng tiền</th>
+                                                        <th></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -158,8 +53,16 @@
                                                     @foreach ($invoices as $invoice)
                                                         <tr>
                                                             <td>{{ $index=+1 }}</td>
-                                                            <td>Doe</td>
-                                                            <td>john@example.com</td>
+                                                            <td>{{ $invoice->facility_name }}</td>
+                                                            <td>{{ $invoice->fullname }}</td>
+                                                            <td>{{ $invoice->issue_date }}</td>
+                                                            <td>{{ $invoice->final_amount }}</td>
+                                                            <td>
+                                                                <form action="" method="POST">
+                                                                    <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
+                                                                    <button type="submit">Chi tiết</button>
+                                                                </form>
+                                                            </td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -170,17 +73,6 @@
 									
 								</div>
 							</div> 
-							
-							<!-- <div class="tab-footer">
-								<div class="row">
-									<div class="col-md-6">
-										<div id="tablelength"></div>
-									</div>
-									<div class="col-md-6">
-										<div id="tablepage"></div>
-									</div>
-								</div>
-							</div> -->
 						</div>
 					</div>
 				</div>

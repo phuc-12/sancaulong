@@ -2,6 +2,7 @@
     <p>User ID: {{ session('user_id') }}</p>
 @endif
 @extends('layouts.main')
+
 @section('index_content')
 		<!-- Hero Section -->
 		<section class="hero-section">	
