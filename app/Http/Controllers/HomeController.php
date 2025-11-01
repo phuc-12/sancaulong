@@ -189,7 +189,6 @@ class HomeController extends Controller
         $slots = json_decode($request->slots, true);
         // CHUYỂN MẢNG $slots SANG COLLECTION ĐỂ SỬ DỤNG CÁC HÀM CỦA LARAVEL
         $slotCollection = collect($slots);
-
         // LẤY CÁC GIÁ TRỊ DUY NHẤT
         $uniqueCourts = $slotCollection->pluck('court')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('date')->unique()->implode(' / ');
@@ -203,7 +202,12 @@ class HomeController extends Controller
         $customer = Users::find($request->input('user_id'));
         $facilities = Facilities::find($request->input('facility_id'));
         $countSlots = count($slots);
-
+        // ✅ Cập nhật thông tin khách hàng với dữ liệu mới nhập
+        $customer->update([
+            'fullname' => $request->input('fullname'),
+            'phone'    => $request->input('phone'),
+            'email'    => $request->input('email'),
+        ]);
         if ($countSlots % 2 === 0) {
             $result = ($countSlots / 2) . ' tiếng';
         } else {
@@ -215,6 +219,7 @@ class HomeController extends Controller
             'result' => $result,
             'customer' => $customer,
             'facilities' => $facilities,
+
             // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
             'uniqueCourts' => $uniqueCourts,
             'uniqueDates' => $uniqueDates,
@@ -234,10 +239,22 @@ class HomeController extends Controller
         {
             $total += $slot['price'];
         }
-        
+        $promotion_id = null;
+        $payment_method = 1;
+        $payment_status = 'Chuyển khoản';
         DB::table(table: 'invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
                 'sub_total' => $total
+            ]);
+
+        DB::table(table: 'invoices')->insert([
+                'customer_id' => $userId,
+                'issue_date' => now(),
+                'total_amount' => $total,
+                'promotion_id' => $promotion_id,
+                'final_amount' => $total,
+                'payment_status' => $payment_status,
+                'payment_method' => $payment_method,
             ]);  
         if (!$slots || !is_array($slots)) {
             return back()->with('error', 'Không có dữ liệu đặt sân!');
@@ -572,7 +589,22 @@ class HomeController extends Controller
                 'sub_total' => $total,
             ]);
         }
-
+        $promotion_id = null;
+        $payment_method = 1;
+        $payment_status = 'Chuyển khoản';
+        $deposit = 0;
+        $note = null;
+        DB::table(table: 'long_term_contracts')->insert([
+                'invoice_detail_id' => $invoiceDetailId,
+                'customer_id' => $userId,
+                'issue_date' => now(),
+                'total_amount' => $total,
+                'promotion_id' => $promotion_id,
+                'final_amount' => $total,
+                'payment_status' => $payment_status,
+                'deposit' => $deposit,
+                'note' => $note,
+            ]);  
         // ✅ Chèn từng chi tiết đặt sân
         foreach ($details as $detail) {
             $date = \Carbon\Carbon::parse($detail['date'])->format('Y-m-d');
@@ -602,19 +634,13 @@ class HomeController extends Controller
         ]);
     }
 
-    // public function payment_contract(Request $request)
-    // {
-    //     // $summary = $request->input('summary');
-    //     $summary = json_decode($request->input('summary'), true);
-    //     // $details = $request->input('details');
-    //     $details = json_decode($request->input('details'), true);
-    //     // $lines = $request->input('lines');
-    //     $lines = json_decode($request->input('lines'), true);
-    //     // $userInfo = $request->input('userInfo');
-    //     $userInfo = json_decode($request->input('userInfo'), true);
-    //     // dd($userInfo, $summary, $details, $lines);
-    //     return view('payment_contract', compact('summary', 'details', 'lines', 'userInfo'));
-    // }
+    public function list_Invoices(Request $request)
+    {
+        $user_id = $request->user_id;
 
+        $invoices = DB::table('invoices')->where('customer_id',$user_id)->get();
+        
+        return view('my_bookings',compact('user_id', 'invoices'));
+    }
 
 }

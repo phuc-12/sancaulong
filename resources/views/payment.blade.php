@@ -57,9 +57,9 @@
 								<h3 class="'border-bottom">Thông tin khách hàng</h3>
 								<ul>
 									<div style="float:left; width: 350px;">
-										<li><i class="feather-user me-2"></i>Tên: {{ $customer->fullname }}</li>
-										<li><i class="feather-phone me-2"></i>SĐT: {{ $customer->phone }}</li>
-										<li><i class="feather-mail me-2"></i>Email: {{ $customer->email }}</li>
+										<li><i class="feather-user me-2"></i>Tên: {{ $customer_name ?? $customer->fullname }}</li>
+										<li><i class="feather-phone me-2"></i>SĐT: {{ $customer_phone ?? $customer->phone }}</li>
+										<li><i class="feather-mail me-2"></i>Email: {{ $customer_email ?? $customer->email }}</li>
 									</div>
 								</ul>
 								
