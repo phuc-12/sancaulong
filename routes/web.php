@@ -20,22 +20,22 @@ Route::get('/', function () {
 //Dat san
 Route::prefix('/')->controller(HomeController::class)
 
-->group(function () {
-    Route::get('/','index')->name('trang_chu');
-    Route::get('/listing-grid','listing_grid')->name('danh_sach_san');
-    Route::get('/api/load-more-san','load_more_san')->name('api.load_san');
-    // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
-    Route::post('/venue', 'show')->name('chi_tiet_san');
-    // Route::post('/booking-process', 'processBooking')->name('booking.process');
-    Route::post('/thanh-toan', 'payments')->name('thanh.toan');
-    Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
-    Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
-    Route::post('/thanh-toan/thanh-toan-complete','payments_complete')->name('payments_complete');
-    Route::post('/contract_bookings','contract_bookings')->name('contract_bookings');
-    Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
-    Route::match(['get', 'post'],'/payment_contract', 'payment_contract')->name('payment_contract');
-    Route::post('/thanh-toan/thanh-toan-contract-complete','payments_contract_complete')->name('payments_contract_complete');
-});
+    ->group(function () {
+        Route::get('/', 'index')->name('trang_chu');
+        Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
+        Route::get('/api/load-more-san', 'load_more_san')->name('api.load_san');
+        // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
+        Route::post('/venue', 'show')->name('chi_tiet_san');
+        // Route::post('/booking-process', 'processBooking')->name('booking.process');
+        Route::post('/thanh-toan', 'payments')->name('thanh.toan');
+        Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
+        Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
+        Route::post('/thanh-toan/thanh-toan-complete', 'payments_complete')->name('payments_complete');
+        Route::post('/contract_bookings', 'contract_bookings')->name('contract_bookings');
+        Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
+        Route::match(['get', 'post'], '/payment_contract', 'payment_contract')->name('payment_contract');
+        Route::post('/thanh-toan/thanh-toan-contract-complete', 'payments_contract_complete')->name('payments_contract_complete');
+    });
 
 Route::prefix('users')->controller(UserController::class)
     ->name('users.')->group(function () {
@@ -152,8 +152,27 @@ Route::prefix('staff')->name('staff.')->middleware(['auth'])->group(function () 
     // Trang chính: Lịch đặt sân & Check-in
     Route::get('/', [StaffController::class, 'index'])->name('index');
 
-    // Trang thanh toán & In hóa đơn
-    Route::get('/payment', [StaffController::class, 'payment'])->name('payment');
+    // 2. Xử lý "Xác nhận đến sân" (Func 2)
+    Route::post('/booking/{booking}/confirm', [StaffController::class, 'confirmArrival'])
+        ->name('booking.confirm');
+
+    // 3. Trang Thanh Toán (Func 3, 4)
+    // GET: Hiển thị trang & kết quả tìm kiếm
+    Route::get('/payment', [StaffController::class, 'paymentPage'])
+        ->name('payment');
+    // POST: Tìm kiếm booking để thanh toán
+    Route::post('/payment/search', [StaffController::class, 'searchBooking'])
+        ->name('payment.search');
+
+    // 4. Xử lý "Xác nhận Thanh toán" (Func 3)
+    // {booking} là ID của booking cần thanh toán
+    Route::post('/booking/{booking}/pay', [StaffController::class, 'processPayment'])
+        ->name('booking.pay');
+
+    // 5. In Hóa Đơn (Func 4)
+    // {invoice} là ID của hóa đơn
+    Route::get('/invoice/{invoice}/print', [StaffController::class, 'printInvoice'])
+        ->name('invoice.print');
 });
 
 //=============================================================================================================

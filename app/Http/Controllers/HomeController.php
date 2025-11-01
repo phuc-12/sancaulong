@@ -253,6 +253,7 @@ class HomeController extends Controller
                 'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
                 'time_slot_id' => $slot['time_slot_id'],
                 'unit_price' => $slot['price'],
+                'status' => 'Đã thanh toán (Online)'
             ]);
         }
 
