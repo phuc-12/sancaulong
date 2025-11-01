@@ -45,7 +45,7 @@ class HomeController extends Controller
         return view('listing-grid', compact('danhsachsan', 'hasMoreData', 'total_count', 'limit'));
     }
 
-    // HÀM MỚI: Xử lý request AJAX/Fetch (Trả về JSON)
+    //  Xử lý request AJAX/Fetch (Trả về JSON)
     public function load_more_san(Request $request)
     {
         $limit = self::LIMIT_PER_LOAD;
@@ -270,6 +270,7 @@ class HomeController extends Controller
                 'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
                 'time_slot_id' => $slot['time_slot_id'],
                 'unit_price' => $slot['price'],
+                'status' => 'Đã thanh toán (Online)'
             ]);
         }
 

@@ -20,6 +20,7 @@ Route::get('/', function () {
 //Dat san
 Route::prefix('/')->controller(HomeController::class)
 
+
 ->group(function () {
     Route::get('/','index')->name('trang_chu');
     Route::get('/listing-grid','listing_grid')->name('danh_sach_san');
@@ -37,6 +38,7 @@ Route::prefix('/')->controller(HomeController::class)
     Route::post('/thanh-toan/thanh-toan-contract-complete','payments_contract_complete')->name('payments_contract_complete');
     Route::post('/list_Invoices','list_Invoices')->name('lich_dat_san');
 });
+
 
 Route::prefix('users')->controller(UserController::class)
     ->name('users.')->group(function () {
@@ -153,8 +155,27 @@ Route::prefix('staff')->name('staff.')->middleware(['auth'])->group(function () 
     // Trang chính: Lịch đặt sân & Check-in
     Route::get('/', [StaffController::class, 'index'])->name('index');
 
-    // Trang thanh toán & In hóa đơn
-    Route::get('/payment', [StaffController::class, 'payment'])->name('payment');
+    // 2. Xử lý "Xác nhận đến sân" (Func 2)
+    Route::post('/booking/{booking}/confirm', [StaffController::class, 'confirmArrival'])
+        ->name('booking.confirm');
+
+    // 3. Trang Thanh Toán (Func 3, 4)
+    // GET: Hiển thị trang & kết quả tìm kiếm
+    Route::get('/payment', [StaffController::class, 'paymentPage'])
+        ->name('payment');
+    // POST: Tìm kiếm booking để thanh toán
+    Route::post('/payment/search', [StaffController::class, 'searchBooking'])
+        ->name('payment.search');
+
+    // 4. Xử lý "Xác nhận Thanh toán" (Func 3)
+    // {booking} là ID của booking cần thanh toán
+    Route::post('/booking/{booking}/pay', [StaffController::class, 'processPayment'])
+        ->name('booking.pay');
+
+    // 5. In Hóa Đơn (Func 4)
+    // {invoice} là ID của hóa đơn
+    Route::get('/invoice/{invoice}/print', [StaffController::class, 'printInvoice'])
+        ->name('invoice.print');
 });
 
 //=============================================================================================================

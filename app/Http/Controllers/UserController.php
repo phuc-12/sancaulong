@@ -6,7 +6,7 @@ use App\Http\Requests\CreateUserRequest;
 use App\Models\Users;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use App\Models\User;
+
 class UserController extends Controller
 {
     /**
@@ -14,7 +14,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = Users::all();
         return view('users', compact('users'));
     }
 
