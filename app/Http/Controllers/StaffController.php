@@ -38,29 +38,17 @@ class StaffController extends Controller
 
         $bookingsToday = Bookings::where('bookings.facility_id', $facilityId)
             ->where('bookings.booking_date', $today)
-
-            // --- SỬA LẠI: DÙNG EAGER LOADING THAY VÌ leftJoin ---
-            // Tải kèm thông tin từ relationship 'user' và 'court'
             ->with(['user', 'court'])
-
-            // --- VẪN JOIN VỚI time_slots ĐỂ SẮP XẾP ---
             ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
-
-            // --- CHỈ CẦN SELECT CỘT TỪ bookings VÀ time_slots ---
             ->select(
                 'bookings.*', // Lấy tất cả cột từ bảng bookings
                 'time_slots.start_time',
-                'time_slots.end_time'
-                // Không cần select 'users.fullname' hay 'courts.court_name' ở đây nữa
+                'time_slots.end_time',
+                'users.fullname', 
+                'courts.court_name'
             )
             ->orderBy('time_slots.start_time', 'asc') // Sắp xếp
-
-            // --- BỎ GROUP BY ĐI ---
-            // ->groupBy('bookings.booking_id') // <-- XÓA DÒNG NÀY
-
             ->get();
-
-        // dd($bookingsToday); // Tắt dd để xem kết quả
 
         return view('staff.index', compact('bookingsToday'));
     }
