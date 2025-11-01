@@ -45,7 +45,7 @@ class HomeController extends Controller
         return view('listing-grid', compact('danhsachsan', 'hasMoreData', 'total_count', 'limit'));
     }
 
-    // HÀM MỚI: Xử lý request AJAX/Fetch (Trả về JSON)
+    //  Xử lý request AJAX/Fetch (Trả về JSON)
     public function load_more_san(Request $request)
     {
         $limit = self::LIMIT_PER_LOAD;

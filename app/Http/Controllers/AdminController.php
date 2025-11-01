@@ -243,7 +243,7 @@ class AdminController extends Controller
         return view('admin.customers.index', compact('customers'));
     }
 
-    // === HÀM MỚI: HIỂN THỊ FORM SỬA KHÁCH HÀNG ===
+    // ===  HIỂN THỊ FORM SỬA KHÁCH HÀNG ===
     public function editCustomer(Users $user) // Laravel tự động tìm User (Users)
     {
         // Kiểm tra lại để chắc chắn đây là khách hàng
@@ -255,7 +255,7 @@ class AdminController extends Controller
         return view('admin.customers.edit', compact('user'));
     }
 
-    // === HÀM MỚI: XỬ LÝ CẬP NHẬT KHÁCH HÀNG ===
+    // ===  XỬ LÝ CẬP NHẬT KHÁCH HÀNG ===
     public function updateCustomer(Request $request, Users $user)
     {
         // Kiểm tra lại
