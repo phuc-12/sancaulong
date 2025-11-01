@@ -185,16 +185,11 @@ class HomeController extends Controller
     // Hàm nhận dữ liệu từ form và đưa đến trang thanh toán
     public function payments(Request $request)
     {
-        // Dữ liệu slots gửi từ form, dưới dạng JSON
         $slots = json_decode($request->slots, true);
-        // CHUYỂN MẢNG $slots SANG COLLECTION ĐỂ SỬ DỤNG CÁC HÀM CỦA LARAVEL
         $slotCollection = collect($slots);
-        // LẤY CÁC GIÁ TRỊ DUY NHẤT
+
         $uniqueCourts = $slotCollection->pluck('court')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('date')->unique()->implode(' / ');
-
-        // LẤY THỜI GIAN ĐẶT DUY NHẤT (start_time và end_time)
-        // Để giữ nguyên định dạng "start_time đến end_time", ta phải tạo một chuỗi tạm
         $uniqueTimes = $slotCollection->map(function ($slot) {
             return $slot['start_time'] . ' đến ' . $slot['end_time'];
         })->unique()->implode(' / ');
@@ -202,12 +197,13 @@ class HomeController extends Controller
         $customer = Users::find($request->input('user_id'));
         $facilities = Facilities::find($request->input('facility_id'));
         $countSlots = count($slots);
-        // ✅ Cập nhật thông tin khách hàng với dữ liệu mới nhập
-        $customer->update([
-            'fullname' => $request->input('fullname'),
-            'phone'    => $request->input('phone'),
-            'email'    => $request->input('email'),
-        ]);
+
+        $tempCustomer = [
+            'user_id'  => $customer->user_id, // thêm user_id để không lỗi
+            'fullname' => $request->input('fullname') ?: $customer->fullname,
+            'phone'    => $request->input('phone') ?: $customer->phone,
+            'email'    => $request->input('email') ?: $customer->email,
+        ];
         if ($countSlots % 2 === 0) {
             $result = ($countSlots / 2) . ' tiếng';
         } else {
@@ -217,7 +213,7 @@ class HomeController extends Controller
         return view('payment', [
             'slots' => $slots,
             'result' => $result,
-            'customer' => $customer,
+            'customer' => (object)$tempCustomer,
             'facilities' => $facilities,
 
             // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
@@ -247,8 +243,13 @@ class HomeController extends Controller
                 'sub_total' => $total,
                 'facility_id' => $facility_id,
             ]);
+        $invoice_details = DB::table('invoice_details')
+        ->select('invoice_id')
+        ->where('invoice_detail_id', $invoiceDetailId)
+        ->first();
 
         DB::table(table: 'invoices')->insert([
+                'invoice_id' => $invoice_details->invoice_id,
                 'customer_id' => $userId,
                 'issue_date' => now(),
                 'total_amount' => $total,
@@ -652,9 +653,30 @@ class HomeController extends Controller
             'invoices.issue_date as issue_date',
             'invoices.final_amount as final_amount'
         )
-        ->orderBy('invoices.invoice_id', 'asc')
+        ->orderBy('invoices.invoice_id', 'desc')
         ->get();
         return view('my_bookings',compact('user_id', 'invoices'));
+    }
+
+    public function list_Contracts(Request $request)
+    {
+        $user_id = $request->user_id;
+
+        $long_term_contracts = DB::table('long_term_contracts')
+        ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+        ->where('long_term_contracts.customer_id', $user_id)
+        ->select(
+            'long_term_contracts.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'long_term_contracts.issue_date as issue_date',
+            'long_term_contracts.final_amount as final_amount'
+        )
+        ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
+        ->get();
+        return view('my_contracts',compact('user_id', 'long_term_contracts'));
     }
 
 }

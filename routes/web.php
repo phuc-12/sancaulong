@@ -37,6 +37,7 @@ Route::prefix('/')->controller(HomeController::class)
     Route::match(['get', 'post'],'/payment_contract', 'payment_contract')->name('payment_contract');
     Route::post('/thanh-toan/thanh-toan-contract-complete','payments_contract_complete')->name('payments_contract_complete');
     Route::post('/list_Invoices','list_Invoices')->name('lich_dat_san');
+    Route::post('/list_Contracts','list_Contracts')->name('lich_co_dinh');
 });
 
 

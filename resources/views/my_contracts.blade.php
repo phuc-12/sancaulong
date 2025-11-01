@@ -1,6 +1,6 @@
 @extends('layouts.main')
 
-@section('my_bookings_content')
+@section('my_contracts_content')
 
 		<!-- Breadcrumb -->
 		<section class="breadcrumb breadcrumb-list mb-0">
@@ -16,7 +16,7 @@
 
 		<div class="content court-bg">
 			<div class="container">
-				<!-- Sort By -->
+                <!-- Sort By -->
 				{{-- <div class="row">
 					<div class="col-lg-12">
 						<div class="sortby-section court-sortby-section">
@@ -27,12 +27,14 @@
 											<ul class="nav">
 												<li>
                                                     <form method="POST" action="{{ route('lich_dat_san') }}">
+                                                    @csrf
                                                         <input type="hidden" name="user_id" value="{{ $user_id }}">
-                                                        <button type="submit">Hóa đơn đặt</button>
+                                                        <button type="submit" class="active">Hóa đơn đặt</button>
                                                     </form>
                                                 </li>
 												<li>
                                                     <form method="POST" action="{{ route('lich_co_dinh') }}">
+                                                    @csrf
                                                         <input type="hidden" name="user_id" value="{{ $user_id }}">
                                                         <button type="submit">Hợp đồng dài hạn</button>
                                                     </form>
@@ -68,6 +70,7 @@
 					</div>
 				</div> --}}
 				<!-- Sort By -->
+
 				<div class="row">
 					<div class="col-sm-12">
 						<div class="court-tab-content">
@@ -77,7 +80,7 @@
 										<div class="row align-items-center">
 											<div class="col-md-5">
 												<div class="court-table-head">
-													<h4>Giao Dịch Của Bạn</h4>
+													<h4>Giao dịch thuê cố định của bạn</h4>
 													<p>Theo dõi và quản lý các sân đã hoàn thành của bạn</p>
 												</div>
 											</div>
@@ -101,16 +104,16 @@
                                                 </thead>
                                                 <tbody>
                                                     @php $index=0 @endphp
-                                                    @foreach ($invoices as $invoice)
+                                                    @foreach ($long_term_contracts as $ct)
                                                         <tr>
                                                             <td>{{ $index+=1 }}</td>
-                                                            <td>{{ $invoice->facility_name }}</td>
-                                                            <td>{{ $invoice->fullname }}</td>
-                                                            <td>{{ $invoice->issue_date }}</td>
-                                                            <td>{{ $invoice->final_amount }}</td>
+                                                            <td>{{ $ct->facility_name }}</td>
+                                                            <td>{{ $ct->fullname }}</td>
+                                                            <td>{{ $ct->issue_date }}</td>
+                                                            <td>{{ $ct->final_amount }}</td>
                                                             <td>
                                                                 <form action="" method="POST">
-                                                                    <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
+                                                                    <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
                                                                     <button type="submit">Chi tiết</button>
                                                                 </form>
                                                             </td>
