@@ -16,6 +16,8 @@ use App\Http\Controllers\UserController;
 Route::get('/', function () {
     return view('index');
 });
+//Tim kiếm
+Route::get('/search', [HomeController::class, 'search'])->name('search.results');
 
 //Dat san
 Route::prefix('/')->controller(HomeController::class)
@@ -148,7 +150,7 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
 
 //=============================================================================================================
 //Nhân viên sân
-Route::prefix('staff')->name('staff.')->middleware(['auth'])->group(function () {
+Route::prefix('staff')->name('staff.')->middleware(['auth','role:staff'])->group(function () {
     // Trang chính: Lịch đặt sân & Check-in
     Route::get('/', [StaffController::class, 'index'])->name('index');
 

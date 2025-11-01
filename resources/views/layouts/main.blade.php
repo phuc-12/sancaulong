@@ -238,6 +238,7 @@
 	@yield('payments_content')
 	@yield('login')
 	@yield('payment_content')
+	@yield('search_content')
 	{{-- -------------------------------------- --}}
 
 	<footer class="footer">

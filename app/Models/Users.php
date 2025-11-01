@@ -4,6 +4,8 @@ namespace App\Models;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Role;
+use App\Models\Facility;
 
 class Users extends Authenticatable
 {
@@ -46,17 +48,16 @@ class Users extends Authenticatable
     ];
     protected static function boot()
     {
-        parent::boot(); // Gọi hàm boot của lớp cha
+        parent::boot(); 
 
-        // Lắng nghe sự kiện "creating" (TRƯỚC KHI insert vào CSDL)
         static::creating(function ($user) {
-            // Ghi log toàn bộ thuộc tính ($attributes) của user sắp được tạo
             Log::info('User creating event - Attributes:', $user->getAttributes()); 
         });
 
-        // (Bạn cũng có thể thêm static::saving(...) để debug cả khi update)
-        // static::saving(function ($user) {
-        //     Log::info('User saving event - Attributes:', $user->getAttributes());
-        // });
     }
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
+    }
+
 }
