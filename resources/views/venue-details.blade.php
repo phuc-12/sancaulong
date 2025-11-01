@@ -754,9 +754,12 @@
     {{-- THÔNG TIN ĐẶT SÂN --}}
     <div class="white-bg" style="padding-top: 30px;">
         <h4 style="text-align: center;">Thông tin đặt sân</h4>
-            <div class="alert alert-success">
-                <p>{{ $success_message }}</p>
-            </div>
+            @if($success_message)
+                <div class="alert alert-success">
+                    <p>{{ $success_message }}</p>
+                </div>
+            @else 
+            @endif
         <div class="text-end mb-3">
             <div style="float: left;">
                 <a href="{{ route('chi_tiet_san', ['idSan' => $thongtinsan->facility_id]) }}" class="btn btn-success">Reset</a>
@@ -777,30 +780,34 @@
                 {{-- Body sẽ được JS render --}}
             </tbody>
         </table>
-        
+        <form id="paymentForm" action="{{ route('thanh.toan') }}" method="POST">
+        @csrf
         {{-- THÔNG TIN NGƯỜI ĐẶT --}}
-        <div class="mb-3" style="padding: 0px 10px;">
-            <h6 class="form-label">Họ tên:</h6>
-            <input type="text" class="form-control" value="{{ auth()->user()->fullname ?? '' }}" readonly>
-        </div>
+            <div class="mb-3" style="padding: 0px 10px;">
+                <h6 class="form-label">Họ tên:</h6>
+                <input type="text" name="fullname" class="form-control"
+                    value="{{ old('fullname', auth()->user()->fullname ?? '') }}">
+            </div>
 
-        <div class="mb-3" style="padding: 0px 10px;">
-            <h6 class="form-label">Email:</h6>
-            <input type="email" class="form-control" value="{{ auth()->user()->email ?? '' }}" readonly>
-        </div>
+            <div class="mb-3" style="padding: 0px 10px;">
+                <h6 class="form-label">Số điện thoại:</h6>
+                <input type="text" name="phone" class="form-control"
+                    value="{{ old('phone', auth()->user()->phone ?? '') }}">
+            </div>
+
+            <div class="mb-3" style="padding: 0px 10px;">
+                <h6 class="form-label">Email:</h6>
+                <input type="email" name="email" class="form-control"
+                    value="{{ old('email', auth()->user()->email ?? '') }}">
+            </div>
 
         <div class="d-grid">
-            <form id="paymentForm" action="{{ route('thanh.toan') }}" method="POST">
-                @csrf
-                <input type="hidden" name="slots" id="slotsInput">
-                <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
-                <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
-                <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
-            </form>
-            {{-- <a href="{{ route('payment') }}" class="btn btn-secondary d-flex justify-content-center align-items-center">
-                Thanh Toán <i class="feather-arrow-right-circle ms-2"></i>
-            </a> --}}
+            <input type="hidden" name="slots" id="slotsInput">
+            <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
+            <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
+            <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
         </div>
+        </form>
     </div>
 </aside>
 
