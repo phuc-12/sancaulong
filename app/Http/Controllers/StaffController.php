@@ -12,6 +12,7 @@ use App\Models\Court;
 use App\Models\TimeSlot;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
+use Illuminate\Support\Facades\Log;
 
 class StaffController extends Controller
 {
@@ -44,8 +45,8 @@ class StaffController extends Controller
                 'bookings.*', // Lấy tất cả cột từ bảng bookings
                 'time_slots.start_time',
                 'time_slots.end_time',
-                'users.fullname', 
-                'courts.court_name'
+                // 'users.fullname', 
+                // 'courts.court_name'
             )
             ->orderBy('time_slots.start_time', 'asc') // Sắp xếp
             ->get();

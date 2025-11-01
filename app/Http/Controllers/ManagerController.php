@@ -37,7 +37,7 @@ class ManagerController extends Controller
     public function courts()
     {
         // --- LẤY FACILITY ID---
-        $manager = Auth::user();
+        $manager = Auth::users();
         if (!$manager || !$manager->facility_id) { // Kiểm tra manager có facility_id không
             // Hoặc chuyển hướng hoặc báo lỗi nếu không tìm thấy facility_id
             abort(403, 'Không tìm thấy thông tin cơ sở của quản lý.');
@@ -84,7 +84,7 @@ class ManagerController extends Controller
     public function getBookingsData(Request $request)
     {
         // --- LẤY FACILITY ID ---
-        $manager = Auth::user();
+        $manager = Auth::users();
         if (!$manager || !$manager->facility_id) {
             return response()->json(['error' => 'Không tìm thấy cơ sở của quản lý.'], 403);
         }
@@ -167,7 +167,7 @@ class ManagerController extends Controller
     public function updateBookingTime(Request $request, Bookings $booking)
     {
         // --- 1. KIỂM TRA QUYỀN ---
-        $manager = Auth::user();
+        $manager = Auth::users();
         if (!$manager || !$manager->facility_id || $booking->facility_id !== $manager->facility_id) {
             // Trả về lỗi JSON thay vì abort() vì đây là AJAX request
             return response()->json(['message' => 'Bạn không có quyền cập nhật lịch đặt này.'], 403);
