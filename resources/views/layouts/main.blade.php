@@ -72,9 +72,14 @@
             <ul class="nav header-navbar-rht">
                 @auth
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light btn-sm" href="{{ route('user.courts') }}">
-                            <i class="feather-check-circle"></i> Lịch Đặt Của Bạn
-                        </a>
+						<form method="POST" action="{{ route('lich_dat_san') }}">
+						@csrf
+							<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
+							<button type="submit" class="nav-link btn btn-outline-light btn-sm">
+								<i class="feather-check-circle"></i> Lịch Đặt Của Bạn
+							</button>
+						</form>
+                        
                     </li>
                     <!-- Dropdown User -->
                     <li class="nav-item dropdown">
@@ -209,6 +214,7 @@
 @yield('payment_content')
 @yield('contract_content')
 @yield('payment_contract_content')
+@yield('my_bookings_content')
 {{-- -------------------------------------- --}}
 
 <footer class="footer">
