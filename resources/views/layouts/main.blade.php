@@ -66,9 +66,24 @@
 					<ul class="nav header-navbar-rht">
 						@auth
 							<li class="nav-item">
-								<a class="nav-link btn btn-outline-light btn-sm" href="{{ route('user.courts') }}">
-									<i class="feather-check-circle"></i> Lịch Đặt Của Bạn
-								</a>
+								<form method="POST" action="{{ route('lich_dat_san') }}">
+								@csrf
+									<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
+									<button type="submit" class="nav-link btn btn-outline-light btn-sm">
+										<i class="feather-check-circle"></i> Lịch Đặt Của Bạn
+									</button>
+								</form>
+								
+							</li>
+							<li class="nav-item">
+								<form method="POST" action="{{ route('lich_co_dinh') }}">
+								@csrf
+									<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
+									<button type="submit" class="nav-link btn btn-outline-light btn-sm">
+										<i class="feather-check-circle"></i> Lịch cố định
+									</button>
+								</form>
+								
 							</li>
 							<li class="nav-item dropdown">
 								<a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
