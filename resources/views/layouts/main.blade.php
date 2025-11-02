@@ -253,10 +253,7 @@
 	@yield('payments_content')
 	@yield('login')
 	@yield('payment_content')
-	@yield('contract_content')
-	@yield('payment_contract_content')
-	@yield('my_bookings_content')
-	@yield('my_contracts_content')
+	@yield('search_content')
 	{{-- -------------------------------------- --}}
 
 	<footer class="footer">

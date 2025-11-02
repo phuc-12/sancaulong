@@ -50,7 +50,7 @@ class StaffController extends Controller
             )
             ->orderBy('time_slots.start_time', 'asc') // Sắp xếp
             ->get();
-
+                // dd($bookingsToday->pluck('status'));
         return view('staff.index', compact('bookingsToday'));
     }
 
