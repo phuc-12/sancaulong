@@ -186,16 +186,11 @@ class HomeController extends Controller
     // Hàm nhận dữ liệu từ form và đưa đến trang thanh toán
     public function payments(Request $request)
     {
-        // Dữ liệu slots gửi từ form, dưới dạng JSON
         $slots = json_decode($request->slots, true);
-        // CHUYỂN MẢNG $slots SANG COLLECTION ĐỂ SỬ DỤNG CÁC HÀM CỦA LARAVEL
         $slotCollection = collect($slots);
-        // LẤY CÁC GIÁ TRỊ DUY NHẤT
+
         $uniqueCourts = $slotCollection->pluck('court')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('date')->unique()->implode(' / ');
-
-        // LẤY THỜI GIAN ĐẶT DUY NHẤT (start_time và end_time)
-        // Để giữ nguyên định dạng "start_time đến end_time", ta phải tạo một chuỗi tạm
         $uniqueTimes = $slotCollection->map(function ($slot) {
             return $slot['start_time'] . ' đến ' . $slot['end_time'];
         })->unique()->implode(' / ');
@@ -203,12 +198,13 @@ class HomeController extends Controller
         $customer = Users::find($request->input('user_id'));
         $facilities = Facilities::find($request->input('facility_id'));
         $countSlots = count($slots);
-        // ✅ Cập nhật thông tin khách hàng với dữ liệu mới nhập
-        $customer->update([
-            'fullname' => $request->input('fullname'),
-            'phone'    => $request->input('phone'),
-            'email'    => $request->input('email'),
-        ]);
+
+        $tempCustomer = [
+            'user_id'  => $customer->user_id, // thêm user_id để không lỗi
+            'fullname' => $request->input('fullname') ?: $customer->fullname,
+            'phone'    => $request->input('phone') ?: $customer->phone,
+            'email'    => $request->input('email') ?: $customer->email,
+        ];
         if ($countSlots % 2 === 0) {
             $result = ($countSlots / 2) . ' tiếng';
         } else {
@@ -218,7 +214,7 @@ class HomeController extends Controller
         return view('payment', [
             'slots' => $slots,
             'result' => $result,
-            'customer' => $customer,
+            'customer' => (object)$tempCustomer,
             'facilities' => $facilities,
 
             // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
@@ -245,10 +241,16 @@ class HomeController extends Controller
         $payment_status = 'Chuyển khoản';
         DB::table(table: 'invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
-                'sub_total' => $total
+                'sub_total' => $total,
+                'facility_id' => $facility_id,
             ]);
+        $invoice_details = DB::table('invoice_details')
+        ->select('invoice_id')
+        ->where('invoice_detail_id', $invoiceDetailId)
+        ->first();
 
         DB::table(table: 'invoices')->insert([
+                'invoice_id' => $invoice_details->invoice_id,
                 'customer_id' => $userId,
                 'issue_date' => now(),
                 'total_amount' => $total,
@@ -293,7 +295,7 @@ class HomeController extends Controller
     $dateStart = $request->input('date_start') ?? now()->format('Y-m-d');
     $dateEnd = $request->input('date_end') ?? now()->addDays(7)->format('Y-m-d');
 
-    // ✅ Sinh mảng ngày từ date_start → date_end
+    // Sinh mảng ngày từ date_start → date_end
     $dates = [];
     $current = \Carbon\Carbon::parse($dateStart);
     $end = \Carbon\Carbon::parse($dateEnd);
@@ -588,12 +590,12 @@ class HomeController extends Controller
             DB::table('invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
                 'sub_total' => $total,
+                'facility_id' => $facility_id,
             ]);
         }
-<<<<<<< HEAD
+
 
         // Chèn từng chi tiết đặt sân
-=======
         $promotion_id = null;
         $payment_method = 1;
         $payment_status = 'Chuyển khoản';
@@ -610,8 +612,7 @@ class HomeController extends Controller
                 'deposit' => $deposit,
                 'note' => $note,
             ]);  
-        // ✅ Chèn từng chi tiết đặt sân
->>>>>>> 58abac3bc36c427a9d155caf81c9c00a22465b49
+
         foreach ($details as $detail) {
             $date = \Carbon\Carbon::parse($detail['date'])->format('Y-m-d');
 
@@ -643,19 +644,15 @@ class HomeController extends Controller
     public function list_Invoices(Request $request)
     {
         $user_id = $request->user_id;
-
-<<<<<<< HEAD
+    }
+  
 //Tìm kiếm sân
     public function search(Request $request)
     {
         // Lấy từ khóa tìm kiếm từ URL
         $keyword = $request->input('keyword');
-=======
-        $invoices = DB::table('invoices')->where('customer_id',$user_id)->get();
-        
         return view('my_bookings',compact('user_id', 'invoices'));
     }
->>>>>>> 58abac3bc36c427a9d155caf81c9c00a22465b49
 
         // Kiểm tra nếu keyword rỗng thì quay về trang chủ
         if (empty($keyword)) {

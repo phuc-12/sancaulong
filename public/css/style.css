@@ -739,7 +739,7 @@ ul li {
 -----------------------*/
 .table {
   color: #192335;
-  font-size: 14px;
+  font-size: 20px;
   max-width: 100%;
   margin-bottom: 0;
   width: 100%;
@@ -789,7 +789,7 @@ ul li {
   border-radius: 10px;
 }
 .table tbody tr td {
-  font-size: 12px;
+  font-size: 20px;
   padding: 0px;
 }
 .table thead {
