@@ -590,28 +590,8 @@ class HomeController extends Controller
                 'sub_total' => $total,
             ]);
         }
-<<<<<<< HEAD
 
         // Chèn từng chi tiết đặt sân
-=======
-        $promotion_id = null;
-        $payment_method = 1;
-        $payment_status = 'Chuyển khoản';
-        $deposit = 0;
-        $note = null;
-        DB::table(table: 'long_term_contracts')->insert([
-                'invoice_detail_id' => $invoiceDetailId,
-                'customer_id' => $userId,
-                'issue_date' => now(),
-                'total_amount' => $total,
-                'promotion_id' => $promotion_id,
-                'final_amount' => $total,
-                'payment_status' => $payment_status,
-                'deposit' => $deposit,
-                'note' => $note,
-            ]);  
-        // ✅ Chèn từng chi tiết đặt sân
->>>>>>> 58abac3bc36c427a9d155caf81c9c00a22465b49
         foreach ($details as $detail) {
             $date = \Carbon\Carbon::parse($detail['date'])->format('Y-m-d');
 
@@ -643,19 +623,12 @@ class HomeController extends Controller
     public function list_Invoices(Request $request)
     {
         $user_id = $request->user_id;
-
-<<<<<<< HEAD
+    }
 //Tìm kiếm sân
     public function search(Request $request)
     {
         // Lấy từ khóa tìm kiếm từ URL
         $keyword = $request->input('keyword');
-=======
-        $invoices = DB::table('invoices')->where('customer_id',$user_id)->get();
-        
-        return view('my_bookings',compact('user_id', 'invoices'));
-    }
->>>>>>> 58abac3bc36c427a9d155caf81c9c00a22465b49
 
         // Kiểm tra nếu keyword rỗng thì quay về trang chủ
         if (empty($keyword)) {
@@ -663,7 +636,7 @@ class HomeController extends Controller
         }
 
         // Thực hiện truy vấn (Luồng sự kiện chính 3)
-        // Tìm các cơ sở (facilities) có status 'đã duyệt' VÀ tên cơ sở (facility_name) HOẶC địa chỉ (address) chứa từ khóa
+        // Tìm các cơ sở (facilities) có status 'đã duyệt' VÀ tên cơ sở (facility_name) hoac địa chỉ (address) chứa từ khóa
         $results = Facility::where('status', 'đã duyệt')
                             ->where(function($query) use ($keyword) {
                                 $query->where('facility_name', 'LIKE', "%{$keyword}%")
