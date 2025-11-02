@@ -187,7 +187,7 @@ class HomeController extends Controller
     {
         $slots = json_decode($request->slots, true);
         $slotCollection = collect($slots);
-
+        
         $uniqueCourts = $slotCollection->pluck('court')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('date')->unique()->implode(' / ');
         $uniqueTimes = $slotCollection->map(function ($slot) {
@@ -229,6 +229,36 @@ class HomeController extends Controller
         $invoiceDetailId = $request->input('invoice_details_id');
         $userId = $request->input('user_id');
         $facility_id = $request->input('facility_id');
+
+        $fullname = $request->input('customer_name');
+        $phone = $request->input('customer_phone');
+        $email = $request->input('customer_email');
+
+        $currentUser = Users::find($userId);
+
+        if ($currentUser) {
+            // Nếu phone khác với trong DB thì tạo user mới
+            if ($currentUser->phone !== $phone) {
+                $newUser = Users::create([
+                    'fullname' => $fullname,
+                    'phone' => $phone,
+                    'email' => $email,
+                    'password' => bcrypt('123456789'), // hoặc tạo password mặc định
+                    'role_id' => '5', // ví dụ
+                ]);
+                $userId = $newUser->user_id;
+            }
+        } else {
+            // Nếu user không tồn tại thì cũng tạo mới
+            $newUser = Users::create([
+                'fullname' => $fullname,
+                'phone' => $phone,
+                'email' => $email,
+                'password' => bcrypt('123456789'), // hoặc tạo password mặc định
+                'role_id' => '5', // ví dụ
+            ]);
+            $userId = $newUser->user_id;
+        }
 
         $total = 0;
         foreach ($slots as $slot)
@@ -651,11 +681,26 @@ class HomeController extends Controller
             'facilities.facility_name as facility_name',
             'users.fullname as fullname',
             'invoices.issue_date as issue_date',
-            'invoices.final_amount as final_amount'
+            'invoices.final_amount as final_amount',
+            'invoice_details.invoice_detail_id as invoice_detail_id'
         )
         ->orderBy('invoices.invoice_id', 'desc')
         ->get();
-        return view('my_bookings',compact('user_id', 'invoices'));
+
+        foreach($invoices as $invoice)
+        {
+            $mybooking_details = DB::table('bookings')
+            ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+            ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+            ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
+            ->select(
+                'bookings.*',
+                'time_slots.start_time',
+                'time_slots.end_time',
+            )->get();
+        }
+
+        return view('my_bookings',compact('user_id', 'invoices','mybooking_details'));
     }
 
     public function list_Contracts(Request $request)
@@ -676,7 +721,21 @@ class HomeController extends Controller
         )
         ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
         ->get();
-        return view('my_contracts',compact('user_id', 'long_term_contracts'));
+
+        foreach($long_term_contracts as $ct)
+        {
+            $mycontract_details = DB::table('bookings')
+            ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+            ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+            ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+            ->select(
+                'bookings.*',
+                'time_slots.start_time',
+                'time_slots.end_time',
+            )->get();
+        }
+
+        return view('my_contracts',compact('user_id', 'long_term_contracts','mycontract_details'));
     }
 
 }

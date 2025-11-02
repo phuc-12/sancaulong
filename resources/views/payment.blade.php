@@ -122,6 +122,9 @@
 								</div>
 								<form id="paymentCompleteForm" action="{{ route('payments_complete') }}" method="POST">
 									@csrf
+									<input type="hidden" name="customer_name" value="{{ $customer_name ?? $customer->fullname }}">
+									<input type="hidden" name="customer_phone" value="{{ $customer_phone ?? $customer->phone }}">
+									<input type="hidden" name="customer_email" value="{{ $customer_email ?? $customer->email }}">
 									<input type="hidden" name="slots" id="slots_input" value='@json($slots)'>
 									<input type="hidden" name="invoice_details_id" id="invoice_details_id" value="{{ $invoice_detail_id }}">
 									<input type="hidden" name="facility_id" id="facility_id" value="{{ $facilities->facility_id }}">
