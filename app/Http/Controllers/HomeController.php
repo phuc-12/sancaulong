@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-use App\Models\Facility;
 class HomeController extends Controller
 {
     const LIMIT_PER_LOAD = 10;
@@ -295,7 +294,7 @@ class HomeController extends Controller
     $dateStart = $request->input('date_start') ?? now()->format('Y-m-d');
     $dateEnd = $request->input('date_end') ?? now()->addDays(7)->format('Y-m-d');
 
-    // Sinh mảng ngày từ date_start → date_end
+    // ✅ Sinh mảng ngày từ date_start → date_end
     $dates = [];
     $current = \Carbon\Carbon::parse($dateStart);
     $end = \Carbon\Carbon::parse($dateEnd);
@@ -412,11 +411,11 @@ class HomeController extends Controller
             $thongtinsan = Facilities::where('facility_id', $idSan)->first();
             $customer = Users::where('user_id', $user_id)->first();
             $timeSlots = Time_slots::all();
-            // Lấy ngày bắt đầu và kết thúc từ form
+            // ⚙️ Lấy ngày bắt đầu và kết thúc từ form
             $dateStart = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
             $dateEnd   = isset($endDate)   ? trim($endDate, '"')   : now()->addDays(7)->format('Y-m-d');
 
-            // Sinh mảng ngày từ date_start → date_end
+            // ✅ Sinh mảng ngày từ date_start → date_end
             $dates = [];
             $current = \Carbon\Carbon::parse($dateStart);
             $end     = \Carbon\Carbon::parse($dateEnd);
@@ -585,7 +584,7 @@ class HomeController extends Controller
             return back()->with('error', 'Dữ liệu không hợp lệ!');
         }
 
-        // Kiểm tra trùng invoice_detail_id
+        // ✅ Kiểm tra trùng invoice_detail_id
         if (!DB::table('invoice_details')->where('invoice_detail_id', $invoiceDetailId)->exists()) {
             DB::table('invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
@@ -593,9 +592,6 @@ class HomeController extends Controller
                 'facility_id' => $facility_id,
             ]);
         }
-
-
-        // Chèn từng chi tiết đặt sân
         $promotion_id = null;
         $payment_method = 1;
         $payment_status = 'Chuyển khoản';
@@ -612,7 +608,7 @@ class HomeController extends Controller
                 'deposit' => $deposit,
                 'note' => $note,
             ]);  
-
+        // ✅ Chèn từng chi tiết đặt sân
         foreach ($details as $detail) {
             $date = \Carbon\Carbon::parse($detail['date'])->format('Y-m-d');
 
@@ -644,33 +640,43 @@ class HomeController extends Controller
     public function list_Invoices(Request $request)
     {
         $user_id = $request->user_id;
-    }
-  
-//Tìm kiếm sân
-    public function search(Request $request)
-    {
-        // Lấy từ khóa tìm kiếm từ URL
-        $keyword = $request->input('keyword');
+
+        $invoices = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+        ->where('invoices.customer_id', $user_id)
+        ->select(
+            'invoices.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'invoices.issue_date as issue_date',
+            'invoices.final_amount as final_amount'
+        )
+        ->orderBy('invoices.invoice_id', 'desc')
+        ->get();
         return view('my_bookings',compact('user_id', 'invoices'));
     }
 
-        // Kiểm tra nếu keyword rỗng thì quay về trang chủ
-        if (empty($keyword)) {
-            return redirect()->route('trang_chu');
-        }
+    public function list_Contracts(Request $request)
+    {
+        $user_id = $request->user_id;
 
-        // Thực hiện truy vấn (Luồng sự kiện chính 3)
-        // Tìm các cơ sở (facilities) có status 'đã duyệt' VÀ tên cơ sở (facility_name) HOẶC địa chỉ (address) chứa từ khóa
-        $results = Facility::where('status', 'đã duyệt')
-                            ->where(function($query) use ($keyword) {
-                                $query->where('facility_name', 'LIKE', "%{$keyword}%")
-                                      ->orWhere('address', 'LIKE', "%{$keyword}%");
-                            })
-                            ->with('courtPrice') // Tải kèm thông tin giá (nếu có relationship 'courtPrice')
-                            ->paginate(10); // Phân trang kết quả
-
-        // Trả về view hiển thị kết quả (Luồng sự kiện chính 4)
-        // Truyền biến $results và $keyword sang view
-        return view('users.search_results', compact('results', 'keyword'));
+        $long_term_contracts = DB::table('long_term_contracts')
+        ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+        ->where('long_term_contracts.customer_id', $user_id)
+        ->select(
+            'long_term_contracts.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'long_term_contracts.issue_date as issue_date',
+            'long_term_contracts.final_amount as final_amount'
+        )
+        ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
+        ->get();
+        return view('my_contracts',compact('user_id', 'long_term_contracts'));
     }
+
 }
