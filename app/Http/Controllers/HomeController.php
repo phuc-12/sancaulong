@@ -388,112 +388,111 @@ class HomeController extends Controller
                     'message' => 'Thiếu dữ liệu đầu vào!'
                 ], 400);
             }
-        $timeSlots = json_decode($data['time_slots'], true) ?? [];
-        $actualDates = json_decode($data['actual_dates'], true) ?? [];
-        $courts = json_decode($data['courts'], true) ?? [];
-            // ================== KIỂM TRA TRÙNG (TỐI ƯU CHO DỮ LIỆU LỚN) ==================
-        $combinations = [];
-        foreach ($actualDates as $item) {
-            $date = $item['date'] ?? null;
-            $courtIds = $item['courts'] ?? [];
-            $timeSlotIds = $item['time_slots'] ?? [];
+            $timeSlots = json_decode($data['time_slots'], true) ?? [];
+            $actualDates = json_decode($data['actual_dates'], true) ?? [];
+            $courts = json_decode($data['courts'], true) ?? [];
+                // ================== KIỂM TRA TRÙNG (TỐI ƯU CHO DỮ LIỆU LỚN) ==================
+            $combinations = [];
+            foreach ($actualDates as $item) {
+                $date = $item['date'] ?? null;
+                $courtIds = $item['courts'] ?? [];
+                $timeSlotIds = $item['time_slots'] ?? [];
 
-            if (!$date || empty($courtIds) || empty($timeSlotIds)) continue;
+                if (!$date || empty($courtIds) || empty($timeSlotIds)) continue;
 
-            foreach ($courtIds as $courtId) {
-                foreach ($timeSlotIds as $timeSlotId) {
-                    $combinations[] = [
-                        'date' => $date,
-                        'court_id' => $courtId,
-                        'time_slot_id' => $timeSlotId,
-                    ];
+                foreach ($courtIds as $courtId) {
+                    foreach ($timeSlotIds as $timeSlotId) {
+                        $combinations[] = [
+                            'date' => $date,
+                            'court_id' => $courtId,
+                            'time_slot_id' => $timeSlotId,
+                        ];
+                    }
                 }
             }
-        }
 
-        if (empty($combinations)) {
-            return back()->with('error', 'Không có ngày hợp lệ để kiểm tra!');
-        }
-
-        $existingBookings = DB::table('bookings')
-            ->whereIn('booking_date', collect($combinations)->pluck('date')->unique())
-            ->whereIn('court_id', collect($combinations)->pluck('court_id')->unique())
-            ->whereIn('time_slot_id', collect($combinations)->pluck('time_slot_id')->unique())
-            ->select('booking_date', 'court_id', 'time_slot_id')
-            ->get();
-
-        $existingMap = [];
-        foreach ($existingBookings as $b) {
-            $existingMap["{$b->booking_date}_{$b->court_id}_{$b->time_slot_id}"] = true;
-        }
-
-        $conflicts = [];
-        foreach ($combinations as $c) {
-            $key = "{$c['date']}_{$c['court_id']}_{$c['time_slot_id']}";
-            if (isset($existingMap[$key])) {
-                $conflicts[] = $c;
-            }
-        }
-
-        if (!empty($conflicts)) {
-            
-            $idSan = $facility_id;
-            $thongtinsan = Facilities::where('facility_id', $idSan)->first();
-            $customer = Users::where('user_id', $user_id)->first();
-            $timeSlots = Time_slots::all();
-            // ⚙️ Lấy ngày bắt đầu và kết thúc từ form
-            $dateStart = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
-            $dateEnd   = isset($endDate)   ? trim($endDate, '"')   : now()->addDays(7)->format('Y-m-d');
-
-            // ✅ Sinh mảng ngày từ date_start → date_end
-            $dates = [];
-            $current = \Carbon\Carbon::parse($dateStart);
-            $end     = \Carbon\Carbon::parse($dateEnd);
-
-            while ($current->lte($end)) {
-                $dates[] = $current->format('Y-m-d');
-                $current->addDay();
+            if (empty($combinations)) {
+                return back()->with('error', 'Không có ngày hợp lệ để kiểm tra!');
             }
 
-            // Lấy danh sách đặt sân
-            $bookings = Bookings::where('facility_id', $idSan)
-                ->whereBetween('booking_date', [$dateStart, $dateEnd])
-                ->get(['booking_date', 'time_slot_id', 'court_id']);
+            $existingBookings = DB::table('bookings')
+                ->whereIn('booking_date', collect($combinations)->pluck('date')->unique())
+                ->whereIn('court_id', collect($combinations)->pluck('court_id')->unique())
+                ->whereIn('time_slot_id', collect($combinations)->pluck('time_slot_id')->unique())
+                ->select('booking_date', 'court_id', 'time_slot_id')
+                ->get();
 
-            $bookingsData = [];
-            foreach ($bookings as $b) {
-                $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
+            $existingMap = [];
+            foreach ($existingBookings as $b) {
+                $existingMap["{$b->booking_date}_{$b->court_id}_{$b->time_slot_id}"] = true;
             }
 
-            $thuTiengViet = [
-                'Mon' => 'Thứ hai', 'Tue' => 'Thứ ba', 'Wed' => 'Thứ tư',
-                'Thu' => 'Thứ năm', 'Fri' => 'Thứ sáu', 'Sat' => 'Thứ bảy', 'Sun' => 'Chủ nhật',
-            ];
+            $conflicts = [];
+            foreach ($combinations as $c) {
+                $key = "{$c['date']}_{$c['court_id']}_{$c['time_slot_id']}";
+                if (isset($existingMap[$key])) {
+                    $conflicts[] = $c;
+                }
+            }
 
-            $soLuongSan = $thongtinsan->quantity_court;
-            $dsSanCon = [];
-            for ($i = 1; $i <= $soLuongSan; $i++) {
-                $dsSanCon[] = [
-                    'id' => $thongtinsan->facility_id . '-' . $i,
-                    'ten' => 'Sân ' . $i
+            if (!empty($conflicts)) {
+                
+                $idSan = $facility_id;
+                $thongtinsan = Facilities::where('facility_id', $idSan)->first();
+                $customer = Users::where('user_id', $user_id)->first();
+                $timeSlots = Time_slots::all();
+                // ⚙️ Lấy ngày bắt đầu và kết thúc từ form
+                $dateStart = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
+                $dateEnd   = isset($endDate)   ? trim($endDate, '"')   : now()->addDays(7)->format('Y-m-d');
+
+                // ✅ Sinh mảng ngày từ date_start → date_end
+                $dates = [];
+                $current = \Carbon\Carbon::parse($dateStart);
+                $end     = \Carbon\Carbon::parse($dateEnd);
+
+                while ($current->lte($end)) {
+                    $dates[] = $current->format('Y-m-d');
+                    $current->addDay();
+                }
+
+                // Lấy danh sách đặt sân
+                $bookings = Bookings::where('facility_id', $idSan)
+                    ->whereBetween('booking_date', [$dateStart, $dateEnd])
+                    ->get(['booking_date', 'time_slot_id', 'court_id']);
+
+                $bookingsData = [];
+                foreach ($bookings as $b) {
+                    $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
+                }
+
+                $thuTiengViet = [
+                    'Mon' => 'Thứ hai', 'Tue' => 'Thứ ba', 'Wed' => 'Thứ tư',
+                    'Thu' => 'Thứ năm', 'Fri' => 'Thứ sáu', 'Sat' => 'Thứ bảy', 'Sun' => 'Chủ nhật',
                 ];
+
+                $soLuongSan = $thongtinsan->quantity_court;
+                $dsSanCon = [];
+                for ($i = 1; $i <= $soLuongSan; $i++) {
+                    $dsSanCon[] = [
+                        'id' => $thongtinsan->facility_id . '-' . $i,
+                        'ten' => 'Sân ' . $i
+                    ];
+                }
+                $courts = Court::where('facility_id', $idSan)->get();
+
+                return view('contract', compact(
+                    'thongtinsan', 'customer', 'timeSlots', 'dates',
+                    'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon',
+                    'dateStart', 'dateEnd', 'courts'
+                ))->with([
+                    'message' => 'Có khung giờ đã được đặt trước, vui lòng chọn lại!',
+                    'conflicts' => $conflicts // <--- phải truyền conflicts vào view
+                ]);
+
             }
-            $courts = Court::where('facility_id', $idSan)->get();
-
-            return view('contract', compact(
-                'thongtinsan', 'customer', 'timeSlots', 'dates',
-                'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon',
-                'dateStart', 'dateEnd', 'courts'
-            ))->with([
-                'message' => 'Có khung giờ đã được đặt trước, vui lòng chọn lại!',
-                'conflicts' => $conflicts // <--- phải truyền conflicts vào view
-            ]);
-
-        }
 
 
         // =====================================================================
-
             // === XỬ LÝ KHUNG GIỜ ===
             $timeSlots = collect($timeSlots)->slice(0, -1);
             // $actualDates = collect($actualDates)->slice(0, -1);
@@ -579,14 +578,9 @@ class HomeController extends Controller
                 'slot_details' => $slotDetails,
                 'courts'       => $courts,
             ];
-            // Chỉ truyền 3 biến chính vào view
+
             return view('payment_contract', compact('summary', 'details', 'lines', 'userInfo'));
-            // return view('layouts.redirect_post_contract', [
-            //     'summary' => $summary,
-            //     'details' => $details,
-            //     'lines' => $lines,
-            //     'userInfo' => $userInfo,
-            // ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => 'error',
@@ -687,21 +681,24 @@ class HomeController extends Controller
         )
         ->orderBy('invoices.invoice_id', 'desc')
         ->get();
+        $success_message = $request->success_message;
+        $mybooking_details = [];
 
-        foreach($invoices as $invoice)
-        {
-            $mybooking_details = DB::table('bookings')
-            ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
-            ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
-            ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
-            ->select(
-                'bookings.*',
-                'time_slots.start_time',
-                'time_slots.end_time',
-            )->get();
+        foreach ($invoices as $invoice) {
+            $details = DB::table('bookings')
+                ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )->get();
+
+            $mybooking_details[$invoice->invoice_detail_id] = $details;
         }
-        
-        return view('my_bookings',compact('user_id', 'invoices','mybooking_details'));
+
+        return view('my_bookings', compact('user_id', 'invoices', 'mybooking_details', 'success_message'));
     }
 
     public function list_Contracts(Request $request)
@@ -731,8 +728,8 @@ class HomeController extends Controller
             ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
             ->select(
                 'bookings.*',
-                'time_slots.start_time',
-                'time_slots.end_time',
+                'time_slots.start_time as start_time',
+                'time_slots.end_time as end_time',
             )->get();
         }
 
@@ -744,6 +741,7 @@ class HomeController extends Controller
         $slots = json_decode($request->slots, true);
         $slotCollection = collect($slots);
         $invoice_detail_id = $request->invoice_detail_id;
+        $invoices = $request->invoices;
 
         $uniqueCourts = $slotCollection->pluck('court_id')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('booking_date')->unique()->implode(' / ');
@@ -767,6 +765,7 @@ class HomeController extends Controller
             'customer' => $customer,
             'facilities' => $facilities,
             'invoice_detail_id' => $invoice_detail_id,
+            'invoices' => $invoices,
             // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
             'uniqueCourts' => $uniqueCourts,
             'uniqueDates' => $uniqueDates,
@@ -777,8 +776,28 @@ class HomeController extends Controller
     public function cancel_invoice(Request $request)
     {
         $invoice_detail_id = $request->invoice_detail_id;
+        $user_id = $request->user_id;
 
-        dd($invoice_detail_id);
+        Bookings::where('invoice_detail_id', $invoice_detail_id)->delete();
+
+        $invoice_details = DB::table('invoice_details')
+        ->where('invoice_detail_id', $invoice_detail_id)
+        ->select('invoice_id')
+        ->first();
+
+        DB::table('invoices')->where('invoice_id', $invoice_details->invoice_id)->update([
+            'payment_status' => 'Đã Hủy',
+        ]);
+
+        return view('layouts.redirect_mybookings', [
+            'user_id' => $user_id,
+            'success_message' => 'Đã hủy!!! Vui lòng liên hệ sân để hoàn tiền.',
+        ]);
+    }
+
+    public function contract_details(Request $request)
+    {
         
     }
+
 }

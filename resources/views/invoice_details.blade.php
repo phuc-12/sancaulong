@@ -112,9 +112,13 @@
 								<form action="{{ route('cancel_invoice') }}" method="POST">
 									@csrf
 									<input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}">
+									
                                     <div class="d-flex justify-content-center gap-2">
+										<input type="hidden" name="user_id" value="{{ $customer->user_id}}">
+										<input type="hidden" name="invoices" value="{{ $invoices }}">
                                         <button type="submit" class="btn btn-danger btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">HỦY LỊCH</button>
                                     </div>
+									<p style="text-align: center">Khi hủy, vui lòng liên hệ chủ sân qua số điện thoại hoặc email để được hoàn tiền.</p>
 								</form>
 							</aside>
 						</div>

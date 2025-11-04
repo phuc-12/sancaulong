@@ -40,6 +40,8 @@ Route::prefix('/')->controller(HomeController::class)
     Route::post('/list_Contracts','list_Contracts')->name('lich_co_dinh');
     Route::post('/invoice_details','invoice_details')->name('chi_tiet_hd');
     Route::post('/cancel_invoice','cancel_invoice')->name('cancel_invoice');
+    Route::post('/contract_details','contract_details')->name('chi_tiet_ct');
+    
 });
 
 
