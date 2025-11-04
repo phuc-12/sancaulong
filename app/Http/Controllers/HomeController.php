@@ -683,7 +683,8 @@ class HomeController extends Controller
             'users.fullname as fullname',
             'invoices.issue_date as issue_date',
             'invoices.final_amount as final_amount',
-            'invoice_details.invoice_detail_id as invoice_detail_id'
+            'invoice_details.invoice_detail_id as invoice_detail_id',
+            'invoice_details.facility_id as facility_id'
         )
         ->orderBy('invoices.invoice_id', 'desc')
         ->get();
@@ -700,7 +701,7 @@ class HomeController extends Controller
                 'time_slots.end_time',
             )->get();
         }
-
+        
         return view('my_bookings',compact('user_id', 'invoices','mybooking_details'));
     }
 
@@ -766,4 +767,46 @@ class HomeController extends Controller
     }
 
     
+    public function invoice_details(Request $request)
+    {
+        $slots = json_decode($request->slots, true);
+        $slotCollection = collect($slots);
+        $invoice_detail_id = $request->invoice_detail_id;
+
+        $uniqueCourts = $slotCollection->pluck('court_id')->unique()->implode(' , ');
+        $uniqueDates = $slotCollection->pluck('booking_date')->unique()->implode(' / ');
+        $uniqueTimes = $slotCollection->map(function ($slot) {
+            return $slot['start_time'] . ' đến ' . $slot['end_time'];
+        })->unique()->implode(' / ');
+
+        $customer = Users::find($request->input('user_id'));
+        $facilities = Facilities::find($request->input('facility_id'));
+        $countSlots = count($slots);
+
+        if ($countSlots % 2 === 0) {
+            $result = ($countSlots / 2) . ' tiếng';
+        } else {
+            $result = (($countSlots - 1) / 2) . ' tiếng rưỡi';
+        }
+        // Truyền sang view thanh toán
+        return view('invoice_details', [
+            'slots' => $slots,
+            'result' => $result,
+            'customer' => $customer,
+            'facilities' => $facilities,
+            'invoice_detail_id' => $invoice_detail_id,
+            // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
+            'uniqueCourts' => $uniqueCourts,
+            'uniqueDates' => $uniqueDates,
+            'uniqueTimes' => $uniqueTimes,
+        ]);
+    }
+
+    public function cancel_invoice(Request $request)
+    {
+        $invoice_detail_id = $request->invoice_detail_id;
+
+        dd($invoice_detail_id);
+        
+    }
 }

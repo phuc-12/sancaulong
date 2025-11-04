@@ -176,8 +176,9 @@
 													</a>
 												</div>
 												<h3 class="listing-title">
-													<a
-														href="{{ route('chi_tiet_san', ['idSan' => $thongtin->facility_id]) }}">{{ $thongtin->facility_name }}</a>
+													<button type="submit" style="background-color: white; border: 1px solid white;">
+														{{ $thongtin->facility_name }}
+													</button>
 												</h3>
 												<div class="listing-details-group">
 													<p>{{ $thongtin['description'] }}</p>
@@ -197,9 +198,8 @@
 												</div>
 												<div class="listing-button">
 													<div class="listing-venue-owner">
+														<button class="btn btn-success">Đặt sân</button>
 													</div>
-													<a href="{{ route('chi_tiet_san', ['idSan' => $thongtin->facility_id]) }}"
-														class="user-book-now">
 												</div>
 											</div>
 										</div>
