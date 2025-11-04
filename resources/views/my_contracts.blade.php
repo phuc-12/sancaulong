@@ -112,7 +112,7 @@
                                                             <td>{{ $ct->issue_date }}</td>
                                                             <td>{{ $ct->final_amount }}</td>
                                                             <td>
-                                                                <form action="" method="POST">
+                                                                <form action="{{ route('chi_tiet_ct') }}" method="POST">
                                                                     <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
                                                                     <button type="submit">Chi tiết</button>
                                                                 </form>

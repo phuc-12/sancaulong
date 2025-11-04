@@ -379,42 +379,37 @@
                 </table>
             </div>
         @endif
-
-
-
-
         {{-- Chọn thứ trong tuần --}}
         <div class="mb-3 text-white">
-    <label>
-        <input type="checkbox" name="dayofweek[]" value="2"
-            {{ in_array('2', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 2
-    </label>
-    <label>
-        <input type="checkbox" name="dayofweek[]" value="3"
-            {{ in_array('3', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 3
-    </label>
-    <label>
-        <input type="checkbox" name="dayofweek[]" value="4"
-            {{ in_array('4', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 4
-    </label>
-    <label>
-        <input type="checkbox" name="dayofweek[]" value="5"
-            {{ in_array('5', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 5
-    </label>
-    <label>
-        <input type="checkbox" name="dayofweek[]" value="6"
-            {{ in_array('6', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 6
-    </label>
-    <label>
-        <input type="checkbox" name="dayofweek[]" value="7"
-            {{ in_array('7', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 7
-    </label>
-    <label>
-        <input type="checkbox" name="dayofweek[]" value="8"
-            {{ in_array('8', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Chủ Nhật
-    </label>
-</div>
-
+            <label>
+                <input type="checkbox" name="dayofweek[]" value="2"
+                    {{ in_array('2', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 2
+            </label>
+            <label>
+                <input type="checkbox" name="dayofweek[]" value="3"
+                    {{ in_array('3', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 3
+            </label>
+            <label>
+                <input type="checkbox" name="dayofweek[]" value="4"
+                    {{ in_array('4', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 4
+            </label>
+            <label>
+                <input type="checkbox" name="dayofweek[]" value="5"
+                    {{ in_array('5', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 5
+            </label>
+            <label>
+                <input type="checkbox" name="dayofweek[]" value="6"
+                    {{ in_array('6', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 6
+            </label>
+            <label>
+                <input type="checkbox" name="dayofweek[]" value="7"
+                    {{ in_array('7', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 7
+            </label>
+            <label>
+                <input type="checkbox" name="dayofweek[]" value="8"
+                    {{ in_array('8', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Chủ Nhật
+            </label>
+        </div>
 
         {{-- Lưới chọn khung giờ --}}
         <div class="court-grid">

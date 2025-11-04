@@ -88,6 +88,12 @@
 									<div>
 										
 										<div>
+											@if($success_message)
+												<div class="alert alert-danger">
+													<p>{{ $success_message }}</p>
+												</div>
+											@else 
+											@endif
 											<table class="table table-striped">
                                                 <thead>
                                                     <tr>
@@ -113,9 +119,16 @@
 																@csrf
 																	<input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
 																	<input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
-																	<input type="hidden" name="slots" value='@json($mybooking_details)'>
+																	<input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
                                                                     <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
-                                                                    <button type="submit">Chi tiết</button>
+																	<input type="hidden" name="invoices" value="{{ $invoices }}">
+																	@if ($invoice->payment_status === 'Đã Hủy')
+																		<p class="text-danger">Đã hủy</p>
+																	@else 
+																		<button type="submit">
+																			Chi tiết
+																		</button>
+																	@endif
                                                                 </form>
                                                             </td>
                                                         </tr>
