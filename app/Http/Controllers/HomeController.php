@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookings;
+use App\Models\Facility;
 use Illuminate\Http\Request;
 use App\Models\facilities;
 use App\Models\Users;
@@ -441,11 +442,11 @@ class HomeController extends Controller
             $thongtinsan = Facilities::where('facility_id', $idSan)->first();
             $customer = Users::where('user_id', $user_id)->first();
             $timeSlots = Time_slots::all();
-            // ⚙️ Lấy ngày bắt đầu và kết thúc từ form
+            // Lấy ngày bắt đầu và kết thúc từ form
             $dateStart = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
             $dateEnd   = isset($endDate)   ? trim($endDate, '"')   : now()->addDays(7)->format('Y-m-d');
 
-            // ✅ Sinh mảng ngày từ date_start → date_end
+            //  Sinh mảng ngày từ date_start → date_end
             $dates = [];
             $current = \Carbon\Carbon::parse($dateStart);
             $end     = \Carbon\Carbon::parse($dateEnd);
@@ -614,7 +615,7 @@ class HomeController extends Controller
             return back()->with('error', 'Dữ liệu không hợp lệ!');
         }
 
-        // ✅ Kiểm tra trùng invoice_detail_id
+        // Kiểm tra trùng invoice_detail_id
         if (!DB::table('invoice_details')->where('invoice_detail_id', $invoiceDetailId)->exists()) {
             DB::table('invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
@@ -638,7 +639,7 @@ class HomeController extends Controller
                 'deposit' => $deposit,
                 'note' => $note,
             ]);  
-        // ✅ Chèn từng chi tiết đặt sân
+        // Chèn từng chi tiết đặt sân
         foreach ($details as $detail) {
             $date = \Carbon\Carbon::parse($detail['date'])->format('Y-m-d');
 
@@ -739,6 +740,33 @@ class HomeController extends Controller
         return view('my_contracts',compact('user_id', 'long_term_contracts','mycontract_details'));
     }
 
+    public function search(Request $request)
+    {
+        // 1. Lấy từ khóa tìm kiếm từ URL (?keyword=...)
+        $keyword = $request->input('keyword');
+
+        // 2. Kiểm tra nếu keyword rỗng thì quay về trang chủ
+        if (empty($keyword)) {
+            return redirect()->route('trang_chu');
+        }
+
+        // 3. Thực hiện truy vấn (Luồng sự kiện chính 3)
+        // Tìm các cơ sở (facilities) có status 'đã duyệt' VÀ
+        // tên cơ sở (facility_name) HOẶC địa chỉ (address) chứa từ khóa
+        $results = Facility::where('status', 'đã duyệt')
+                            ->where(function($query) use ($keyword) {
+                                $query->where('facility_name', 'LIKE', "%{$keyword}%")
+                                      ->orWhere('address', 'LIKE', "%{$keyword}%");
+                            })
+                            ->with('courtPrice') // Tải kèm thông tin giá (nếu có relationship 'courtPrice')
+                            ->paginate(10); // Phân trang kết quả
+
+        // 4. Trả về view hiển thị kết quả (Luồng sự kiện chính 4)
+        // Truyền biến $results và $keyword sang view
+        return view('users.search_results', compact('results', 'keyword'));
+    }
+
+    
     public function invoice_details(Request $request)
     {
         $slots = json_decode($request->slots, true);
