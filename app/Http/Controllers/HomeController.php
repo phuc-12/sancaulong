@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookings;
+use App\Models\Facility;
 use Illuminate\Http\Request;
 use App\Models\facilities;
 use App\Models\Users;
@@ -20,7 +21,7 @@ class HomeController extends Controller
     {
         $sancaulong = Facilities::with('Court_prices')->take(3)->get();
         // dd($sancaulong);
-        return view('index',compact('sancaulong'));
+        return view('index', compact('sancaulong'));
 
     }
 
@@ -69,18 +70,6 @@ class HomeController extends Controller
         ]);
     }
 
-    // public function venue_details(Request $request)
-    // {
-    //     $idSan = $request->query('facility_id');
-
-    //     $thongtinsan = Facilities::with('Users')->get()->where('facility_id', $idSan)->first();
-
-    //     if (!$thongtinsan) {
-    //         return response()->json(['error' => 'Không tìm thấy sản phẩm'], 404);
-    //     }
-
-    //     return view('venue-details',compact('thongtinsan'));
-    // }
 
 
     public function show(Request $request)
@@ -187,7 +176,7 @@ class HomeController extends Controller
     {
         $slots = json_decode($request->slots, true);
         $slotCollection = collect($slots);
-        
+
         $uniqueCourts = $slotCollection->pluck('court')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('date')->unique()->implode(' / ');
         $uniqueTimes = $slotCollection->map(function ($slot) {
@@ -199,10 +188,10 @@ class HomeController extends Controller
         $countSlots = count($slots);
 
         $tempCustomer = [
-            'user_id'  => $customer->user_id, // thêm user_id để không lỗi
+            'user_id' => $customer->user_id, // thêm user_id để không lỗi
             'fullname' => $request->input('fullname') ?: $customer->fullname,
-            'phone'    => $request->input('phone') ?: $customer->phone,
-            'email'    => $request->input('email') ?: $customer->email,
+            'phone' => $request->input('phone') ?: $customer->phone,
+            'email' => $request->input('email') ?: $customer->email,
         ];
         if ($countSlots % 2 === 0) {
             $result = ($countSlots / 2) . ' tiếng';
@@ -213,7 +202,7 @@ class HomeController extends Controller
         return view('payment', [
             'slots' => $slots,
             'result' => $result,
-            'customer' => (object)$tempCustomer,
+            'customer' => (object) $tempCustomer,
             'facilities' => $facilities,
 
             // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
@@ -261,37 +250,36 @@ class HomeController extends Controller
         }
 
         $total = 0;
-        foreach ($slots as $slot)
-        {
+        foreach ($slots as $slot) {
             $total += $slot['price'];
         }
         $promotion_id = null;
         $payment_method = 1;
         $payment_status = 'Chuyển khoản';
         DB::table(table: 'invoice_details')->insert([
-                'invoice_detail_id' => $invoiceDetailId,
-                'sub_total' => $total,
-                'facility_id' => $facility_id,
-            ]);
+            'invoice_detail_id' => $invoiceDetailId,
+            'sub_total' => $total,
+            'facility_id' => $facility_id,
+        ]);
         $invoice_details = DB::table('invoice_details')
-        ->select('invoice_id')
-        ->where('invoice_detail_id', $invoiceDetailId)
-        ->first();
+            ->select('invoice_id')
+            ->where('invoice_detail_id', $invoiceDetailId)
+            ->first();
 
         DB::table(table: 'invoices')->insert([
-                'invoice_id' => $invoice_details->invoice_id,
-                'customer_id' => $userId,
-                'issue_date' => now(),
-                'total_amount' => $total,
-                'promotion_id' => $promotion_id,
-                'final_amount' => $total,
-                'payment_status' => $payment_status,
-                'payment_method' => $payment_method,
-            ]);  
+            'invoice_id' => $invoice_details->invoice_id,
+            'customer_id' => $userId,
+            'issue_date' => now(),
+            'total_amount' => $total,
+            'promotion_id' => $promotion_id,
+            'final_amount' => $total,
+            'payment_status' => $payment_status,
+            'payment_method' => $payment_method,
+        ]);
         if (!$slots || !is_array($slots)) {
             return back()->with('error', 'Không có dữ liệu đặt sân!');
         }
-        
+
         // dd($slots, $invoiceDetailId, $userId, $facility_id);
         foreach ($slots as $slot) {
             DB::table(table: 'bookings')->insert([
@@ -315,72 +303,87 @@ class HomeController extends Controller
     }
 
     public function contract_bookings(Request $request)
-{
-    $idSan = $request->input('facility_id');
-    $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
-    $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
-    $timeSlots = Time_slots::all();
-    // ⚙️ Lấy ngày bắt đầu và kết thúc từ form
-    $dateStart = $request->input('date_start') ?? now()->format('Y-m-d');
-    $dateEnd = $request->input('date_end') ?? now()->addDays(7)->format('Y-m-d');
+    {
+        $idSan = $request->input('facility_id');
+        $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
+        $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
+        $timeSlots = Time_slots::all();
+        // Lấy ngày bắt đầu và kết thúc từ form
+        $dateStart = $request->input('date_start') ?? now()->format('Y-m-d');
+        $dateEnd = $request->input('date_end') ?? now()->addDays(7)->format('Y-m-d');
 
-    // ✅ Sinh mảng ngày từ date_start → date_end
-    $dates = [];
-    $current = \Carbon\Carbon::parse($dateStart);
-    $end = \Carbon\Carbon::parse($dateEnd);
+        // Sinh mảng ngày từ date_start → date_end
+        $dates = [];
+        $current = \Carbon\Carbon::parse($dateStart);
+        $end = \Carbon\Carbon::parse($dateEnd);
 
-    while ($current->lte($end)) {
-        $dates[] = $current->format('Y-m-d');
-        $current->addDay();
-    }
+        while ($current->lte($end)) {
+            $dates[] = $current->format('Y-m-d');
+            $current->addDay();
+        }
 
-    // Lấy danh sách đặt sân
-    $bookings = Bookings::where('facility_id', $idSan)
-        ->whereBetween('booking_date', [$dateStart, $dateEnd])
-        ->get(['booking_date', 'time_slot_id', 'court_id']);
+        // Lấy danh sách đặt sân
+        $bookings = Bookings::where('facility_id', $idSan)
+            ->whereBetween('booking_date', [$dateStart, $dateEnd])
+            ->get(['booking_date', 'time_slot_id', 'court_id']);
 
-    $bookingsData = [];
-    foreach ($bookings as $b) {
-        $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
-    }
+        $bookingsData = [];
+        foreach ($bookings as $b) {
+            $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
+        }
 
-    $thuTiengViet = [
-        'Mon' => 'Thứ hai', 'Tue' => 'Thứ ba', 'Wed' => 'Thứ tư',
-        'Thu' => 'Thứ năm', 'Fri' => 'Thứ sáu', 'Sat' => 'Thứ bảy', 'Sun' => 'Chủ nhật',
-    ];
-
-    $soLuongSan = $thongtinsan->quantity_court;
-    $dsSanCon = [];
-    for ($i = 1; $i <= $soLuongSan; $i++) {
-        $dsSanCon[] = [
-            'id' => $thongtinsan->facility_id . '-' . $i,
-            'ten' => 'Sân ' . $i
+        $thuTiengViet = [
+            'Mon' => 'Thứ hai',
+            'Tue' => 'Thứ ba',
+            'Wed' => 'Thứ tư',
+            'Thu' => 'Thứ năm',
+            'Fri' => 'Thứ sáu',
+            'Sat' => 'Thứ bảy',
+            'Sun' => 'Chủ nhật',
         ];
+
+        $soLuongSan = $thongtinsan->quantity_court;
+        $dsSanCon = [];
+        for ($i = 1; $i <= $soLuongSan; $i++) {
+            $dsSanCon[] = [
+                'id' => $thongtinsan->facility_id . '-' . $i,
+                'ten' => 'Sân ' . $i
+            ];
+        }
+        $courts = Court::where('facility_id', $idSan)->get();
+        return view('contract', compact(
+            'thongtinsan',
+            'customer',
+            'timeSlots',
+            'dates',
+            'bookingsData',
+            'thuTiengViet',
+            'soLuongSan',
+            'dsSanCon',
+            'dateStart',
+            'dateEnd',
+            'courts',
+            'dateStart',
+            'dateEnd'
+        ));
     }
-    $courts = Court::where('facility_id', $idSan)->get();
-    return view('contract', compact(
-        'thongtinsan', 'customer', 'timeSlots', 'dates',
-        'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon',
-        'dateStart', 'dateEnd', 'courts', 'dateStart', 'dateEnd'
-    ));
-}
 
     public function contracts_preview(Request $request)
     {
         try {
             $data = $request->all();
-            
-            $startDate    = $data['start_date'] ?? null;
-            $endDate      = $data['end_date'] ?? null;
-            $dayOfWeeks   = $data['day_of_weeks'] ?? [];
-            $timeSlots    = $data['time_slots'] ?? [];
-            $courts       = $data['courts'] ?? [];
-            $actualDates  = $data['actual_dates'] ?? [];
+
+            $startDate = $data['start_date'] ?? null;
+            $endDate = $data['end_date'] ?? null;
+            $dayOfWeeks = $data['day_of_weeks'] ?? [];
+            $timeSlots = $data['time_slots'] ?? [];
+            $courts = $data['courts'] ?? [];
+            $actualDates = $data['actual_dates'] ?? [];
             $defaultPrice = $data['default_price'] ?? null;
             $specialPrice = $data['special_price'] ?? null;
             $facility_id = $request->input('facility_id');
             $user_id = $data['user_id'] ?? null;
-        
+
 
             if (!$startDate || !$endDate || empty($dayOfWeeks) || empty($timeSlots) || empty($courts) || empty($actualDates)) {
                 return response()->json([
@@ -498,7 +501,7 @@ class HomeController extends Controller
             // $actualDates = collect($actualDates)->slice(0, -1);
             $slotDetails = $timeSlots->map(function ($slot) use ($defaultPrice, $specialPrice) {
                 $start = \Carbon\Carbon::parse($slot['start']);
-                $end   = \Carbon\Carbon::parse($slot['end']);
+                $end = \Carbon\Carbon::parse($slot['end']);
                 $duration = $start->floatDiffInMinutes($end) / 60;
                 $startDecimal = $start->hour + $start->minute / 60;
                 $pricePerHour = ($startDecimal >= 16) ? $specialPrice : $defaultPrice;
@@ -514,13 +517,13 @@ class HomeController extends Controller
             });
 
             // === TÍNH TỔNG ===
-            $totalDays   = count($actualDates);
+            $totalDays = count($actualDates);
             $totalCourts = count($courts);
             $totalAmount = $slotDetails->sum('amount') * $totalDays * $totalCourts;
-            $user = DB::table('users')->get()->where('user_id',$user_id)->first();
+            $user = DB::table('users')->get()->where('user_id', $user_id)->first();
             $facilities = Facilities::with('Users')->get()->where('facility_id', $facility_id)->first();
             $startDate = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
-            $endDate   = isset($endDate)   ? trim($endDate, '"')   : now()->addDays(7)->format('Y-m-d');
+            $endDate = isset($endDate) ? trim($endDate, '"') : now()->addDays(7)->format('Y-m-d');
             $dayOfWeeks = $dayOfWeeks ?? [];
             // Nếu là chuỗi JSON, decode
             if (is_string($dayOfWeeks)) {
@@ -538,14 +541,14 @@ class HomeController extends Controller
                     // Tính tổng amount cho sân này ngày này
                     $totalAmountCourt = collect($slotDetails)->sum('amount');
                     $totalDuration = collect($slotDetails)
-                    ->map(fn($slot) => is_array($slot) ? $slot['hours'] ?? 0 : ($slot->hours ?? 0))
-                    ->sum();
+                        ->map(fn($slot) => is_array($slot) ? $slot['hours'] ?? 0 : ($slot->hours ?? 0))
+                        ->sum();
 
                     $lines[] = [
-                        'date'     => $date,
-                        'court'    => $court,
+                        'date' => $date,
+                        'court' => $court,
                         'duration' => $totalDuration,
-                        'amount'   => $totalAmountCourt,
+                        'amount' => $totalAmountCourt,
                     ];
                 }
             }
@@ -554,39 +557,39 @@ class HomeController extends Controller
 
             // Tạo summary gọn
             $summary = [
-                'start_date'    => $startDate,
-                'end_date'      => $endDate,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'selected_days' => $dayOfWeeks,
-                'total_days'    => $totalDays,
-                'total_slots'   => $slotDetails->count(),
-                'total_courts'  => $totalCourts,
-                'total_amount'  => $totalAmount
+                'total_days' => $totalDays,
+                'total_slots' => $slotDetails->count(),
+                'total_courts' => $totalCourts,
+                'total_amount' => $totalAmount
             ];
             // Thông tin user/facility
             $userInfo = [
-                'user_id'          => $user_id ?? '---',
-                'user_name'        => $user->fullname ?? '---',
-                'phone'            => $user->phone ?? '---',
-                'facility_name'    => $facilities->facility_name ?? '---',
+                'user_id' => $user_id ?? '---',
+                'user_name' => $user->fullname ?? '---',
+                'phone' => $user->phone ?? '---',
+                'facility_name' => $facilities->facility_name ?? '---',
                 'facility_address' => $facilities->address ?? '---',
-                'facility_phone'   => $facilities->phone ?? '---',
-                'facility_id'      => $facility_id ?? '---',
+                'facility_phone' => $facilities->phone ?? '---',
+                'facility_id' => $facility_id ?? '---',
             ];
 
             $details = [
                 'actual_dates' => $actualDates,
                 'slot_details' => $slotDetails,
-                'courts'       => $courts,
+                'courts' => $courts,
             ];
 
             return view('payment_contract', compact('summary', 'details', 'lines', 'userInfo'));
 
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
-                'file'    => $e->getFile()
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ], 500);
         }
     }
@@ -608,7 +611,7 @@ class HomeController extends Controller
             return back()->with('error', 'Dữ liệu không hợp lệ!');
         }
 
-        // ✅ Kiểm tra trùng invoice_detail_id
+        // Kiểm tra trùng invoice_detail_id
         if (!DB::table('invoice_details')->where('invoice_detail_id', $invoiceDetailId)->exists()) {
             DB::table('invoice_details')->insert([
                 'invoice_detail_id' => $invoiceDetailId,
@@ -622,17 +625,17 @@ class HomeController extends Controller
         $deposit = 0;
         $note = null;
         DB::table(table: 'long_term_contracts')->insert([
-                'invoice_detail_id' => $invoiceDetailId,
-                'customer_id' => $userId,
-                'issue_date' => now(),
-                'total_amount' => $total,
-                'promotion_id' => $promotion_id,
-                'final_amount' => $total,
-                'payment_status' => $payment_status,
-                'deposit' => $deposit,
-                'note' => $note,
-            ]);  
-        // ✅ Chèn từng chi tiết đặt sân
+            'invoice_detail_id' => $invoiceDetailId,
+            'customer_id' => $userId,
+            'issue_date' => now(),
+            'total_amount' => $total,
+            'promotion_id' => $promotion_id,
+            'final_amount' => $total,
+            'payment_status' => $payment_status,
+            'deposit' => $deposit,
+            'note' => $note,
+        ]);
+        // Chèn từng chi tiết đặt sân
         foreach ($details as $detail) {
             $date = \Carbon\Carbon::parse($detail['date'])->format('Y-m-d');
 
@@ -643,12 +646,12 @@ class HomeController extends Controller
 
                     DB::table('bookings')->insert([
                         'invoice_detail_id' => $invoiceDetailId,
-                        'user_id'           => $userId,
-                        'facility_id'       => $facility_id,
-                        'court_id'          => $courtId,
-                        'booking_date'      => $date,
-                        'time_slot_id'      => $timeSlotId,
-                        'unit_price'        => $amount,
+                        'user_id' => $userId,
+                        'facility_id' => $facility_id,
+                        'court_id' => $courtId,
+                        'booking_date' => $date,
+                        'time_slot_id' => $timeSlotId,
+                        'unit_price' => $amount,
                     ]);
                 }
             }
@@ -706,35 +709,70 @@ class HomeController extends Controller
         $user_id = $request->user_id;
 
         $long_term_contracts = DB::table('long_term_contracts')
-        ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
-        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
-        ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
-        ->where('long_term_contracts.customer_id', $user_id)
-        ->select(
-            'long_term_contracts.*',
-            'facilities.facility_name as facility_name',
-            'users.fullname as fullname',
-            'long_term_contracts.issue_date as issue_date',
-            'long_term_contracts.final_amount as final_amount'
-        )
-        ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
-        ->get();
-
-        foreach($long_term_contracts as $ct)
-        {
-            $mycontract_details = DB::table('bookings')
-            ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
-            ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
-            ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+            ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+            ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+            ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+            ->where('long_term_contracts.customer_id', $user_id)
             ->select(
-                'bookings.*',
-                'time_slots.start_time as start_time',
-                'time_slots.end_time as end_time',
-            )->get();
+                'long_term_contracts.*',
+                'facilities.facility_name as facility_name',
+                'users.fullname as fullname',
+                'long_term_contracts.issue_date as issue_date',
+                'long_term_contracts.final_amount as final_amount'
+            )
+            ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
+            ->get();
+
+        foreach ($long_term_contracts as $ct) {
+            $mycontract_details = DB::table('bookings')
+                ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time',
+                )->get();
         }
 
-        return view('my_contracts',compact('user_id', 'long_term_contracts','mycontract_details'));
+        return view('my_contracts', compact('user_id', 'long_term_contracts', 'mycontract_details'));
     }
+
+    public function search(Request $request)
+    {
+        // 1. Lấy từ khóa tìm kiếm từ URL (?keyword=...)
+        $keyword = $request->input('keyword');
+
+        // 2. Kiểm tra nếu keyword rỗng thì quay về trang chủ
+        if (empty($keyword)) {
+            return redirect()->route('trang_chu');
+        }
+
+        // 3. Truy vấn với JOIN giữa facilities và court_prices
+        $sancaulong = DB::table('facilities')
+            ->join('court_prices', 'facilities.facility_id', '=', 'court_prices.facility_id')
+            ->select(
+                'facilities.facility_id',
+                'facilities.facility_name',
+                'facilities.address',
+                'facilities.status',
+                'facilities.image',
+                'facilities.description',
+                'court_prices.default_price'
+            )
+            ->where('facilities.status', 'đã duyệt')
+            ->where(function ($query) use ($keyword) {
+                $query->where('facilities.facility_name', 'LIKE', "%{$keyword}%")
+                    ->orWhere('facilities.address', 'LIKE', "%{$keyword}%");
+            })
+            ->paginate(10);
+
+
+        // 4. Trả về view hiển thị kết quả
+        return view('users.search_results', compact('sancaulong', 'keyword'));
+    }
+
+
 
     public function invoice_details(Request $request)
     {

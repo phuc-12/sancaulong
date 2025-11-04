@@ -151,19 +151,17 @@
 										style="width: 380px; height: 582.8px; margin: 10px; float: left;">
 										<div class="listing-item mb-0">
 											<div class="listing-img">
-												<button type="submit">
+												<button type="submit" style="border: white;">
 													<input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
 													<img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="">
 												</button>
 												<div class="fav-item-venues">
 													<span class="tag tag-blue">Đang Hoạt Động</span>
-
 													<h5 class="tag tag-primary">
 														<!-- $thongtin->Court_prices -->
 														{{ number_format($thongtin->Court_prices->default_price ?? 0) }}
 														<span>/Giờ</span>
 													</h5>
-
 												</div>
 											</div>
 											<div class="listing-content">
@@ -198,8 +196,8 @@
 												</div>
 												<div class="listing-button">
 													<div class="listing-venue-owner">
-														<button class="btn btn-success">Đặt sân</button>
-													</div>
+														<button class="btn btn-primary" >ĐẶT SÂN</button>
+													</div>	
 												</div>
 											</div>
 										</div>

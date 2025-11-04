@@ -67,23 +67,23 @@
 						@auth
 							<li class="nav-item">
 								<form method="POST" action="{{ route('lich_dat_san') }}">
-								@csrf
+									@csrf
 									<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
 									<button type="submit" class="nav-link btn btn-outline-light btn-sm">
 										<i class="feather-check-circle"></i> Lịch Đặt Của Bạn
 									</button>
 								</form>
-								
+
 							</li>
 							<li class="nav-item">
 								<form method="POST" action="{{ route('lich_co_dinh') }}">
-								@csrf
+									@csrf
 									<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
 									<button type="submit" class="nav-link btn btn-outline-light btn-sm">
 										<i class="feather-check-circle"></i> Lịch cố định
 									</button>
 								</form>
-								
+
 							</li>
 							<li class="nav-item dropdown">
 								<a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
@@ -257,7 +257,7 @@
 	@yield('payment_contract_content')
 	@yield('my_bookings_content')
 	@yield('my_contracts_content')
-	@yield('invoice_details_content')
+	@yield('search_content')
 	{{-- -------------------------------------- --}}
 
 	<footer class="footer">
@@ -438,7 +438,7 @@
 					<div class="row align-items-center">
 						<div class="col-md-6">
 							<div class="copyright-text">
-								<p class="mb-0">&copy; 2023 DreamSports - All rights reserved.</p>
+								<p class="mb-0">&copy; 2025 DreamSports - All rights reserved.</p>
 							</div>
 						</div>
 						<div class="col-md-6">
@@ -447,7 +447,7 @@
 								<ul class="navbar-nav selection-list">
 									<li class="nav-item dropdown">
 										<div class="lang-select">
-											<span class="select-icon"><i class="feather-globe"></i></span>
+											<!-- <span class="select-icon" style="display: flex;"><i class="feather-globe"></i></span> -->
 											<select class="select">
 												<option>English (US)</option>
 												<option>UK</option>
@@ -456,13 +456,6 @@
 										</div>
 									</li>
 									<li class="nav-item dropdown">
-										<!-- <div class="lang-select">
-												<span class="select-icon"></span>
-												<select class="select">
-													<option>$ USD</option>
-													<option>$ Euro</option>
-												</select>				
-											</div>	 -->
 									</li>
 								</ul>
 							</div>
