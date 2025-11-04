@@ -109,8 +109,12 @@
                                                             <td>{{ $invoice->issue_date }}</td>
                                                             <td>{{ $invoice->final_amount }}</td>
                                                             <td>
-                                                                <form action="" method="POST">
-                                                                    <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
+                                                                <form action="{{ route('chi_tiet_hd') }}" method="POST">
+																@csrf
+																	<input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
+																	<input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
+																	<input type="hidden" name="slots" value='@json($mybooking_details)'>
+                                                                    <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
                                                                     <button type="submit">Chi tiết</button>
                                                                 </form>
                                                             </td>
