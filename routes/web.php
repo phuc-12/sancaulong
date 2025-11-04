@@ -21,8 +21,6 @@ Route::get('/search', [HomeController::class, 'search'])->name('search.results')
 
 //Dat san
 Route::prefix('/')->controller(HomeController::class)
-
-
 ->group(function () {
     Route::get('/','index')->name('trang_chu');
     Route::get('/listing-grid','listing_grid')->name('danh_sach_san');
@@ -40,6 +38,8 @@ Route::prefix('/')->controller(HomeController::class)
     Route::post('/thanh-toan/thanh-toan-contract-complete','payments_contract_complete')->name('payments_contract_complete');
     Route::post('/list_Invoices','list_Invoices')->name('lich_dat_san');
     Route::post('/list_Contracts','list_Contracts')->name('lich_co_dinh');
+    Route::post('/invoice_details','invoice_details')->name('chi_tiet_hd');
+    Route::post('/cancel_invoice','cancel_invoice')->name('cancel_invoice');
 });
 
 

@@ -257,6 +257,7 @@
 	@yield('payment_contract_content')
 	@yield('my_bookings_content')
 	@yield('my_contracts_content')
+	@yield('invoice_details_content')
 	{{-- -------------------------------------- --}}
 
 	<footer class="footer">

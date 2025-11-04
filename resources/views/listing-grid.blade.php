@@ -54,70 +54,74 @@
             <div class="justify-content-center" id="san-cau-long-list"> 
                 
                 @isset($danhsachsan)
-                    @forelse ($danhsachsan as $san)
-                        <div class="featured-venues-item aos" data-aos="fade-up" style="width: 400px; height: 582.8px; margin: 10px; display:inline-block;">
-                            <div class="listing-item mb-0"> 
-                                <div class="listing-img">
-                                    {{-- <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}">
-                                        <img src="{{ asset('img/venues/'.$san->image) }}" alt="">
-                                    </a> --}}
-                                    <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}">
-                                        <img src="{{ asset('img/venues/'.$san->image) }}" alt="">
-                                    </a>
+                    @forelse ($danhsachsan as $thongtin)
+                        <form method="POST" action="{{ route('chi_tiet_san') }}">
+                            @csrf
+                            <div class="featured-venues-item aos" data-aos="fade-up"
+                                style="width: 380px; height: 582.8px; margin: 10px; float: left;">
+                                <div class="listing-item mb-0">
+                                    <div class="listing-img">
+                                        <button type="submit">
+                                            <input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
+                                            <img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="">
+                                        </button>
+                                        <div class="fav-item-venues">
+                                            <span class="tag tag-blue">Đang Hoạt Động</span>
 
-                                    <div class="fav-item-venues">
-                                        <span class="tag tag-blue">Đang Hoạt Động</span>
-                                        {{-- Định dạng tiền tệ cho đẹp --}}
-                                        <h5 class="tag tag-primary">{{ number_format($san->Court_prices->default_price, 0, ',', '.') }}<span>/Giờ</span></h5>
-                                    </div>
-                                </div>
-                                <div class="listing-content">
-                                    <div class="list-reviews"> 
-                                        <div class="d-flex align-items-center">
-                                            <span class="rating-bg">4.2</span><span>300 Reviews</span> 
+                                            <h5 class="tag tag-primary">
+                                                <!-- $thongtin->Court_prices -->
+                                                {{ number_format($thongtin->Court_prices->default_price ?? 0) }}
+                                                <span>/Giờ</span>
+                                            </h5>
+
                                         </div>
-                                        <a href="javascript:void(0)" class="fav-icon">
-                                            <i class="feather-heart"></i>
-                                        </a>
-                                    </div> 
-                                    <h3 class="listing-title" style="height: 64px;">
-                                        {{-- <a href="{{ url('venue-details.blade.php?maSan=' . $san->facility_id) }}">{{ $san->facility_name }}</a> --}}
-                                        <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}">{{ $san->facility_name }}</a>
-
-                                    </h3>
-                                    <div class="listing-details-group">
-                                        {{-- Giả định 'ghiChu' là 'moTa' --}}
-                                        <p>{{ $san->description ?? 'Không có mô tả' }}</p> 
-                                        <ul>
-                                            <li>
-                                                <span>
-                                                    <i class="feather-map-pin"></i>{{ $san->address }}
-                                                </span>
-                                            </li>
-                                            <li>
-                                                {{-- <span>
-                                                    <i class="feather-calendar"></i>Giờ mở cửa: <span class="primary-text">{{ $san->gioMoCua }}</span>
-                                                </span> --}}
-                                            </li>
-                                        </ul>
                                     </div>
-                                    <div class="listing-button">
-                                        {{-- <a href="{{ url('venue-details.blade.php?maSan=' . $san->facility_id) }}" class="user-book-now"><span><i class="feather-calendar me-2"></i></span>Đặt Ngay</a> --}}
-                                        <a href="{{ route('chi_tiet_san', ['idSan' => $san->facility_id]) }}" class="user-book-now">
-
-                                    </div> 
+                                    <div class="listing-content">
+                                        <div class="list-reviews">
+                                            <div class="d-flex align-items-center">
+                                                <span class="rating-bg">4.2</span><span>300 Reviews</span>
+                                            </div>
+                                            <a href="javascript:void(0)" class="fav-icon">
+                                                <i class="feather-heart"></i>
+                                            </a>
+                                        </div>
+                                        <h3 class="listing-title">
+                                            <button type="submit" style="background-color: white; border: 1px solid white;">
+                                                {{ $thongtin->facility_name }}
+                                            </button>
+                                        </h3>
+                                        <div class="listing-details-group">
+                                            <p>{{ $thongtin['description'] }}</p>
+                                            <ul>
+                                                <li>
+                                                    <span>
+                                                        <i class="feather-map-pin"></i>{{ $thongtin['address'] }}
+                                                    </span>
+                                                </li>
+                                                <li>
+                                                    {{-- <span>
+                                                        <i class="feather-calendar"></i>Giờ mở cửa: <span
+                                                            class="primary-text">{{ $thongtin['gioMoCua'] }}</span>
+                                                    </span> --}}
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="listing-button">
+                                            <div class="listing-venue-owner">
+                                                <button class="btn btn-success">Đặt sân</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </form>
                     @empty
-                        <div class="col-12 text-center">
-                            <p>Danh sách hiện tại đang trống</p>
-                        </div>
+                        <tr>
+                            <td colspan="7" class="text-center">Danh sách hiện tại đang trống</td>
+                        </tr>
                     @endforelse
                 @else
-                    <div class="col-12 text-center">
-                        <p>Dữ liệu chưa được tải.</p>
-                    </div>
+                    <p>Dữ liệu chưa được tải.</p>
                 @endisset
 
                 {{-- Nút "TẢI THÊM SÂN CẦU" --}}
