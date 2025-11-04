@@ -4,7 +4,7 @@
     {{-- Khai báo biến cần thiết cho JS. Giả định Controller đã truyền:
          $danhsachsan: Danh sách sân đã tải lần đầu (ví dụ: 10 sân)
          $hasMoreData: Boolean kiểm tra xem còn dữ liệu để tải nữa hay không --}}
-    
+
     <section class="breadcrumb breadcrumb-list mb-0">
         <span class="primary-right-round"></span>
         <div class="container">
@@ -52,7 +52,6 @@
             </div>
             {{-- THÊM ID CHO CONTAINER ĐỂ CHÈN DỮ LIỆU MỚI --}}
             <div class="justify-content-center" id="san-cau-long-list"> 
-                
                 @isset($danhsachsan)
                     @forelse ($danhsachsan as $thongtin)
                         <form method="POST" action="{{ route('chi_tiet_san') }}">
@@ -61,7 +60,7 @@
                                 style="width: 380px; height: 582.8px; margin: 10px; float: left;">
                                 <div class="listing-item mb-0">
                                     <div class="listing-img">
-                                        <button type="submit">
+                                        <button type="submit" style="border: white;">
                                             <input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
                                             <img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="">
                                         </button>
@@ -143,10 +142,10 @@
     {{-- PHẦN SCRIPT XỬ LÝ AJAX LOAD MORE --}}
     <script>
         // document.addEventListener('DOMContentLoaded', function () {
-            
+
         //     const loadMoreBtn = document.getElementById('load-more-btn');
         //     const sanListContainer = document.getElementById('san-cau-long-list');
-            
+
         //     // 1. KHỞI TẠO TRẠNG THÁI
         //     let currentOffset = {{ count($danhsachsan ?? []) }};
         //     let isLoading = false;
@@ -205,7 +204,7 @@
         //         `;
         //     }
 
-            
+
     </script>
 
 @endsection
