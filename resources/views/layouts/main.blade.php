@@ -55,8 +55,8 @@
 							<li class="has-submenu">
 								<a href="#">Sân Cầu Lông <i class="fas fa-chevron-down"></i></a>
 								<ul class="submenu">
-									<li><a href="#">Book a Court</a></li>
-									<li><a href="#">Profile Settings</a></li>
+									<li><a href="{{ route('danh_sach_san') }}">Danh sách sân</a></li>
+									{{-- <li><a href="#">Profile Settings</a></li> --}}
 								</ul>
 							</li>
 							<li><a href="#">Liên Hệ</a></li>
@@ -258,6 +258,8 @@
 	@yield('my_bookings_content')
 	@yield('my_contracts_content')
 	@yield('search_content')
+	@yield('invoice_details_content')
+	@yield('contract_details_content')
 	{{-- -------------------------------------- --}}
 
 	<footer class="footer">

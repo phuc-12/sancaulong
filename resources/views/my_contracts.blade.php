@@ -113,8 +113,10 @@
                                                             <td>{{ $ct->final_amount }}</td>
                                                             <td>
                                                                 <form action="{{ route('chi_tiet_ct') }}" method="POST">
+																@csrf
                                                                     <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
-                                                                    <button type="submit">Chi tiết</button>
+																	<input type="hidden" name="slots" value='@json($mycontract_details[$ct->invoice_detail_id] ?? [])'>
+                                                                    <button type="submit" class="btn btn-success">Chi tiết</button>
                                                                 </form>
                                                             </td>
                                                         </tr>
