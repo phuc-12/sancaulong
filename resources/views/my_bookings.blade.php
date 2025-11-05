@@ -102,7 +102,7 @@
                                                         <th>Khách hàng</th>
                                                         <th>Ngày đặt</th>
                                                         <th>Tổng tiền</th>
-                                                        <th></th>
+														<th>Tình trạng</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -124,8 +124,10 @@
 																	<input type="hidden" name="invoices" value="{{ $invoices }}">
 																	@if ($invoice->payment_status === 'Đã Hủy')
 																		<p class="text-danger">Đã hủy</p>
+																	@elseif ($invoice->payment_status === 'Đã sử dụng')
+																		<p class="text-primary">Đã sử dụng</p>
 																	@else 
-																		<button type="submit">
+																		<button type="submit" class="btn btn-success">
 																			Chi tiết
 																		</button>
 																	@endif

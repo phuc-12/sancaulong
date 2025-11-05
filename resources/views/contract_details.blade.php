@@ -1,6 +1,6 @@
 @extends('layouts.main');
 
-@section('payment_contract_content')
+@section('contract_details_content')
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -70,74 +70,59 @@
 						<div class="col-12 col-sm-12 col-md-12 col-lg-12">
 							<div class="header_invoice">
 								<h2>BẢNG BÁO GIÁ HỢP ĐỒNG</h2>
-								<h3>{{ $userInfo['facility_name'] }}</h3>
-								<p><strong>Địa chỉ:</strong> {{ $userInfo['facility_address'] }}</p>
-								<p><strong>Liên hệ:</strong> {{ $userInfo['facility_phone'] }}</p>
+								<h3>{{ $facilities->facility_name }}</h3>
+								<p><strong>Địa chỉ:</strong> {{ $facilities->address }}</p>
+								<p><strong>Liên hệ:</strong> {{ $facilities->phone }}</p>
 							</div>
 
 							<div class="customer-info">
-								<p><strong>Khách hàng:</strong> {{ $userInfo['user_name'] ?? '---' }}</p>
-								<p><strong>Số điện thoại:</strong> {{ $userInfo['phone'] ?? '---' }}</p>
+								<p><strong>Khách hàng:</strong> {{ $customer->fullname ?? '---' }}</p>
+								<p><strong>Số điện thoại:</strong> {{ $customer->phone ?? '---' }}</p>
 								<p><strong>Thời gian:</strong> 
-									Từ {{ \Carbon\Carbon::parse($summary['start_date'])->format('d/m/Y') }} 
-									đến {{ \Carbon\Carbon::parse($summary['end_date'])->format('d/m/Y') }}
+									Từ {{ \Carbon\Carbon::parse($long_term_contracts->start_date)->format('d/m/Y') }} 
+									đến {{ \Carbon\Carbon::parse($long_term_contracts->end_date)->format('d/m/Y') }}
 								</p>
-								@php 
-									$invoice_detail_id = 'HD_' . $userInfo['user_id'] . '_' . $userInfo['facility_id'] . '_' . date('Ymd_His') .'_'. rand(1000, 9999);
-								@endphp
-								<p><strong>Ngày trong tuần:</strong>
-									@foreach ($summary['selected_days'] as $d)
-										Thứ {{ $d }}@if (!$loop->last), @endif
-									@endforeach
-								</p>
+								<p><strong>Ngày trong tuần:</strong> {{ $daysOfWeek }}</p>
+                                <p><strong>Sân:</strong> {{ $courts }}</p>
 							</div>
 
 							<table>
-							<thead>
-								<tr>
-									<th>Ngày</th>
-									<th>Sân</th>
-									<th>Tổng thời lượng (giờ)</th>
-									<th>Tổng tiền</th>
-								</tr>
-							</thead>
-							<tbody>
-								@foreach ($lines as $line)
-								<tr>
-									<td>{{ $line['date'] }}</td>
-									<td>Sân {{ $line['court'] }}</td>
-									<td>{{ $line['duration'] }} giờ</td>
-									<td>{{ number_format($line['amount'],0,',','.') }}đ</td>
-								</tr>
-								@endforeach
-							</tbody>
-						</table>
+                                <thead>
+                                    <tr>
+                                        <th>Ngày</th>
+                                        <th>Sân</th>
+                                        <th>Tổng thời lượng (giờ)</th>
+                                        <th>Tổng tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($slots as $slot)
+                                        <tr>
+                                            <td>{{ \Carbon\Carbon::parse($slot['booking_date'])->format('d/m') }}</td>
+                                            <td>Sân {{ $slot['court_id'] }}</td>
+                                            <td>{{ $slot['total_duration'] }} giờ</td>
+                                            <td>{{ number_format($slot['total_price'], 0, ',', '.') }}đ</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
 
-						<p class="total">Tổng cộng: <span class="highlight">{{ number_format($summary['total_amount'], 0, ',', '.') }} đ</span></p>
+						<p class="total">Tổng cộng: <span class="highlight">{{ number_format($long_term_contracts->total_amount, 0, ',', '.') }} đ</span></p>
 							{{-- <p class="total">Tổng cộng: <span class="highlight">{{ $summary['total_amount'] }} đ</span></p> --}}
-							<p class="total">Số tiền cần thanh toán: <span class="highlight">{{ number_format($summary['total_amount'], 0, ',', '.') }} đ</span></p>
+							<p class="total">Số tiền cần thanh toán: <span class="highlight">{{ number_format($long_term_contracts->final_amount, 0, ',', '.') }} đ</span></p>
 							
 							<div>
-								<p><strong>Chủ tài khoản:</strong> {{ $userInfo['facility_name'] }}</p>
-								<p><strong>Số tài khoản:</strong> 1025183831</p>
-
-								<div class="course_qr mt-4" align="center">
-									<img class="course_qr_img" style="width: 300px;" >
-								</div>
-								<div class="d-flex justify-content-center gap-2">
-									<button type="submit" class="btn btn-primary btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">Chuyển Khoản</button>
-								</div>
-								
 								<form id="paymentCompleteForm" action="{{ route('payments_contract_complete') }}" method="POST">
 									@csrf
-									<input type="hidden" name="start_date" id="start_date" value="{{ $summary['start_date'] }} ">
-									<input type="hidden" name="end_date" id="end_date" value="{{ $summary['end_date'] }}">
-									<input type="hidden" name="tongtien" id="tongtien" value="{{ $summary['total_amount'] }}">
+									{{-- <input type="hidden" name="tongtien" id="tongtien" value="{{ $summary['total_amount'] }}">
 									<input type="hidden" name="details" id="details_input" value='@json($details["actual_dates"])'>
 									<input type="hidden" name="invoice_details_id" id="invoice_details_id" value="{{ $invoice_detail_id }}">
 									<input type="hidden" name="facility_id" id="facility_id" value="{{ $userInfo["facility_id"] }}">
 									<input type="hidden" name="user_id" id="user_id" value="{{ $userInfo["user_id"] }}">
-									<input type="hidden" name="slot_details" value='@json($details["slot_details"])'>
+									<input type="hidden" name="slot_details" value='@json($details["slot_details"])'> --}}
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button type="submit" class="btn btn-danger btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">Hủy hợp đồng</button>
+                                    </div>
 								</form>
 
 							</div>

@@ -406,8 +406,8 @@
                     {{ in_array('7', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Thứ 7
             </label>
             <label>
-                <input type="checkbox" name="dayofweek[]" value="8"
-                    {{ in_array('8', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Chủ Nhật
+                <input type="checkbox" name="dayofweek[]" value="CN"
+                    {{ in_array('CN', old('dayofweek', $dayOfWeeks ?? [])) ? 'checked' : '' }}> Chủ Nhật
             </label>
         </div>
 

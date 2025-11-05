@@ -602,6 +602,8 @@ class HomeController extends Controller
         $userId = $request->input('user_id');
         $facility_id = $request->input('facility_id');
         $total = $request->input('tongtien');
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
         // dd([
         //     'details' => $details,
         //     'slot_details' => $slot_details,
@@ -628,6 +630,8 @@ class HomeController extends Controller
             'invoice_detail_id' => $invoiceDetailId,
             'customer_id' => $userId,
             'issue_date' => now(),
+            'start_date' => $start_date,
+            'end_date' => $end_date,
             'total_amount' => $total,
             'promotion_id' => $promotion_id,
             'final_amount' => $total,
@@ -723,17 +727,22 @@ class HomeController extends Controller
             ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
             ->get();
 
-        foreach ($long_term_contracts as $ct) {
-            $mycontract_details = DB::table('bookings')
-                ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
-                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
-                ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
-                ->select(
-                    'bookings.*',
-                    'time_slots.start_time',
-                    'time_slots.end_time',
-                )->get();
-        }
+            $mycontract_details = [];
+
+            foreach ($long_term_contracts as $ct) {
+                $details = DB::table('bookings')
+                    ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                    ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                    ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+                    ->select(
+                        'bookings.*',
+                        'time_slots.start_time',
+                        'time_slots.end_time'
+                    )
+                    ->get();
+
+                $mycontract_details[$ct->invoice_detail_id] = $details;
+            }
 
         return view('my_contracts', compact('user_id', 'long_term_contracts', 'mycontract_details'));
     }
@@ -835,7 +844,75 @@ class HomeController extends Controller
 
     public function contract_details(Request $request)
     {
+        $slots = json_decode($request->slots, true);
+        $slotCollection = collect($slots);
+        $invoice_detail_id = $request->invoice_detail_id;
         
+        $long_term_contracts = DB::table('long_term_contracts')
+        ->join('invoice_details','invoice_details.invoice_detail_id', '=','long_term_contracts.invoice_detail_id')
+        ->where('long_term_contracts.invoice_detail_id',$invoice_detail_id)
+        ->select(
+            'long_term_contracts.*',
+            'invoice_details.facility_id as facility_id'
+        )
+        ->first();
+        // dd($long_term_contracts);
+        $customer = DB::table('users')
+        ->where('user_id',$long_term_contracts->customer_id)
+        ->first();
+        
+        $facilities = DB::table('facilities')
+        ->where('facility_id',$long_term_contracts->facility_id)
+        ->first();
+        
+        $groupedSlots = collect($slots)
+        ->groupBy(function ($item) {
+            return $item['booking_date'] . '_' . $item['court_id'];
+        })
+        ->map(function ($group) {
+            $first = $group->first();
+            return [
+                'booking_date' => $first['booking_date'],
+                'court_id' => $first['court_id'],
+                // mỗi slot là 0.5 giờ → tổng giờ = số slot * 0.5
+                'total_duration' => count($group) * 0.5,
+                // tổng tiền cộng dồn
+                'total_price' => collect($group)->sum('unit_price'),
+            ];
+        })
+        ->values();
+        $daysOfWeek = $groupedSlots
+        ->map(function ($slot) {
+            $date = Carbon::parse($slot['booking_date']);
+            return match ($date->dayOfWeek) {
+                0 => 'Chủ nhật',
+                1 => 'Thứ 2',
+                2 => 'Thứ 3',
+                3 => 'Thứ 4',
+                4 => 'Thứ 5',
+                5 => 'Thứ 6',
+                6 => 'Thứ 7',
+            };
+        })
+        ->unique() // loại trùng
+        ->values()
+        ->implode(', '); // nối thành chuỗi "Thứ 2, Thứ 4, Thứ 6"
+
+        // ✅ Lấy danh sách các sân duy nhất
+        $courts = $groupedSlots
+        ->pluck('court_id')
+        ->unique()
+        ->map(fn($id) => 'Sân ' . $id)
+        ->implode(', ');
+
+        return view('contract_details',[
+            'slots' => $groupedSlots,
+            'long_term_contracts' => $long_term_contracts,
+            'customer' => $customer,
+            'facilities' => $facilities,
+            'daysOfWeek' => $daysOfWeek, // ✅ truyền ra view
+            'courts' => $courts,
+        ]);
     }
 
 }
