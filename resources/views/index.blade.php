@@ -179,7 +179,7 @@
 													</button>
 												</h3>
 												<div class="listing-details-group">
-													<p>{{ $thongtin['description'] }}</p>
+													<p>{{ $thongtin->description }}</p>
 													<ul>
 														<li>
 															<span>

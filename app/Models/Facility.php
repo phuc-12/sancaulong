@@ -18,7 +18,8 @@ class Facility extends Model
         'open_time', 
         'close_time', 
         'description', 
-        'business_license_path', 
+        // 'business_license_path',
+        'image', 
         'status'
     ];
     public function owner()

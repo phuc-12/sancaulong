@@ -444,11 +444,11 @@ class HomeController extends Controller
                 $thongtinsan = Facilities::where('facility_id', $idSan)->first();
                 $customer = Users::where('user_id', $user_id)->first();
                 $timeSlots = Time_slots::all();
-                // ⚙️ Lấy ngày bắt đầu và kết thúc từ form
+                // Lấy ngày bắt đầu và kết thúc từ form
                 $dateStart = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
                 $dateEnd   = isset($endDate)   ? trim($endDate, '"')   : now()->addDays(7)->format('Y-m-d');
 
-                // ✅ Sinh mảng ngày từ date_start → date_end
+                // Sinh mảng ngày từ date_start → date_end
                 $dates = [];
                 $current = \Carbon\Carbon::parse($dateStart);
                 $end     = \Carbon\Carbon::parse($dateEnd);

@@ -124,11 +124,16 @@ Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () 
     // Route::get('/staff/{staff}/edit', [OwnerController::class, 'editStaff'])->name('staff.edit'); 
 
     // PUT/PATCH: Cập nhật thông tin nhân viên
-    // {staff} sẽ là User model nhờ Route Model Binding (cần khai báo binding nếu tên model khác User)
     Route::put('/staff/{staff}', [OwnerController::class, 'updateStaff'])->name('staff.update');
 
     // DELETE: Xóa nhân viên
     Route::delete('/staff/{staff}', [OwnerController::class, 'destroyStaff'])->name('staff.destroy');
+
+    Route::get('/reports', [OwnerController::class, 'reports'])
+        ->name('reports'); 
+    
+    Route::get('/reports/data', [OwnerController::class, 'getReportData'])
+        ->name('reports.data');
 });
 
 //=============================================================================================================
@@ -156,7 +161,7 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
 
 //=============================================================================================================
 //Nhân viên sân
-Route::prefix('staff')->name('staff.')->middleware(['auth','role:staff'])->group(function () {
+Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->group(function () {
     // Trang chính: Lịch đặt sân & Check-in
     Route::get('/', [StaffController::class, 'index'])->name('index');
 
