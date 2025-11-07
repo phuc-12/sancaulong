@@ -7,9 +7,10 @@ use App\Models\Time_slots;
 use App\Models\Court;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
+use App\Models\Users;
 
 class ManagerController extends Controller
 {
@@ -37,7 +38,7 @@ class ManagerController extends Controller
     public function courts()
     {
         // --- LẤY FACILITY ID---
-        $manager = Auth::users();
+        $manager = Auth::user();
         if (!$manager || !$manager->facility_id) { // Kiểm tra manager có facility_id không
             // Hoặc chuyển hướng hoặc báo lỗi nếu không tìm thấy facility_id
             abort(403, 'Không tìm thấy thông tin cơ sở của quản lý.');
@@ -59,7 +60,7 @@ class ManagerController extends Controller
     public function updateCourtStatus(Request $request, Court $court)
     {
         // --- KIỂM TRA QUYỀN ---
-        $manager = Auth::user();
+        $manager = Auth::users();
         if (!$manager || !$manager->facility_id || $court->facility_id !== $manager->facility_id) {
             abort(403, 'Bạn không có quyền cập nhật sân này.');
         }
@@ -223,7 +224,7 @@ class ManagerController extends Controller
                 // 'unit_price' => $newPrice, 
             ]);
         } catch (\Exception $e) {
-            \Log::error("Lỗi cập nhật booking ID {$booking->booking_id}: " . $e->getMessage());
+            Log::error("Lỗi cập nhật booking ID {$booking->booking_id}: " . $e->getMessage());
             return response()->json(['message' => 'Đã xảy ra lỗi khi cập nhật lịch đặt.'], 500); // 500 Internal Server Error
         }
 
