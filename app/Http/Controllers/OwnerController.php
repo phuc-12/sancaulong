@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage; // Sử dụng Facade đầy đủ
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Log;
 
 class OwnerController extends Controller
 {
@@ -78,11 +79,13 @@ class OwnerController extends Controller
 
         // --- CẬP NHẬT THÔNG TIN USER ---
         $user = Auth::user();
-        $user->phone = $validatedData['owner_phone'];
-        $user->address = $validatedData['owner_address'];
-        $user->CCCD = $validatedData['owner_cccd'];
-        $user->save();
 
+        DB::table('users')->where('user_id',$user->user_id)->update([
+            'phone' => $validatedData['owner_phone'],
+            'address' => $validatedData['owner_address'],
+            'CCCD' => $validatedData['owner_cccd'],
+        ]);
+        
         // --- CHUẨN BỊ DỮ LIỆU FACILITY ---
         $facilityData = [
             'facility_name' => $validatedData['facility_name'],
@@ -120,7 +123,7 @@ class OwnerController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                \Log::error('Lỗi upload Giấy phép KD: ' . $e->getMessage());
+                Log::error('Lỗi upload Giấy phép KD: ' . $e->getMessage());
                 return back()->withInput()->withErrors(['image' => 'Không thể lưu file tải lên.']);
             }
         }
@@ -139,12 +142,15 @@ class OwnerController extends Controller
             $user = Auth::user();
             // Chỉ cập nhật nếu facility_id của user chưa đúng
             if ($user->facility_id !== $facility->facility_id) {
-                $user->facility_id = $facility->facility_id; // Gán ID cơ sở vừa tạo/sửa
-                $user->save(); // Lưu lại vào bảng users
+                // $user->facility_id = $facility->facility_id; // Gán ID cơ sở vừa tạo/sửa
+                // $user->save(); // Lưu lại vào bảng users
+                DB::table('users')->where('user_id',$user)->update([
+                    'facility_id' => $facility->facility_id,
+                ]);
             }
         } else {
             // Xử lý lỗi nếu không lưu được facility
-            \Log::error('Không thể tạo/cập nhật facility cho user ID: ' . Auth::id());
+            Log::error('Không thể tạo/cập nhật facility cho user ID: ' . Auth::id());
             return back()->withInput()->withErrors(['general' => 'Lỗi lưu thông tin cơ sở.']);
         }
         // --- PHẢN HỒI ---
@@ -200,7 +206,7 @@ class OwnerController extends Controller
                 $file->move($destinationPath, $newFileName);
                 $avatarPath = 'img/avatars/' . $newFileName;
             } catch (\Exception $e) {
-                \Log::error('Lỗi upload avatar nhân viên: ' . $e->getMessage());
+                Log::error('Lỗi upload avatar nhân viên: ' . $e->getMessage());
             }
         }
 
@@ -279,7 +285,7 @@ class OwnerController extends Controller
                 $file->move($destinationPath, $newFileName);
                 $updateData['avatar'] = 'img/avatars/' . $newFileName; // Thêm vào mảng cập nhật
             } catch (\Exception $e) {
-                \Log::error('Lỗi upload avatar nhân viên (update): ' . $e->getMessage());
+                Log::error('Lỗi upload avatar nhân viên (update): ' . $e->getMessage());
                 // Có thể báo lỗi nếu cần
             }
         }
@@ -307,7 +313,7 @@ class OwnerController extends Controller
             try {
                 unlink(public_path($staff->avatar));
             } catch (\Exception $e) {
-                \Log::error("Lỗi xóa avatar của user {$staff->user_id}: " . $e->getMessage());
+                Log::error("Lỗi xóa avatar của user {$staff->user_id}: " . $e->getMessage());
             }
         }
 

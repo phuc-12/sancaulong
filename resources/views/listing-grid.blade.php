@@ -128,86 +128,102 @@
                 @endisset
 
                     {{-- Nút "TẢI THÊM SÂN CẦU" --}}
-                    {{-- <div class="col-12 text-center">
+                    <div class="col-12 text-center">
                         <div class="more-details">
                             <a href="javascript:void(0)" 
                             id="load-more-btn" 
                             class="btn btn-load"
-                            style="display: {{ (isset($hasMoreData) && !$hasMoreData) ? 'none' : 'inline-flex' }}">
+                            style="display: {{ (isset($hasMoreData) && !$hasMoreData) ? 'none' : 'inline-flex' }}; clear: both;">
                                     TẢI THÊM SÂN CẦU
                                 <img src="{{ asset('img/icons/u_plus-square.svg') }}" class="ms-2" alt="img">
                             </a>
                         </div>
-                    </div> --}}
+                    </div>
                 </div>
             </div>
     </div>
     {{-- PHẦN SCRIPT XỬ LÝ AJAX LOAD MORE --}}
     <script>
-        // document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function () {
 
-        //     const loadMoreBtn = document.getElementById('load-more-btn');
-        //     const sanListContainer = document.getElementById('san-cau-long-list');
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            const sanListContainer = document.getElementById('san-cau-long-list');
 
-        //     // 1. KHỞI TẠO TRẠNG THÁI
-        //     let currentOffset = {{ count($danhsachsan ?? []) }};
-        //     let isLoading = false;
-        //     const limit = 10; 
+            // 1. KHỞI TẠO TRẠNG THÁI
+            let currentOffset = {{ count($danhsachsan ?? []) }};
+            let isLoading = false;
+            const limit = 10; 
 
-        //     // 2. HÀM TẠO HTML CHO MỘT ITEM SÂN
-        //     function createSanCard(san) {
-        //         // CHÚ Ý: Đã sửa 'giaMocua' (trong JS cũ) thành 'giaMacDinh' (trong Blade/DB)
-        //         const giaFormatted = new Intl.NumberFormat('vi-VN').format(san.giaMacDinh); 
+            // 2. HÀM TẠO HTML CHO MỘT ITEM SÂN
+            function createSanCard(san) {
+                // CHÚ Ý: Đã sửa 'giaMocua' (trong JS cũ) thành 'giaMacDinh' (trong Blade/DB)
+                const giaFormatted = new Intl.NumberFormat('vi-VN').format(san.giaMacDinh); 
 
-        //         return `
-        //             <div class="featured-venues-item aos" data-aos="fade-up" style="width: 400px; height: 582.8px; margin: 10px; display:inline-block">
-        //                 <div class="listing-item mb-0">
-        //                     <div class="listing-img">
-        //                         <a href="venue-details.blade.php?maSan=${san.maSan}">
-        //                             <img src="{{ asset('img/venues/') }}/${san.hinhAnh}" alt="">
-        //                         </a>
-        //                         <div class="fav-item-venues">
-        //                             <span class="tag tag-blue">${san.trangThai || 'Đang Hoạt Động'}</span>
-        //                             <h5 class="tag tag-primary">${giaFormatted}<span>/Giờ</span></h5>
-        //                         </div>
-        //                     </div>
-        //                     <div class="listing-content">
-        //                         <div class="list-reviews">
-        //                             <div class="d-flex align-items-center">
-        //                                 <span class="rating-bg">4.2</span><span>300 Reviews</span>
-        //                             </div>
-        //                             <a href="javascript:void(0)" class="fav-icon">
-        //                                 <i class="feather-heart"></i>
-        //                             </a>
-        //                         </div>
-        //                         <h3 class="listing-title" style="height: 64px;">
-        //                             <a href="venue-details.blade.php?maSan=${san.maSan}">${san.tenSan}</a>
-        //                         </h3>
-        //                         <div class="listing-details-group">
-        //                             <p>${san.ghiChu || 'Không có mô tả'}</p>
-        //                             <ul>
-        //                                 <li>
-        //                                     <span>
-        //                                         <i class="feather-map-pin"></i>${san.diaChi}
-        //                                     </span>
-        //                                 </li>
-        //                                 <li>
-        //                                     <span>
-        //                                         <i class="feather-calendar"></i>Giờ mở cửa: <span class="primary-text">${san.gioMoCua}</span>
-        //                                     </span>
-        //                                 </li>
-        //                             </ul>
-        //                         </div>
-        //                         <div class="listing-button">
-        //                             <a href="venue-details.blade.php?maSan=${san.maSan}" class="user-book-now"><span><i class="feather-calendar me-2"></i></span>Đặt Ngay</a>
-        //                         </div>
-        //                     </div>
-        //                 </div>
-        //             </div>
-        //         `;
-        //     }
+                return `
+                    <div class="featured-venues-item aos" data-aos="fade-up"
+                        style="width: 380px; height: 582.8px; margin: 10px; float: left;">
+                        <div class="listing-item mb-0">
+                            <div class="listing-img">
+                                <button type="submit" style="border: white;">
+                                    <input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
+                                    <img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="" style="width: 375px; height: 205px;">
+                                </button>
+                                <div class="fav-item-venues">
+                                    <span class="tag tag-blue">Đang Hoạt Động</span>
 
+                                    <h5 class="tag tag-primary">
+                                        <!-- $thongtin->Court_prices -->
+                                        {{ number_format($thongtin->Court_prices->default_price ?? 0) }}
+                                        <span>/Giờ</span>
+                                    </h5>
 
+                                </div>
+                            </div>
+                            <div class="listing-content" style="height: 317px;">
+                                <div class="list-reviews">
+                                    <div class="d-flex align-items-center">
+                                        <span class="rating-bg">4.2</span><span>300 Reviews</span>
+                                    </div>
+                                    <a href="javascript:void(0)" class="fav-icon">
+                                        <i class="feather-heart"></i>
+                                    </a>
+                                </div>
+                                <h3 class="listing-title">
+                                    <button type="submit" style="background-color: white; border: 1px solid white;">
+                                        {{ $thongtin->facility_name }}
+                                    </button>
+                                </h3>
+                                <div class="listing-details-group">
+                                    <p style="height: 48px;">{{ $thongtin['description'] }}</p>
+                                    <ul>
+                                        <li>
+                                            <span style="height: 48px;">
+                                                <i class="feather-map-pin"></i>{{ $thongtin['address'] }}
+                                                
+                                            </span>
+                                            
+                                        </li>
+                                        <li>
+                                            @php
+                                                    $open = \Carbon\Carbon::parse($thongtin['open_time'])->format('H:i');
+                                                    $close = \Carbon\Carbon::parse($thongtin['close_time'])->format('H:i');
+                                                @endphp
+
+                                                <i class="fa fa-clock-o"></i> {{ $open }} - {{ $close }} 
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="listing-button">
+                                    <div class="listing-venue-owner">
+                                        <button class="btn btn-success">Đặt sân</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
     </script>
 
 @endsection

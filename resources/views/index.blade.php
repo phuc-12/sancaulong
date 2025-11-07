@@ -153,15 +153,17 @@
 											<div class="listing-img">
 												<button type="submit" style="border: white;">
 													<input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
-													<img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="">
+													<img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="" style="width: 375px; height: 205px;">
 												</button>
 												<div class="fav-item-venues">
 													<span class="tag tag-blue">Đang Hoạt Động</span>
+
 													<h5 class="tag tag-primary">
 														<!-- $thongtin->Court_prices -->
 														{{ number_format($thongtin->Court_prices->default_price ?? 0) }}
 														<span>/Giờ</span>
 													</h5>
+
 												</div>
 											</div>
 											<div class="listing-content">
@@ -174,15 +176,15 @@
 													</a>
 												</div>
 												<h3 class="listing-title">
-													<button type="submit" style="background-color: white; border: 1px solid white;">
+													<button type="submit" style="background-color: white; border: 1px solid white; height:62px;">
 														{{ $thongtin->facility_name }}
 													</button>
 												</h3>
-												<div class="listing-details-group">
-													<p>{{ $thongtin->description }}</p>
+												<div class="listing-details-group" style="text-align: left;">
+													<p style="height: 48px;">{{ $thongtin->description }}</p>
 													<ul>
 														<li>
-															<span>
+															<span style="height: 48px;">
 																<i class="feather-map-pin"></i>{{ $thongtin['address'] }} 
 																
 															</span>
