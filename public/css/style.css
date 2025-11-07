@@ -3364,12 +3364,8 @@ div#global-loader {
     margin-bottom: 10px;
   }
 }
-.listing-item .listing-details-group p {
-  margin-bottom: 15px;
-}
 .listing-item .listing-details-group li {
   color: #192335;
-  margin-bottom: 15px;
 }
 .listing-item .listing-details-group li i {
   margin-right: 6px;
