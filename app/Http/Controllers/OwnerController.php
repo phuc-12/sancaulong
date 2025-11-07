@@ -7,7 +7,7 @@ use App\Models\Bookings;
 use App\Models\Invoice;
 use App\Models\Users;
 use Illuminate\Http\Request;
-use App\Models\Facility;
+use App\Models\Facilities;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +26,7 @@ class OwnerController extends Controller
         if (!$owner) {
             abort(401, 'Unauthorized');
         }
-        $facility = Facility::withoutGlobalScopes()
+        $facility = Facilities::withoutGlobalScopes()
             ->where('owner_id', $owner->user_id)
             ->first();
 
@@ -55,7 +55,7 @@ class OwnerController extends Controller
 
     public function facility()
     {
-        $facility = Facility::withoutGlobalScopes()
+        $facility = Facilities::withoutGlobalScopes()
             ->where('owner_id', Auth::id())
             ->first();
         return view('owner.facility', compact('facility'));
@@ -72,6 +72,10 @@ class OwnerController extends Controller
             'close_time' => 'required|date_format:H:i|after:open_time',
             'description' => 'nullable|string|max:65535',
             'image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+
+            'default_price' => 'nullable|numeric|min:0',
+            'special_price' => 'nullable|numeric|min:0',
+
             'owner_phone' => 'nullable|string|max:20',
             'owner_address' => 'nullable|string|max:255',
             'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
@@ -96,6 +100,9 @@ class OwnerController extends Controller
             'description' => $validatedData['description'],
             'status' => 'chờ duyệt',
 
+            'default_price' => $validatedData['default_price'],
+            'special_price' => $validatedData['special_price'],
+
         ];
 
         // --- XỬ LÝ UPLOAD FILE GIẤY PHÉP KD (Giữ nguyên logic, nhưng đảm bảo chạy trước updateOrCreate) ---
@@ -115,7 +122,7 @@ class OwnerController extends Controller
                 $relativePath = 'img/licenses/' . $newFileName; // Gán giá trị cho biến
 
                 // Xóa file cũ chỉ khi upload file mới thành công và tìm thấy facility cũ
-                $existingFacility = Facility::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
+                $existingFacility = Facilities::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
                 if ($existingFacility && $existingFacility->image) {
                     $oldFilePath = public_path($existingFacility->image);
                     if (file_exists($oldFilePath)) {
@@ -134,7 +141,7 @@ class OwnerController extends Controller
         }
 
         // --- LƯU FACILITY VÀO CSDL ---
-        $facility = Facility::updateOrCreate(
+        $facility = Facilities::updateOrCreate(
             ['owner_id' => Auth::id()], // Điều kiện tìm/tạo
             $facilityData                // Dữ liệu cập nhật/tạo mới
         );
