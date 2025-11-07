@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookings;
+use App\Models\Court_prices;
 use App\Models\Users;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -55,7 +56,7 @@ class AdminController extends Controller
             $growthStatus = 'down';
         }
         $percentageChangeAbs = abs($percentageChange);
-//=============================================================================================================
+        //=============================================================================================================
 //CART
 
         // === TÍNH TOÁN DOANH THU ===
@@ -122,7 +123,7 @@ class AdminController extends Controller
             'pendingFacilities' => $pendingFacilities,
         ]);
     }
-//=============================================================================================================
+    //=============================================================================================================
 //BIỂU ĐỒ
 
     // === CUNG CẤP DỮ LIỆU CHO BIỂU ĐỒ ===
@@ -177,27 +178,77 @@ class AdminController extends Controller
         ]);
     }
 
-//=============================================================================================================
+    //=============================================================================================================
 //DOANH NGHIỆP
 
     // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ ===
-    public function approveFacility(Facility $facility)
+    /**
+     * Duyệt facility và tự động tạo court_prices
+     */
+    public function approve(Request $request, $facilityId)
     {
-        // Cập nhật trạng thái thành 'đã duyệt'
-        $facility->update(['status' => 'đã duyệt']);
+        DB::beginTransaction();
 
-        // Quay lại trang admin với thông báo thành công
-        return redirect()->route('admin.index')->with('success', "Đã phê duyệt cơ sở '{$facility->facility_name}'.");
+        try {
+            $facility = Facility::findOrFail($facilityId);
+
+            // Kiểm tra trạng thái hiện tại
+            if ($facility->status !== 'chờ duyệt') {
+                return back()->withErrors(['error' => 'Cơ sở này không ở trạng thái chờ duyệt.']);
+            }
+
+            // Cập nhật trạng thái facility
+            $facility->status = 'đã duyệt';
+            $facility->save();
+
+            // Tự động tạo các bản ghi court_prices dựa trên giá đã nhập
+            $this->createCourtPrices($facility);
+
+            DB::commit();
+
+            return redirect()->route('admin.facilities.approval')
+                ->with('success', 'Đã duyệt cơ sở thành công và tạo bảng giá!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Lỗi khi duyệt facility: ' . $e->getMessage());
+
+            return back()->withErrors(['error' => 'Có lỗi xảy ra khi duyệt cơ sở.']);
+        }
     }
 
-    // === XỬ LÝ TỪ CHỐI 1 CƠ SỞ ===
-    public function denyFacility(Facility $facility)
+    /**
+     * Tạo các bản ghi court_prices từ thông tin giá của facility
+     */
+    private function createCourtPrices(Facility $facility)
     {
-        // Cập nhật trạng thái thành 'từ chối'
-        $facility->update(['status' => 'từ chối']);
+        $today = now()->toDateString();
+        // Tạo 1 bản ghi duy nhất với cả 2 giá
+        Court_prices::create([
+            'facility_id' => $facility->facility_id,
+            'default_price' => $facility->default_price,   // Giờ mặc định (05:00-16:00)
+            'special_price' => $facility->special_price,   // Giờ cao điểm (16:00-23:00)
+            'effective_date' => $today,
+        ]);
+    }
 
-        // Quay lại trang admin với thông báo thành công
-        return redirect()->route('admin.index')->with('success', "Đã từ chối cơ sở '{$facility->facility_name}'.");
+    /**
+     * Từ chối facility
+     */
+    public function reject(Request $request, $facilityId)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $facility = Facility::findOrFail($facilityId);
+
+        $facility->status = 'từ chối';
+        $facility->rejection_reason = $request->rejection_reason;
+        $facility->save();
+
+        return redirect()->route('admin.facilities.approval')
+            ->with('success', 'Đã từ chối cơ sở.');
     }
 
     //Hiển thị trang Quản lý Cơ sở (Doanh nghiệp)
@@ -228,7 +279,7 @@ class AdminController extends Controller
             ->with('success', "Đã kích hoạt lại hoạt động cho cơ sở '{$facility->facility_name}'.");
     }
 
-//=============================================================================================================
+    //=============================================================================================================
 //KHÁCH HÀNG
 
     // === HIỂN THỊ DANH SÁCH KHÁCH HÀNG ===
@@ -272,7 +323,7 @@ class AdminController extends Controller
             // Email phải duy nhất, ngoại trừ chính user này
             'email' => ['required', 'string', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user->user_id, 'user_id')],
             'status' => 'required|boolean',
-            'password' => ['nullable', 'confirmed', Password::min(8)], 
+            'password' => ['nullable', 'confirmed', Password::min(8)],
         ]);
 
         // --- CHUẨN BỊ DỮ LIỆU CẬP NHẬT ---

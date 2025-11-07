@@ -10,9 +10,23 @@ class Court_prices extends Model
 
     protected $primaryKey = 'court_price_id';
 
-    public function Facilities()
+    protected $fillable = [
+        'facility_id',
+        'default_price',
+        'special_price',
+        'effective_date',
+    ];
+
+    protected $casts = [
+        'effective_date' => 'date',
+        'default_price' => 'decimal:2',
+        'special_price' => 'decimal:2',
+    ];
+
+    public function facility()
     {
-        return $this->belongsTo(Facilities::class, 'facility_id');
+        return $this->belongsTo(Facility::class, 'facility_id', 'facility_id');
     }
+
 
 }
