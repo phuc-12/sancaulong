@@ -761,11 +761,6 @@
             @else 
             @endif
         <div class="text-end mb-3">
-            <form method="POST" action="{{ route('chi_tiet_san') }}">
-                @csrf
-                <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
-                <button class="btn btn-success" style="float: left;">Reset</button>
-            </form>
             <strong>Tổng tiền: </strong>
             <span id="total-price" style="color: red; font-size: 20px; font-weight: bold;"><b>0 đ</b></span>
         </div>

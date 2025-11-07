@@ -15,6 +15,7 @@
 	<link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
 	<link rel="stylesheet" href="{{ asset('css/feather.css') }}">
 	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	{{--
 	<link rel="stylesheet" href="{{ asset('css/chatbox.css') }}"> --}}
 

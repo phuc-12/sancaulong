@@ -183,18 +183,22 @@
 													<ul>
 														<li>
 															<span>
-																<i class="feather-map-pin"></i>{{ $thongtin['address'] }}
+																<i class="feather-map-pin"></i>{{ $thongtin['address'] }} 
+																
 															</span>
+															
 														</li>
-														<li>
-															{{-- <span>
-																<i class="feather-calendar"></i>Giờ mở cửa: <span
-																	class="primary-text">{{ $thongtin['gioMoCua'] }}</span>
-															</span> --}}
+														<li style="float: left;">
+															@php
+																	$open = \Carbon\Carbon::parse($thongtin['open_time'])->format('H:i');
+																	$close = \Carbon\Carbon::parse($thongtin['close_time'])->format('H:i');
+																@endphp
+
+															<i class="fa fa-clock-o"></i> {{ $open }} - {{ $close }}
 														</li>
 													</ul>
 												</div>
-												<div class="listing-button">
+												<div class="listing-button" style="clear: both">
 													<div class="listing-venue-owner">
 														<button class="btn btn-primary" >ĐẶT SÂN</button>
 													</div>	

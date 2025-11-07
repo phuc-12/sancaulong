@@ -106,9 +106,7 @@
 							@else
 								<p>Không có dữ liệu khung giờ nào!</p>
 							@endif
-			
-								
-								
+
 								<form action="{{ route('cancel_invoice') }}" method="POST">
 									@csrf
 									<input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}">
@@ -128,5 +126,22 @@
 			<!-- Container -->
 		</div>
 		<!-- /Page Content -->
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.querySelector('form[action="{{ route('cancel_invoice') }}"]').addEventListener('submit', function(e) {
+    e.preventDefault();
+    Swal.fire({
+        title: 'Xác nhận hủy lịch này?',
+        text: 'Hành động này không thể hoàn tác! Vui lòng liên hệ sân để hoàn tiền.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Có, hủy ngay!',
+        cancelButtonText: 'Không, quay lại'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            e.target.submit();
+        }
+    });
+});
+</script>
 @endsection

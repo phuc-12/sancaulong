@@ -91,6 +91,12 @@
 									<div>
 										
 										<div>
+											@if($success_message)
+												<div class="alert alert-danger">
+													<p>{{ $success_message }}</p>
+												</div>
+											@else 
+											@endif
 											<table class="table table-striped">
                                                 <thead>
                                                     <tr>
@@ -104,7 +110,7 @@
                                                 </thead>
                                                 <tbody>
                                                     @php $index=0 @endphp
-                                                    @foreach ($long_term_contracts as $ct)
+                                                    @forelse ($long_term_contracts as $ct)
                                                         <tr>
                                                             <td>{{ $index+=1 }}</td>
                                                             <td>{{ $ct->facility_name }}</td>
@@ -116,11 +122,25 @@
 																@csrf
                                                                     <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
 																	<input type="hidden" name="slots" value='@json($mycontract_details[$ct->invoice_detail_id] ?? [])'>
-                                                                    <button type="submit" class="btn btn-success">Chi tiết</button>
+                                                                    @if ($ct->payment_status === 'Đã Hủy')
+																		<p class="text-danger">Đã hủy</p>
+																	@elseif ($ct->payment_status === 'Đã sử dụng')
+																		<p class="text-primary">Đã sử dụng</p>
+																	@else 
+																		<button type="submit" class="btn btn-success">
+																			Chi tiết
+																		</button>
+																	@endif
                                                                 </form>
                                                             </td>
                                                         </tr>
-                                                    @endforeach
+                                                    @empty
+														<tr>
+															<td colspan="6" class="text-center text-muted">
+																Chưa có lịch đặt nào
+															</td>
+														</tr>
+													@endforelse
                                                 </tbody>
                                             </table>
 										</div>
