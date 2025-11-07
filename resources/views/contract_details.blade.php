@@ -112,54 +112,47 @@
 							<p class="total">Số tiền cần thanh toán: <span class="highlight">{{ number_format($long_term_contracts->final_amount, 0, ',', '.') }} đ</span></p>
 							
 							<div>
-								<form id="paymentCompleteForm" action="{{ route('payments_contract_complete') }}" method="POST">
+								<form action="{{ route('cancel_contract') }}" method="POST">
 									@csrf
-									{{-- <input type="hidden" name="tongtien" id="tongtien" value="{{ $summary['total_amount'] }}">
-									<input type="hidden" name="details" id="details_input" value='@json($details["actual_dates"])'>
-									<input type="hidden" name="invoice_details_id" id="invoice_details_id" value="{{ $invoice_detail_id }}">
-									<input type="hidden" name="facility_id" id="facility_id" value="{{ $userInfo["facility_id"] }}">
-									<input type="hidden" name="user_id" id="user_id" value="{{ $userInfo["user_id"] }}">
-									<input type="hidden" name="slot_details" value='@json($details["slot_details"])'> --}}
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <button type="submit" class="btn btn-danger btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">Hủy hợp đồng</button>
-                                    </div>
-								</form>
+									<input type="hidden" name="invoice_detail_id" value="{{ $long_term_contracts->invoice_detail_id }}">
+									<input type="hidden" name="user_id" value="{{ $customer->user_id }}">
+									
+									<div class="d-flex justify-content-center gap-2">
+										<button type="submit" class="btn btn-danger btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">
+											HỦY HỢP ĐỒNG
+										</button>
+									</div>
 
+									<p style="text-align: center">
+										Khi hủy, vui lòng liên hệ chủ sân qua số điện thoại hoặc email để được hoàn tiền.
+									</p>
+								</form>
 							</div>
 							
 						</div>
 					</div>
-					{{-- <table> 
-						<thead> 
-							<tr> 
-								<th>T.Gian</th> 
-								<th>Dịch vụ</th> 
-								<th>SL</th> 
-								<th>Đ.Giá</th> 
-							</tr> 
-						</thead> 
-						<tbody> 
-							@php $total = 0; @endphp 
-							@foreach ($details['actual_dates'] as $item) 
-								@php $date = \Carbon\Carbon::parse($item['date'])->format('d/m'); @endphp 
-								@foreach ($details['courts'] as $court) 
-									@foreach ($details['slot_details'] as $slot) 
-										@php $amount = $slot['amount']; $total += $amount; @endphp 
-											<tr> 
-												<td>{{ $date }}</td> 
-												<td>Sân {{ $court }}</td> 
-												<td>30 phút</td> 
-												<td>{{ number_format($amount, 0, ',', '.') }}đ</td> 
-											</tr> 
-										@endforeach 
-									@endforeach 
-								@endforeach 
-						</tbody> 
-					</table> --}}
 				</section>
 			</div>
 			<!-- Container -->
 		</div>
 		<!-- /Page Content -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.querySelector('form[action="{{ route('cancel_contract') }}"]').addEventListener('submit', function(e) {
+    e.preventDefault();
+    Swal.fire({
+        title: 'Xác nhận hủy hợp đồng?',
+        text: 'Hành động này không thể hoàn tác! Vui lòng liên hệ sân để hoàn tiền.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Có, hủy ngay!',
+        cancelButtonText: 'Không, quay lại'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            e.target.submit();
+        }
+    });
+});
+</script>
 
 @endsection

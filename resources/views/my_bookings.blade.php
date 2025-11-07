@@ -86,7 +86,6 @@
 										</div>
 									</div>
 									<div>
-										
 										<div>
 											@if($success_message)
 												<div class="alert alert-danger">
@@ -107,7 +106,7 @@
                                                 </thead>
                                                 <tbody>
                                                     @php $index=0 @endphp
-                                                    @foreach ($invoices as $invoice)
+                                                    @forelse ($invoices as $invoice)
                                                         <tr>
                                                             <td>{{ $index+=1 }}</td>
                                                             <td>{{ $invoice->facility_name }}</td>
@@ -134,7 +133,13 @@
                                                                 </form>
                                                             </td>
                                                         </tr>
-                                                    @endforeach
+                                                    @empty
+														<tr>
+															<td colspan="6" class="text-center text-muted">
+																Chưa có lịch đặt nào
+															</td>
+														</tr>
+													@endforelse
                                                 </tbody>
                                             </table>
 										</div>

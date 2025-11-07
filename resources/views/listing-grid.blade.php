@@ -62,7 +62,7 @@
                                     <div class="listing-img">
                                         <button type="submit" style="border: white;">
                                             <input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
-                                            <img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="">
+                                            <img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="" style="width: 375px; height: 205px;">
                                         </button>
                                         <div class="fav-item-venues">
                                             <span class="tag tag-blue">Đang Hoạt Động</span>
@@ -75,7 +75,7 @@
 
                                         </div>
                                     </div>
-                                    <div class="listing-content">
+                                    <div class="listing-content" style="height: 317px;">
                                         <div class="list-reviews">
                                             <div class="d-flex align-items-center">
                                                 <span class="rating-bg">4.2</span><span>300 Reviews</span>
@@ -90,18 +90,22 @@
                                             </button>
                                         </h3>
                                         <div class="listing-details-group">
-                                            <p>{{ $thongtin['description'] }}</p>
+                                            <p style="height: 48px;">{{ $thongtin['description'] }}</p>
                                             <ul>
                                                 <li>
-                                                    <span>
+                                                    <span style="height: 48px;">
                                                         <i class="feather-map-pin"></i>{{ $thongtin['address'] }}
+                                                        
                                                     </span>
+                                                    
                                                 </li>
                                                 <li>
-                                                    {{-- <span>
-                                                        <i class="feather-calendar"></i>Giờ mở cửa: <span
-                                                            class="primary-text">{{ $thongtin['gioMoCua'] }}</span>
-                                                    </span> --}}
+                                                    @php
+                                                            $open = \Carbon\Carbon::parse($thongtin['open_time'])->format('H:i');
+                                                            $close = \Carbon\Carbon::parse($thongtin['close_time'])->format('H:i');
+                                                        @endphp
+
+                                                        <i class="fa fa-clock-o"></i> {{ $open }} - {{ $close }} 
                                                 </li>
                                             </ul>
                                         </div>
@@ -123,20 +127,19 @@
                     <p>Dữ liệu chưa được tải.</p>
                 @endisset
 
-                {{-- Nút "TẢI THÊM SÂN CẦU" --}}
-                <div class="col-12 text-center">
-                    <div class="more-details">
-                        {{-- THÊM ID VÀ ẨN NÚT NẾU KHÔNG CÒN DỮ LIỆU --}}
-                        <a href="javascript:void(0)" 
-                           id="load-more-btn" 
-                           class="btn btn-load"
-                           style="display: {{ (isset($hasMoreData) && !$hasMoreData) ? 'none' : 'inline-flex' }}">
-                                TẢI THÊM SÂN CẦU
-                            <img src="{{ asset('img/icons/u_plus-square.svg') }}" class="ms-2" alt="img">
-                        </a>
-                    </div>
+                    {{-- Nút "TẢI THÊM SÂN CẦU" --}}
+                    {{-- <div class="col-12 text-center">
+                        <div class="more-details">
+                            <a href="javascript:void(0)" 
+                            id="load-more-btn" 
+                            class="btn btn-load"
+                            style="display: {{ (isset($hasMoreData) && !$hasMoreData) ? 'none' : 'inline-flex' }}">
+                                    TẢI THÊM SÂN CẦU
+                                <img src="{{ asset('img/icons/u_plus-square.svg') }}" class="ms-2" alt="img">
+                            </a>
+                        </div>
+                    </div> --}}
                 </div>
-            </div>
             </div>
     </div>
     {{-- PHẦN SCRIPT XỬ LÝ AJAX LOAD MORE --}}

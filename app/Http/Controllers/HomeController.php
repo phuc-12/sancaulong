@@ -30,11 +30,11 @@ class HomeController extends Controller
         $limit = self::LIMIT_PER_LOAD;
 
         // 1. Lấy tổng số sân đang hoạt động (cho mục đích hiển thị tổng số)
-        $total_count = Facilities::where('status', '1')->count();
+        $total_count = Facilities::where('status', 'đã duyệt')->count();
 
         // 2. Lấy danh sách sân lần đầu tiên (Chỉ 10 sân)
         $danhsachsan = Facilities::query()
-            ->where('status', '1')
+            ->where('status', 'đã duyệt')
             ->take($limit)
             ->get();
 
@@ -726,7 +726,7 @@ class HomeController extends Controller
             )
             ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
             ->get();
-
+            $success_message = $request->success_message;
             $mycontract_details = [];
 
             foreach ($long_term_contracts as $ct) {
@@ -744,7 +744,7 @@ class HomeController extends Controller
                 $mycontract_details[$ct->invoice_detail_id] = $details;
             }
 
-        return view('my_contracts', compact('user_id', 'long_term_contracts', 'mycontract_details'));
+        return view('my_contracts', compact('user_id', 'long_term_contracts', 'mycontract_details', 'success_message'));
     }
 
     public function search(Request $request)
@@ -915,4 +915,22 @@ class HomeController extends Controller
         ]);
     }
 
+    public function cancel_contract(Request $request)
+    {
+        $invoice_detail_id = $request->invoice_detail_id;
+        $user_id = $request->user_id;
+
+        Bookings::where('invoice_detail_id', $invoice_detail_id)->delete();
+
+        DB::table('long_term_contracts')->where('invoice_detail_id', $invoice_detail_id)->update([
+            'payment_status' => 'Đã Hủy',
+        ]);
+
+        return view('layouts.redirect_mycontracts', [
+            'user_id' => $user_id,
+            'success_message' => 'Đã hủy hợp đồng!!! Vui lòng liên hệ sân để hoàn tiền.',
+        ]);
+    }
+
 }
+
