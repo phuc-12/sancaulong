@@ -131,9 +131,10 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="bi bi-receipt-cutoff"></i>
-                    Tài chính & Hóa đơn
+                <a href="{{ route('owner.reports') }}"
+                    class="nav-link {{ request()->routeIs('owner.reports*') ? 'active' : '' }}">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Báo Cáo Kinh Doanh
                 </a>
             </li>
         </ul>
@@ -167,7 +168,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
                                 <i class="fas fa-user me-2"></i> Hồ sơ
-                            </a>    
+                            </a>
                         </li>
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"
@@ -195,6 +196,7 @@
     <main id="main-content">
         @yield('owner_content')
         @yield('admin_content')
+        @yield('reports_content')
     </main>
     <!-- --------------------------------------------- -->
 

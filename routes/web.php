@@ -21,28 +21,28 @@ Route::get('/search', [HomeController::class, 'search'])->name('search.results')
 
 //Dat san
 Route::prefix('/')->controller(HomeController::class)
-->group(function () {
-    Route::get('/','index')->name('trang_chu');
-    Route::get('/listing-grid','listing_grid')->name('danh_sach_san');
-    Route::get('/api/load-more-san','load_more_san')->name('api.load_san');
-    // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
-    Route::post('/venue', 'show')->name('chi_tiet_san');
-    // Route::post('/booking-process', 'processBooking')->name('booking.process');
-    Route::post('/thanh-toan', 'payments')->name('thanh.toan');
-    Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
-    Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
-    Route::post('/thanh-toan/thanh-toan-complete','payments_complete')->name('payments_complete');
-    Route::post('/contract_bookings','contract_bookings')->name('contract_bookings');
-    Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
-    Route::match(['get', 'post'],'/payment_contract', 'payment_contract')->name('payment_contract');
-    Route::post('/thanh-toan/thanh-toan-contract-complete','payments_contract_complete')->name('payments_contract_complete');
-    Route::post('/list_Invoices','list_Invoices')->name('lich_dat_san');
-    Route::post('/list_Contracts','list_Contracts')->name('lich_co_dinh');
-    Route::post('/invoice_details','invoice_details')->name('chi_tiet_hd');
-    Route::post('/cancel_invoice','cancel_invoice')->name('cancel_invoice');
-    Route::post('/contract_details','contract_details')->name('chi_tiet_ct');
-    
-});
+    ->group(function () {
+        Route::get('/', 'index')->name('trang_chu');
+        Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
+        Route::get('/api/load-more-san', 'load_more_san')->name('api.load_san');
+        // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
+        Route::post('/venue', 'show')->name('chi_tiet_san');
+        // Route::post('/booking-process', 'processBooking')->name('booking.process');
+        Route::post('/thanh-toan', 'payments')->name('thanh.toan');
+        Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
+        Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
+        Route::post('/thanh-toan/thanh-toan-complete', 'payments_complete')->name('payments_complete');
+        Route::post('/contract_bookings', 'contract_bookings')->name('contract_bookings');
+        Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
+        Route::match(['get', 'post'], '/payment_contract', 'payment_contract')->name('payment_contract');
+        Route::post('/thanh-toan/thanh-toan-contract-complete', 'payments_contract_complete')->name('payments_contract_complete');
+        Route::post('/list_Invoices', 'list_Invoices')->name('lich_dat_san');
+        Route::post('/list_Contracts', 'list_Contracts')->name('lich_co_dinh');
+        Route::post('/invoice_details', 'invoice_details')->name('chi_tiet_hd');
+        Route::post('/cancel_invoice', 'cancel_invoice')->name('cancel_invoice');
+        Route::post('/contract_details', 'contract_details')->name('chi_tiet_ct');
+
+    });
 
 
 Route::prefix('users')->controller(UserController::class)
@@ -124,11 +124,16 @@ Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () 
     // Route::get('/staff/{staff}/edit', [OwnerController::class, 'editStaff'])->name('staff.edit'); 
 
     // PUT/PATCH: Cập nhật thông tin nhân viên
-    // {staff} sẽ là User model nhờ Route Model Binding (cần khai báo binding nếu tên model khác User)
     Route::put('/staff/{staff}', [OwnerController::class, 'updateStaff'])->name('staff.update');
 
     // DELETE: Xóa nhân viên
     Route::delete('/staff/{staff}', [OwnerController::class, 'destroyStaff'])->name('staff.destroy');
+
+    Route::get('/reports', [OwnerController::class, 'reports'])
+        ->name('reports'); 
+    
+    Route::get('/reports/data', [OwnerController::class, 'getReportData'])
+        ->name('reports.data');
 });
 
 //=============================================================================================================
@@ -156,7 +161,7 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
 
 //=============================================================================================================
 //Nhân viên sân
-Route::prefix('staff')->name('staff.')->middleware(['auth','role:staff'])->group(function () {
+Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->group(function () {
     // Trang chính: Lịch đặt sân & Check-in
     Route::get('/', [StaffController::class, 'index'])->name('index');
 

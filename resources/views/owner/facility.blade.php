@@ -90,38 +90,39 @@
                             <div class="form-text">Giới thiệu về cơ sở vật chất, số lượng sân, tiện ích...</div>
                         </div>
 
-                        <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Chủ Sở Hữu (Sẽ hiển thị cho Admin duyệt)</h5>
+                        <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Chủ Sở Hữu (Sẽ hiển thị cho Admin
+                            duyệt)</h5>
                         {{-- Lấy thông tin từ Auth::user() để điền vào value --}}
-                        @php $ownerUser = Auth::user(); @endphp 
+                        @php $ownerUser = Auth::user(); @endphp
 
                         <div class="row">
-                             <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label for="owner_phone" class="form-label">Số điện thoại Chủ sân</label>
-                                <input type="tel" class="form-control" id="owner_phone" name="owner_phone" 
-                                       value="{{ old('owner_phone', $ownerUser->phone ?? '') }}">
+                                <input type="tel" class="form-control" id="owner_phone" name="owner_phone"
+                                    value="{{ old('owner_phone', $ownerUser->phone ?? '') }}">
                             </div>
-                             <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label for="owner_cccd" class="form-label">Số CCCD Chủ sân</label>
-                                <input type="text" class="form-control" id="owner_cccd" name="owner_cccd" 
-                                       value="{{ old('owner_cccd', $ownerUser->CCCD ?? '') }}">
+                                <input type="text" class="form-control" id="owner_cccd" name="owner_cccd"
+                                    value="{{ old('owner_cccd', $ownerUser->CCCD ?? '') }}">
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="owner_address" class="form-label">Địa chỉ liên hệ Chủ sân</label>
-                            <input type="text" class="form-control" id="owner_address" name="owner_address" 
-                                   value="{{ old('owner_address', $ownerUser->address ?? '') }}">
+                            <input type="text" class="form-control" id="owner_address" name="owner_address"
+                                value="{{ old('owner_address', $ownerUser->address ?? '') }}">
                         </div>
+                        <!-- Giấy phép KD -->
                         <div class="mb-4">
-                            <label for="business_license" class="form-label">Giấy phép kinh doanh (PDF, JPG, PNG)</label>
-                            <input class="form-control" type="file" id="business_license" name="business_license"
+                            <label for="image_upload" class="form-label">Giấy phép kinh doanh (PDF, JPG, PNG)</label>
+                            <input class="form-control" type="file" id="image_upload" name="image"
                                 accept=".pdf,.jpg,.jpeg,.png">
                             {{-- Hiển thị link file hiện tại nếu đang cập nhật và đã có file --}}
-                            @if(isset($facility) && $facility->business_license_path)
+                            @if(isset($facility) && $facility->image)
                                 <div class="mt-2">
-                                    File hiện tại:
-                                    {{-- Storage::url() tạo đường dẫn công khai tới file trong storage/app/public --}}
-                                    <a href="{{ Storage::url($facility->business_license_path) }}" target="_blank">
-                                        Xem file
+                                    <!-- File hiện tại: -->
+                                    <a href="{{ asset($facility->image) }}" target="_blank">
+                                        <!-- Xem file -->
                                         <i class="bi bi-box-arrow-up-right small"></i>
                                     </a>
                                     <small class="text-muted">(Tải file mới sẽ thay thế file này)</small>
@@ -136,8 +137,7 @@
                                 @if($facility->status == 'chờ duyệt') <span class="badge bg-warning text-dark">Chờ duyệt</span>
                                 @elseif($facility->status == 'đã duyệt') <span class="badge bg-success">Đã duyệt</span>
                                 @elseif($facility->status == 'từ chối') <span class="badge bg-danger">Bị từ chối</span>
-                                @else <span class="badge bg-secondary">{{ ucfirst($facility->status) }}</span> {{-- Hiển thị các
-                                    trạng thái khác nếu có --}}
+                                @else <span class="badge bg-secondary">{{ ucfirst($facility->status) }}</span>
                                 @endif
                             </p>
                         @endif
@@ -146,14 +146,12 @@
                             <i class="bi bi-send-check-fill me-2"></i>
                             Gửi Yêu Cầu Đăng Ký / Cập Nhật
                         </button>
-                    </div> {{-- Kết thúc Tab 1 --}}
+                    </div>
 
-                    {{-- Thêm các tab khác ở đây nếu cần --}}
-
-                </div> {{-- Kết thúc Tab Content --}}
+                </div>
             </form>
-        </div> {{-- Kết thúc Card Body --}}
-    </div> {{-- Kết thúc Card --}}
+        </div>
+    </div>
 @endsection
 
 @push('scripts')

@@ -179,18 +179,18 @@
 													</button>
 												</h3>
 												<div class="listing-details-group">
-													<p>{{ $thongtin['description'] }}</p>
+													<p>{{ $thongtin->description }}</p>
 													<ul>
 														<li>
 															<span>
-																<i class="feather-map-pin"></i>{{ $thongtin['address'] }}
+																<i class="feather-map-pin"></i>{{ $thongtin->address }}
 															</span>
 														</li>
 														<li>
-															{{-- <span>
+															<span>
 																<i class="feather-calendar"></i>Giờ mở cửa: <span
-																	class="primary-text">{{ $thongtin['gioMoCua'] }}</span>
-															</span> --}}
+																	class="primary-text">{{ $thongtin->gioMoCua }}</span>
+															</span>
 														</li>
 													</ul>
 												</div>

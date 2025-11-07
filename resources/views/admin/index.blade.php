@@ -463,13 +463,13 @@
                             <dt class="col-sm-5">Mô tả:</dt> <dd class="col-sm-7">{{ $facility->description ?? '(Không có)' }}</dd>
                             <dt class="col-sm-5">Giấy phép KD:</dt> 
                             <dd class="col-sm-7">
-                                <!-- @if($facility->business_license_path)
-                                    <a href="{{ Storage::url($facility->business_license_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                @if($facility->image)
+                                    <a href="{{ Storage::url($facility->image) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-file-earmark-text me-1"></i> Xem File
                                     </a>
                                 @else
-                                    <span class="text-muted">(Không có file)</span>
-                                @endif -->
+                                    <span class="text-muted">(Không có file)</span> 
+                                @endif
                             </dd>
                         </dl>
                     </div>

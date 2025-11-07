@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 // --- SỬA LẠI USE STATEMENTS ---
+use App\Models\Bookings;
+use App\Models\Invoice;
 use App\Models\Users;
 use Illuminate\Http\Request;
 use App\Models\Facility;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage; // Sử dụng Facade đầy đủ
@@ -66,7 +70,7 @@ class OwnerController extends Controller
             'open_time' => 'required|date_format:H:i',
             'close_time' => 'required|date_format:H:i|after:open_time',
             'description' => 'nullable|string|max:65535',
-            'business_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'owner_phone' => 'nullable|string|max:20',
             'owner_address' => 'nullable|string|max:255',
             'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
@@ -93,8 +97,8 @@ class OwnerController extends Controller
 
         // --- XỬ LÝ UPLOAD FILE GIẤY PHÉP KD (Giữ nguyên logic, nhưng đảm bảo chạy trước updateOrCreate) ---
         $relativePath = null; // Khởi tạo biến lưu đường dẫn file
-        if ($request->hasFile('business_license')) {
-            $file = $request->file('business_license');
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $extension = $file->getClientOriginalExtension();
             $safeOriginalName = preg_replace('/[^A-Za-z0-9\-]/', '_', $originalName);
@@ -109,21 +113,21 @@ class OwnerController extends Controller
 
                 // Xóa file cũ chỉ khi upload file mới thành công và tìm thấy facility cũ
                 $existingFacility = Facility::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
-                if ($existingFacility && $existingFacility->business_license_path) {
-                    $oldFilePath = public_path($existingFacility->business_license_path);
+                if ($existingFacility && $existingFacility->image) {
+                    $oldFilePath = public_path($existingFacility->image);
                     if (file_exists($oldFilePath)) {
                         unlink($oldFilePath);
                     }
                 }
             } catch (\Exception $e) {
                 \Log::error('Lỗi upload Giấy phép KD: ' . $e->getMessage());
-                return back()->withInput()->withErrors(['business_license' => 'Không thể lưu file tải lên.']);
+                return back()->withInput()->withErrors(['image' => 'Không thể lưu file tải lên.']);
             }
         }
 
         // --- THÊM ĐƯỜNG DẪN FILE VÀO DỮ LIỆU FACILITY ---
         if ($relativePath) {
-            $facilityData['business_license_path'] = $relativePath;
+            $facilityData['image'] = $relativePath;
         }
 
         // --- LƯU FACILITY VÀO CSDL ---
@@ -175,7 +179,7 @@ class OwnerController extends Controller
         $validatedData = $request->validate([
             'fullname' => 'required|string|max:100',
             'email' => ['required', 'string', 'email', 'max:100', Rule::unique('users', 'email')],
-            'password' => ['required', Password::min(8)], 
+            'password' => ['required', Password::min(8)],
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
@@ -218,20 +222,19 @@ class OwnerController extends Controller
     }
 
     /**
-     * Cập nhật thông tin nhân viên/quản lý - ĐÃ BỔ SUNG LOGIC
+     * Cập nhật thông tin nhân viên/quản lý 
      */
-    public function updateStaff(Request $request, Users $staff) // <-- Sửa kiểu dữ liệu thành Users
+    public function updateStaff(Request $request, Users $staff)
     {
         $owner = Auth::user();
-        // Kiểm tra quyền (Đã đúng)
+        // Kiểm tra quyền
         if (!$owner || !$owner->facility_id || $staff->facility_id !== $owner->facility_id || !in_array($staff->role_id, [3, 4])) {
             abort(403, 'Bạn không có quyền sửa thông tin người này.');
         }
 
-        // --- VALIDATION (Đã đúng) ---
+        // --- VALIDATION ---
         $validatedData = $request->validate([
             'fullname' => 'required|string|max:100',
-            // --- SỬA LẠI: Dùng $staff->user_id ---
             'email' => ['required', 'string', 'email', 'max:100', Rule::unique('users', 'email')->ignore($staff->user_id, 'user_id')],
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()], // Bỏ confirmed nếu form ko có password_confirmation
             'phone' => 'nullable|string|max:20',
@@ -254,12 +257,12 @@ class OwnerController extends Controller
             'role_id' => $validatedData['role_id'],
         ];
 
-        // --- CẬP NHẬT MẬT KHẨU (NẾU CÓ) ---
+        // --- CẬP NHẬT MẬT KHẨU ---
         if (!empty($validatedData['password'])) {
             $updateData['password'] = Hash::make($validatedData['password']);
         }
 
-        // --- XỬ LÝ UPLOAD AVATAR MỚI (NẾU CÓ) ---
+        // --- XỬ LÝ UPLOAD AVATAR MỚI ---
         if ($request->hasFile('avatar')) {
             try {
                 // Xóa avatar cũ trước
@@ -289,17 +292,17 @@ class OwnerController extends Controller
     }
 
     /**
-     * Xóa nhân viên/quản lý - ĐÃ BỔ SUNG LOGIC
+     * Xóa nhân viên/quản lý
      */
-    public function destroyStaff(Users $staff) // <-- Sửa kiểu dữ liệu thành Users
+    public function destroyStaff(Users $staff)
     {
         $owner = Auth::user();
-        // Kiểm tra quyền (Đã đúng)
+        // Kiểm tra quyền
         if (!$owner || !$owner->facility_id || $staff->facility_id !== $owner->facility_id || !in_array($staff->role_id, [3, 4])) {
             abort(403, 'Bạn không có quyền xóa người này.');
         }
 
-        // --- XÓA AVATAR (NẾU CÓ) ---
+        // --- XÓA AVATAR ---
         if ($staff->avatar && file_exists(public_path($staff->avatar))) {
             try {
                 unlink(public_path($staff->avatar));
@@ -315,4 +318,88 @@ class OwnerController extends Controller
         return redirect()->route('owner.staff')->with('success', 'Đã xóa nhân viên/quản lý thành công!');
     }
 
+    /**
+     * Hiển thị trang Báo cáo Doanh thu & Sân
+     */
+    public function reports()
+    {
+        // Lấy facility_id của owner để truyền sang view (dùng cho JS sau này)
+        $owner = Auth::user();
+        if (!$owner || !$owner->facility_id) {
+            abort(403, 'Không tìm thấy thông tin cơ sở.');
+        }
+        $facilityId = $owner->facility_id;
+
+        // Bạn có thể lấy danh sách các sân con để điền vào bộ lọc dropdown
+        $courts = \App\Models\Court::where('facility_id', $facilityId)->get(['court_id', 'court_name']);
+
+        return view('owner.reports', compact('facilityId', 'courts'));
+    }
+
+    /**
+     * API: Cung cấp dữ liệu báo cáo cho Chart.js (AJAX)
+     */
+    public function getReportData(Request $request)
+    {
+        // --- 1. KIỂM TRA QUYỀN VÀ LẤY FACILITY ID ---
+        $owner = Auth::user();
+        if (!$owner || !$owner->facility_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        $facilityId = $owner->facility_id;
+
+        // --- 2. LẤY BỘ LỌC TỪ REQUEST ---
+        $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
+        $endDate = Carbon::parse($request->get('end_date'))->endOfDay();
+        $courtFilter = $request->get('court_id'); // Lọc theo sân con
+
+        // BÁO CÁO 1: BIỂU ĐỒ DOANH THU THEO NGÀY
+        // ===============================================
+        $revenueByDay = Invoice::where('payment_status', 'Đã thanh toán')
+            ->where('issue_date', '>=', $startDate->toDateString())
+            ->where('issue_date', '<=', $endDate->toDateString())
+            ->whereHas('invoiceDetails.booking', function ($query) use ($facilityId) {
+                // Đảm bảo hóa đơn chỉ liên quan đến cơ sở này
+                $query->where('facility_id', $facilityId);
+            })
+            ->select(
+                DB::raw('DATE_FORMAT(issue_date, "%d/%m") as label'),
+                DB::raw('SUM(final_amount) as total')
+            )
+            ->groupBy('issue_date') // Group theo ngày
+            ->orderBy('issue_date', 'asc')
+            ->get();
+
+
+        // BÁO CÁO 2: TỈ LỆ SỬ DỤNG SÂN (THEO SÂN CON)
+        // ===============================================
+        $utilizationQuery = Bookings::where('facility_id', $facilityId)
+            ->whereBetween('booking_date', [$startDate->toDateString(), $endDate->toDateString()]);
+
+        if ($courtFilter) {
+            $utilizationQuery->where('court_id', $courtFilter);
+        }
+
+        $utilizationByCourt = $utilizationQuery
+            ->join('courts', 'bookings.court_id', '=', 'courts.court_id')
+            ->select(
+                'courts.court_name as label',
+                DB::raw('COUNT(bookings.booking_id) as count')
+            )
+            ->groupBy('courts.court_name')
+            ->get();
+
+        // 3. TRẢ VỀ DỮ LIỆU JSON
+        // ===============================================
+        return response()->json([
+            'revenue_data' => [
+                'labels' => $revenueByDay->pluck('label'),
+                'data' => $revenueByDay->pluck('total'),
+            ],
+            'utilization_data' => [
+                'labels' => $utilizationByCourt->pluck('label'),
+                'data' => $utilizationByCourt->pluck('count'),
+            ],
+        ]);
+    }
 }
