@@ -25,7 +25,7 @@ class Court_prices extends Model
 
     public function facility()
     {
-        return $this->belongsTo(Facility::class, 'facility_id', 'facility_id');
+        return $this->belongsTo(Facilities::class, 'facility_id', 'facility_id');
     }
 
 

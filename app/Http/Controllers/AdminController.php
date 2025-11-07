@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bookings;
 use App\Models\Court_prices;
+use App\Models\Facilities;
 use App\Models\Users;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -96,7 +97,7 @@ class AdminController extends Controller
             ->count();
 
         // === LẤY DANH SÁCH CƠ SỞ CHỜ DUYỆT ===
-        $pendingFacilities = Facility::where('status', 'chờ duyệt')
+        $pendingFacilities = Facilities::where('status', 'chờ duyệt')
             ->with('owner') // Lấy kèm thông tin chủ sân (owner)
             ->orderBy('created_at', 'asc') // Ưu tiên cái cũ (nếu có timestamps)
             ->get();
@@ -190,7 +191,7 @@ class AdminController extends Controller
         DB::beginTransaction();
 
         try {
-            $facility = Facility::findOrFail($facilityId);
+            $facility = Facilities::findOrFail($facilityId);
 
             // Kiểm tra trạng thái hiện tại
             if ($facility->status !== 'chờ duyệt') {
@@ -220,7 +221,7 @@ class AdminController extends Controller
     /**
      * Tạo các bản ghi court_prices từ thông tin giá của facility
      */
-    private function createCourtPrices(Facility $facility)
+    private function createCourtPrices(Facilities $facility)
     {
         $today = now()->toDateString();
         // Tạo 1 bản ghi duy nhất với cả 2 giá
@@ -241,7 +242,7 @@ class AdminController extends Controller
             'rejection_reason' => 'required|string|max:500',
         ]);
 
-        $facility = Facility::findOrFail($facilityId);
+        $facility = Facilities::findOrFail($facilityId);
 
         $facility->status = 'từ chối';
         $facility->rejection_reason = $request->rejection_reason;
@@ -254,14 +255,14 @@ class AdminController extends Controller
     //Hiển thị trang Quản lý Cơ sở (Doanh nghiệp)
     public function manageFacilities()
     {
-        $facilities = Facility::with('owner')
+        $facilities = Facilities::with('owner')
             ->orderBy('status', 'asc')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
         return view('admin.facilities.index', compact('facilities'));
     }
     //TẠM KHÓA CƠ SỞ
-    public function suspendFacility(Facility $facility)
+    public function suspendFacility(Facilities $facility)
     {
         // (Kiểm tra quyền Admin)
         $facility->update(['status' => 'tạm khóa']); // Đặt trạng thái là 'tạm khóa'
@@ -270,7 +271,7 @@ class AdminController extends Controller
     }
 
     //KÍCH HOẠT LẠI CƠ SỞ
-    public function activateFacility(Facility $facility)
+    public function activateFacility(Facilities $facility)
     {
         // (Kiểm tra quyền Admin)
         // Kích hoạt lại đồng nghĩa với việc duyệt lại
