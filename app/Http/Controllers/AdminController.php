@@ -207,8 +207,8 @@ class AdminController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.facilities.approval')
-                ->with('success', 'Đã duyệt cơ sở thành công và tạo bảng giá!');
+            return redirect()->route(route: 'admin.facilities.index')
+                ->with(key: 'success', value: 'Đã duyệt cơ sở thành công và tạo bảng giá!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -324,7 +324,7 @@ class AdminController extends Controller
             // Email phải duy nhất, ngoại trừ chính user này
             'email' => ['required', 'string', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user->user_id, 'user_id')],
             'status' => 'required|boolean',
-            'password' => ['nullable', 'confirmed', Password::min(8)],
+            'password' => ['nullable', 'confirmed', 'min:8'],
         ]);
 
         // --- CHUẨN BỊ DỮ LIỆU CẬP NHẬT ---

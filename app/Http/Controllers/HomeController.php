@@ -19,7 +19,7 @@ class HomeController extends Controller
     const LIMIT_PER_LOAD = 10;
     public function index()
     {
-        $sancaulong = Facilities::with('Court_prices')->where('status', 'đã duyệt')->get();
+        $sancaulong = Facilities::with('courtPrice')->where('status', 'đã duyệt')->get();
         // dd($sancaulong);
         return view('index', compact('sancaulong'));
 
