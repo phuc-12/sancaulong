@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Court_prices;
 
 class Facilities extends Model
 {
@@ -23,20 +24,22 @@ class Facilities extends Model
         'description',
         'default_price',
         'special_price',
-        // 'business_license_path',
         'image',
-        'status'
+        'business_license',
+        'status',
+        'quantity_court'
     ];
 
-    public function Court_prices()
+    public function courtPrice()
     {
-        return $this->belongsTo(Court_prices::class, 'facility_id');
+        return $this->hasOne(Court_prices::class, 'facility_id', 'facility_id');
     }
 
     public function Users()
     {
         return $this->belongsTo(Users::class, 'owner_id');
     }
+
     public function owner()
     {
         // belongsTo(User::class, 'foreign_key', 'owner_key')
@@ -44,5 +47,5 @@ class Facilities extends Model
         return $this->belongsTo(Users::class, 'owner_id', 'user_id');
     }
 
-}
+    }
 

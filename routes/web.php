@@ -78,11 +78,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
     // === ROUTE DUYỆT/TỪ CHỐI ===
     // Route để DUYỆT (Approve Facility) - dùng {facility}
-    Route::post('/facilities/approve/{facility}', [AdminController::class, 'approveFacility'])
+    Route::post('/facilities/approve/{facility}', [AdminController::class, 'approve'])
         ->name('facility.approve');
 
     // Route để TỪ CHỐI (Deny Facility) - dùng {facility}
-    Route::post('/facilities/deny/{facility}', [AdminController::class, 'denyFacility'])
+    Route::post('/facilities/deny/{facility}', [AdminController::class, 'reject'])
         ->name('facility.deny');
 
     // POST: Tạm khóa cơ sở

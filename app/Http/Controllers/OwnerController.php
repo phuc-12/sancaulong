@@ -13,11 +13,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage; // Sử dụng Facade đầy đủ
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\Court_prices;
 class OwnerController extends Controller
 {
     public function index()
@@ -62,35 +62,42 @@ class OwnerController extends Controller
     }
 
     public function storeFacility(Request $request)
-    {
-        // --- VALIDATION ---
-        $validatedData = $request->validate([
-            'facility_name' => 'required|string|max:100',
-            'address' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'open_time' => 'required|date_format:H:i',
-            'close_time' => 'required|date_format:H:i|after:open_time',
-            'description' => 'nullable|string|max:65535',
-            'image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+{
+    // --- VALIDATION ---
+    $validatedData = $request->validate([
+        'facility_name' => 'required|string|max:100',
+        'address' => 'required|string|max:255',
+        'phone' => 'required|string|max:20',
+        'open_time' => 'required',
+        'close_time' => 'required|after:open_time',
+        'description' => 'nullable|string|max:65535',
+        
+        // Input cho Giấy phép KD (lưu vào cột business_license)
+        'business_license' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048', 
+        
+        // Input cho Ảnh sân (lưu vào cột image)
+        'image' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
 
-            'default_price' => 'nullable|numeric|min:0',
-            'special_price' => 'nullable|numeric|min:0',
+        'default_price' => 'nullable|numeric|min:0',
+        'special_price' => 'nullable|numeric|min:0',
 
-            'owner_phone' => 'nullable|string|max:20',
-            'owner_address' => 'nullable|string|max:255',
-            'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
-        ]);
+        'owner_phone' => 'nullable|string|max:20',
+        'owner_address' => 'nullable|string|max:255',
+        'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
+    ]);
+
+    try {
+        DB::beginTransaction();
 
         // --- CẬP NHẬT THÔNG TIN USER ---
         $user = Auth::user();
-
-        DB::table('users')->where('user_id',$user->user_id)->update([
+        DB::table('users')->where('user_id', $user->user_id)->update([
             'phone' => $validatedData['owner_phone'],
             'address' => $validatedData['owner_address'],
             'CCCD' => $validatedData['owner_cccd'],
         ]);
-        
-        // --- CHUẨN BỊ DỮ LIỆU FACILITY ---
+
+        // --- CHUẨN BỊ DỮ LIỆU FACILITY (Chưa có ảnh) ---
         $facilityData = [
             'facility_name' => $validatedData['facility_name'],
             'address' => $validatedData['address'],
@@ -99,72 +106,100 @@ class OwnerController extends Controller
             'close_time' => $validatedData['close_time'],
             'description' => $validatedData['description'],
             'status' => 'chờ duyệt',
-
-            'default_price' => $validatedData['default_price'],
-            'special_price' => $validatedData['special_price'],
-
+            // 'quantity_court' => $request->input('quantity_court')
         ];
+        
+        // Lấy facility cũ (nếu có) để xóa ảnh cũ
+        $existingFacility = Facilities::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
 
-        // --- XỬ LÝ UPLOAD FILE GIẤY PHÉP KD (Giữ nguyên logic, nhưng đảm bảo chạy trước updateOrCreate) ---
-        $relativePath = null; // Khởi tạo biến lưu đường dẫn file
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $extension = $file->getClientOriginalExtension();
-            $safeOriginalName = preg_replace('/[^A-Za-z0-9\-]/', '_', $originalName);
-            $newFileName = time() . '_' . Str::limit($safeOriginalName, 50, '') . '.' . $extension;
+        // --- XỬ LÝ UPLOAD GIẤY PHÉP KD (Input 'business_license') ---
+        if ($request->hasFile('business_license')) {
+            $file = $request->file('business_license');
+            $newFileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
             $destinationPath = public_path('img/licenses');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
+            
             try {
+                if (!file_exists($destinationPath)) mkdir($destinationPath, 0755, true);
                 $file->move($destinationPath, $newFileName);
-                $relativePath = 'img/licenses/' . $newFileName; // Gán giá trị cho biến
+                $facilityData['business_license'] = 'img/licenses/' . $newFileName; // Lưu vào cột 'business_license'
 
-                // Xóa file cũ chỉ khi upload file mới thành công và tìm thấy facility cũ
-                $existingFacility = Facilities::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
-                if ($existingFacility && $existingFacility->image) {
-                    $oldFilePath = public_path($existingFacility->image);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
+                // Xóa file cũ
+                if ($existingFacility && $existingFacility->business_license) {
+                    if (file_exists(public_path($existingFacility->business_license))) {
+                        unlink(public_path($existingFacility->business_license));
                     }
                 }
             } catch (\Exception $e) {
+                DB::rollBack();
                 Log::error('Lỗi upload Giấy phép KD: ' . $e->getMessage());
-                return back()->withInput()->withErrors(['image' => 'Không thể lưu file tải lên.']);
+                return back()->withInput()->withErrors(['business_license' => 'Không thể lưu file Giấy phép KD.']);
             }
         }
 
-        // --- THÊM ĐƯỜNG DẪN FILE VÀO DỮ LIỆU FACILITY ---
-        if ($relativePath) {
-            $facilityData['image'] = $relativePath;
-        }
+        // --- XỬ LÝ UPLOAD ẢNH SÂN (Input 'image') ---
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $newFileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('img/venues'); // Lưu vào 'img/venues'
+            
+            try {
+                if (!file_exists($destinationPath)) mkdir($destinationPath, 0755, true);
+                $file->move($destinationPath, $newFileName);
+                $facilityData['image'] = 'img/venues/' . $newFileName; // Lưu vào cột 'image'
 
-        // --- LƯU FACILITY VÀO CSDL ---
+                // Xóa file cũ
+                if ($existingFacility && $existingFacility->image) {
+                    if (file_exists(public_path($existingFacility->image))) {
+                        unlink(public_path($existingFacility->image));
+                    }
+                }
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Lỗi upload Ảnh Sân: ' . $e->getMessage());
+                return back()->withInput()->withErrors(['image' => 'Không thể lưu file Ảnh Sân.']);
+            }
+        }
+        
+        // --- CHUẨN BỊ DỮ LIỆU GIÁ ---
+        $priceData = [
+            'default_price' => $validatedData['default_price'],
+            'special_price' => $validatedData['special_price'],
+        ];
+
+        // --- LƯU FACILITY VÀ GIÁ VÀO CSDL ---
         $facility = Facilities::updateOrCreate(
-            ['owner_id' => Auth::id()], // Điều kiện tìm/tạo
-            $facilityData                // Dữ liệu cập nhật/tạo mới
+            ['owner_id' => Auth::id()],
+            $facilityData
         );
-        if ($facility) { // Nếu tạo/cập nhật facility thành công
-            $user = Auth::user();
-            // Chỉ cập nhật nếu facility_id của user chưa đúng
+
+        if ($facility) {
+            $facility->courtPrice()->updateOrCreate(
+                ['facility_id' => $facility->facility_id],
+                $priceData
+            );
+
             if ($user->facility_id !== $facility->facility_id) {
-                // $user->facility_id = $facility->facility_id; // Gán ID cơ sở vừa tạo/sửa
-                // $user->save(); // Lưu lại vào bảng users
-                DB::table('users')->where('user_id',$user)->update([
+                DB::table('users')->where('user_id', $user->user_id)->update([
                     'facility_id' => $facility->facility_id,
                 ]);
             }
         } else {
-            // Xử lý lỗi nếu không lưu được facility
-            Log::error('Không thể tạo/cập nhật facility cho user ID: ' . Auth::id());
-            return back()->withInput()->withErrors(['general' => 'Lỗi lưu thông tin cơ sở.']);
+            throw new \Exception('Không thể tạo hoặc cập nhật facility.');
         }
-        // --- PHẢN HỒI ---
-        return redirect()->route('owner.index')
-            ->with('success', 'Thông tin cơ sở đã được gửi đi chờ duyệt!');
+                
+        // --- COMMIT TRANSACTION ---
+        DB::commit();
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Lỗi lưu thông tin cơ sở: ' . $e->getMessage());
+        return back()->withInput()->withErrors(['general' => 'Lỗi lưu thông tin cơ sở. Vui lòng thử lại.']);
     }
 
+    // --- PHẢN HỒI ---
+    return redirect()->route('owner.index')
+        ->with('success', 'Thông tin cơ sở đã được gửi đi chờ duyệt!');
+}
 
     public function staff()
     {

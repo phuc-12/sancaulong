@@ -297,8 +297,8 @@
                 </ul>
             </div>
             <div class="col-md-6 text-end">
-                <p class="d-inline-block me-2 mb-0">Giá từ:</p>
-                <h3 class="primary-text d-inline-block">{{ $thongtinsan->Court_prices->default_price }}<span>/giờ</span></h3>
+                <p class="d-inline-block me-2 mb-0">Giá từ:</p>   
+                 <h3 class="primary-text d-inline-block">{{ $thongtinsan->courtPrice?->default_price ?? 'Chưa có giá' }}</span>/Giờ</span></h3>
             </div>
         </div>
     </div>
@@ -376,8 +376,8 @@
                                                                             $isBooked = isset($bookingsData[$d][$slot->time_slot_id][$i]);
 
                                                                             $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
-                                                                                ? $thongtinsan->Court_prices->default_price
-                                                                                : $thongtinsan->Court_prices->special_price;
+                                                                                ? $thongtinsan->courtPrice->default_price
+                                                                                : $thongtinsan->courtPrice->special_price;
                                                                         @endphp
 
                                                                         <td>
@@ -740,12 +740,12 @@
 
         <ul class="d-sm-flex align-items-center justify-content-evenly">
             <li>
-                <h3 class="d-inline-block primary-text">{{ number_format($thongtinsan->Court_prices->default_price) }}</h3><span>/hr</span>
+                <h3 class="d-inline-block primary-text">{{ number_format($thongtinsan->courtPrice->default_price) }}</h3><span>/hr</span>
                 <p>Giá Mặc Định</p>
             </li>
             <li><span><i class="feather-plus"></i></span></li>
             <li>
-                <h4 class="d-inline-block primary-text">{{ number_format($thongtinsan->Court_prices->special_price) }}</h4><span>/hr</span>
+                <h4 class="d-inline-block primary-text">{{ number_format($thongtinsan->courtPrice->special_price) }}</h4><span>/hr</span>
                 <p>Giá Giờ Vàng</p>
             </li>
         </ul>
