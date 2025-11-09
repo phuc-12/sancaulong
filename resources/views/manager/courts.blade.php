@@ -1,6 +1,280 @@
 @extends('layouts.manager') {{-- Kế thừa layout Manager --}}
 
 @section('manager_content')
+<style>
+        .venue-info h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+        .venue-info ul li {
+            list-style: none;
+            margin-right: 20px;
+            color: #555;
+            font-size: 14px;
+        }
+        .venue-info ul li i {
+            color: #28a745;
+            margin-right: 6px;
+        }
+        .bannergallery-section img {
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .showphotos a {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .details li {
+            display: flex;
+            align-items: center;
+            margin-right: 25px;
+        }
+        .primary-text {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .social-options li a{
+            font-size:15px;
+            color:#555;
+            margin-right:15px;
+        }
+        .hero-banner {
+            position: relative;
+            width: 100%;
+            height: 320px; /* Bạn chỉnh thấp/cao hơn tùy thích */
+            background: url('{{ asset('img/venues/' . $thongtinsan->image) }}') center/cover no-repeat;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .hero-banner::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%; /* Làm tối hình 1 chút để chữ rõ */
+        }
+
+        .hero-content {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+        }
+
+        .hero-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .hero-content p {
+            font-size: 15px;
+            margin: 0;
+        }
+
+        table.fixed-table {
+                min-width: 1000px;
+                border-collapse: collapse;
+            }
+
+            table.fixed-table th,
+            table.fixed-table td {
+                border: 1px solid #ccc;
+                text-align: center;
+                white-space: nowrap;
+            }
+
+            thead th {
+                position: sticky;
+                top: 0;
+                background-color: white;
+                z-index: 2;
+            }
+
+            
+
+            thead .sticky-col {
+                z-index: 4; /* để cột đầu của thead nổi hơn */
+            }
+
+            /* Cố định cột đầu tiên (Khung giờ) */
+            .sticky-col {
+                position: sticky;
+                left: 0;
+                background: white;
+                z-index: 2;
+                font-weight: bold;
+            }
+
+            /* Ô đã quá hạn */
+            td div.het-han {
+                width: 100%;
+                background-color: gray;
+                font-weight: 500;
+            }
+
+            /* Ô đã được chọn */
+            td div.da-chon {
+                width: 100%;
+                background-color: red;
+                font-weight: bold;
+            }
+
+            /* Button đặt giờ */
+            td form button {
+                background-color: white;
+                border: 2px solid #007F7F;
+                color: #007F7F;
+                padding: 6px 10px;
+                font-weight: bold;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s ease-in-out;
+                width: 100%;
+            }
+
+            /* Hover hiệu ứng */
+            td form button:hover {
+                background-color: #007F7F;
+                color: white;
+            }
+
+            /* Trạng thái nhấn */
+            td form button:active {
+                transform: scale(0.98);
+                background-color: #005f5f;
+            }
+
+            /* Container cho các nút ở hàng đầu tiên */
+            .venue-options-styled {
+                display: flex;
+                gap: 10px; /* Khoảng cách giữa các nút */
+                margin-bottom: 10px; /* Khoảng cách với hàng thứ hai */
+            }
+
+            /* Container cho nút ở hàng thứ hai */
+            .venue-options-styled-row2 {
+                display: flex;
+                gap: 10px;
+            }
+
+            /* Định kiểu chung cho tất cả các nút */
+            .option-button {
+                /* Đặt màu chữ và nền mặc định (Trắng) */
+                color: #000;
+                background-color: #fff;
+                border: 1px solid #e0e0e0; /* Viền rất nhạt */
+                border-radius: 6px; /* Bo góc */
+                padding: 8px 15px; /* Đệm bên trong */
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s ease; /* Hiệu ứng chuyển đổi mượt */
+                white-space: nowrap;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Bóng đổ nhẹ */
+            }
+
+            /* Nút slot mặc định */
+    .slot-btn {
+        width: 70px;
+        height: 35px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    /* Hover trên slot chưa chọn */
+    .slot-btn:not(.selected):hover {
+        background-color: #f7f7f7; /* nền xám nhạt */
+        border-color: #ccc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Khi nhấn giữ chuột */
+    .slot-btn:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Khi đã chọn */
+    .slot-btn.selected {
+        background-color: #28a745;
+        color: #fff;
+        border-color: #28a745;
+    }
+
+    /* Hover trên slot đã chọn (nếu muốn) */
+    .slot-btn.selected:hover {
+        background-color: #218838; /* màu xanh đậm hơn khi hover */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transform: translateY(-1px);
+    }
+
+            .container {
+    background: #006d3b;
+    padding: 20px;
+    border-radius: 15px;
+}
+/* .slot-btn {
+    margin: 3px;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    padding: 8px 14px;
+    background: white;
+    color: #000;
+} */
+.slot-btn.selected { background: #1976d2; color: white; }
+.slot-btn.booked { background: #f44336; color: white; }
+.slot-btn.pending { background: #ffc107; color: white; }
+.slot-btn.locked { background: #9e9e9e; color: white; }
+
+/* Nút chọn sân */
+.court-btn {
+    border-radius: 10px;
+    background: white;
+    color: #000;
+    border: 2px solid #ccc;
+    padding: 10px 20px;
+    transition: 0.2s;
+}
+.court-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.court-btn.selected {
+    background: #1976d2;
+    color: white;
+    border-color: #1976d2;
+}
+
+.legend-item {
+    display: inline-block;
+    width: 20px; height: 20px;
+    margin-right: 6px; border-radius: 4px;
+}
+.legend-item.trống { background: white; border: 1px solid #ccc; }
+.legend-item.chọn { background: #1976d2; }
+.legend-item.xácnhận { background: #ffc107; }
+.legend-item.đặt { background: #f44336; }
+.legend-item.khóa { background: #9e9e9e; }
+
+.slot-btn:hover, .court-btn:hover {
+    transform: scale(1.05);
+    transition: 0.2s ease;
+}
+    </style>
     <h1 class="h3 mb-4">Quản lý Sân Bãi & Lịch Đặt</h1>
 
     {{-- Hiển thị thông báo thành công (nếu có) --}}
@@ -68,7 +342,7 @@
                                         </select>
                                         
                                         {{-- Nút Cập nhật --}}
-                                        <button type="submit" class="btn btn-sm btn-primary">Cập nhật</button>
+                                        <button type="submit" class="btn btn-sm btn-primary" style="width: 100px;">Cập nhật</button>
                                     </form>
                                 </td>
                             </tr>
@@ -82,148 +356,140 @@
     
     {{-- Phần 2: Điều chỉnh Lịch Đặt (Placeholder) --}}
     <div class="card mt-4">
-         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Quản lý & Điều chỉnh Lịch Đặt</h5>
-            {{-- Bạn có thể thêm nút "Tạo lịch đặt mới" ở đây nếu cần --}}
-            {{-- <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addBookingModal"><i class="bi bi-plus-circle me-1"></i> Tạo Lịch Đặt</button> --}}
-         </div>
-         <div class="card-body">
-            {{-- Thẻ div này sẽ chứa Lịch --}}
-            <div id='bookingCalendar'></div>
-         </div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Quản lý & Điều chỉnh Lịch Đặt</h5>
+        {{-- Bạn có thể thêm nút "Tạo lịch đặt mới" ở đây nếu cần --}}
+        {{-- <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addBookingModal"><i class="bi bi-plus-circle me-1"></i> Tạo Lịch Đặt</button> --}}
+        </div>
+        <div class="content" style="padding-top: 30px;">
+        {{-- lưới sân --}}
+        <div class="" style="margin: 0; width: 100%;">
+            <div class="row">
+                <div class="col-12 col-sm-12 col-md-12 col-lg-8"></div>
+                    <div class="accordion" id="accordionPanel">
+                        <div class="accordion-item mb-4" id="overview">
+                            <h4 class="accordion-header" id="panelsStayOpen-overview" style="padding: 10px 20px;">
+                                <div class="mb-10">
+                                    <label for="date_start" class="form-label" style="font-size: 15px">Ngày bắt đầu</label>
+                                    <input type="date" class="form-control" id="date_start" name="date_start" value="{{ $dateStart }}">
+                                </div>
+                                <div class="mb-10">
+                                    <label for="date_end" class="form-label" style="font-size: 15px">Ngày kết thúc</label>
+                                    <input type="date" class="form-control" id="date_end" name="date_end" value="{{ $dateEnd }}">
+                                </div>
+                            </h4>
+                            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-overview">
+                                <div class="accordion-body">
+                                    @php
+                                        $soLuongSan = $thongtinsan->quantity_court;
+                                    @endphp
+
+                                    <ul class="nav nav-tabs" id="sanTabs" role="tablist">
+                                        @for ($i = 1; $i <= $soLuongSan; $i++)
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link {{ $i == 1 ? 'active' : '' }}"
+                                                    id="san{{ $i }}-tab" data-bs-toggle="tab"
+                                                    data-bs-target="#san{{ $i }}" type="button" role="tab">
+                                                    Sân {{ $i }}
+                                                </button>
+                                            </li>
+                                        @endfor
+                                    </ul>
+
+                                    <div class="tab-content" id="sanTabsContent">
+                                        @for ($i = 1; $i <= $soLuongSan; $i++)
+                                            <div class="tab-pane fade {{ $i == 1 ? 'show active' : '' }}" id="san{{ $i }}" role="tabpanel">
+
+                                                <div style="max-height: 500px; overflow-y: auto;">
+                                                    <table class="fixed-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="sticky-col">Khung giờ</th>
+                                                                @foreach ($dates as $d)
+                                                                    <th>{{ $thuTiengViet[date('D', strtotime($d))] }} {{ date('d/m', strtotime($d)) }}</th>
+                                                                @endforeach
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach ($timeSlots as $slot)
+                                                                <tr>
+                                                                    <td class="sticky-col">
+                                                                        {{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}
+                                                                    </td>
+
+                                                                    @foreach ($dates as $d)
+                                                                        @php
+                                                                            $now = \Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                                                                            $slotDateTime = \Carbon\Carbon::parse($d . ' ' . $slot->start_time, 'Asia/Ho_Chi_Minh');
+
+                                                                            $isPast = $slotDateTime->lt($now);
+                                                                            $isBooked = isset($bookingsData[$d][$slot->time_slot_id][$i]);
+
+                                                                            $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
+                                                                                ? $thongtinsan->Court_prices->default_price
+                                                                                : $thongtinsan->Court_prices->special_price;
+                                                                        @endphp
+
+                                                                        
+                                                                            @if ($isPast)
+                                                                                <td style="background-color: grey">
+                                                                                    <div class="het-han"></div>
+                                                                            @elseif ($isBooked)
+                                                                                <td style="background-color: red">
+                                                                                    <div class="da-chon"></div>
+                                                                            @elseif (auth()->check())
+                                                                                <td style="background-color: white">
+                                                                                    <div class="slot-btn" style="width: 100%;"
+                                                                                        data-user="{{ auth()->id() }}"
+                                                                                        data-facility="{{ $thongtinsan->facility_id }}"
+                                                                                        data-court="{{ $i }}"
+                                                                                        data-date="{{ \Carbon\Carbon::parse($d)->format('d-m-Y') }}"
+                                                                                        data-slot="{{ $slot->time_slot_id }}"
+                                                                                        data-price="{{ $unitPrice/2 }}"
+                                                                                        data-start_time="{{ substr($slot->start_time,0,5) }}"
+                                                                                        data-end_time="{{ substr($slot->end_time,0,5) }}">
+                                                                                    </div>
+
+                                                                            @else
+                                                                                <a href="{{ route('login') }}" onclick="alert('Vui lòng đăng nhập để đặt sân')">Đăng nhập</a>
+                                                                            @endif
+                                                                        </td>
+                                                                    @endforeach
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endfor
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+<script>
+document.addEventListener('change', function(e) {
+    if (e.target.matches('#date_start') || e.target.matches('#date_end')) {
+        const dateStart = document.getElementById('date_start').value;
+        const dateEnd = document.getElementById('date_end').value;
+        if (!dateStart || !dateEnd) return;
+
+        fetch(`{{ route('manager.courts') }}?start=${dateStart}&end=${dateEnd}`)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, 'text/html');
+                const newContent = newDoc.querySelector('.content');
+                document.querySelector('.content').innerHTML = newContent.innerHTML;
+            })
+            .catch(err => console.error(err));
+    }
+});
+</script>
+
+
 @endsection
-
-{{-- Đẩy CSS và JS của FullCalendar vào layout --}}
-@push('scripts')
-    {{-- FullCalendar Core và Plugins cần thiết --}}
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
-
-    {{-- JavaScript khởi tạo FullCalendar cho quản lý lịch đặt --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('bookingCalendar'); // Lấy thẻ div chứa lịch
-
-            if (calendarEl) { // Kiểm tra thẻ có tồn tại không
-                var calendar = new FullCalendar.Calendar(calendarEl, {
-                    // === CẤU HÌNH GIAO DIỆN ===
-                    initialView: 'timeGridWeek', // Bắt đầu với view Tuần (có giờ)
-                    headerToolbar: { // Các nút điều khiển
-                        left: 'prev,next today', // Nút qua lại, hôm nay
-                        center: 'title',          // Tiêu đề (Tháng Năm, Ngày...)
-                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' // Nút chuyển đổi các view
-                    },
-                    locale: 'vi', // Ngôn ngữ Tiếng Việt
-                    buttonText: { // Dịch chữ trên nút
-                        today:    'Hôm nay',
-                        month:    'Tháng',
-                        week:     'Tuần',
-                        day:      'Ngày',
-                        list:     'Danh sách'
-                    },
-                    slotMinTime: '05:00:00', // Giờ sớm nhất hiển thị trên lịch
-                    slotMaxTime: '23:00:00', // Giờ muộn nhất hiển thị
-                    allDaySlot: false,       // Ẩn dòng "Cả ngày"
-                    expandRows: true,        // Mở rộng chiều cao các dòng giờ
-                    nowIndicator: true,      // Hiển thị vạch chỉ giờ hiện tại
-                    handleWindowResize: true,// Tự điều chỉnh kích thước khi cửa sổ thay đổi
-                    height: 'auto',          // Chiều cao tự động theo nội dung
-
-                    // === LẤY DỮ LIỆU SỰ KIỆN (BOOKINGS) ===
-                    events: {
-                        url: '{{ route("manager.bookings.data") }}', // API đã tạo để lấy JSON bookings
-                        failure: function(error) {
-                            console.error("Lỗi tải lịch đặt:", error);
-                            alert('Không thể tải dữ liệu lịch đặt. Vui lòng thử lại.');
-                        }
-                    },
-
-                    // === TƯƠNG TÁC: KÉO THẢ, RESIZE ===
-                    editable: true,       // Bật tính năng kéo thả, thay đổi kích thước
-                    eventDrop: function(info) { // Xử lý sau khi kéo thả xong
-                        console.log("Event dropped:", info.event);
-                        if (!confirm("Bạn có chắc muốn di chuyển lịch đặt này?")) {
-                            info.revert(); // Hoàn tác nếu không xác nhận
-                        } else {
-                            updateBookingTime(info.event); // Gọi hàm gửi cập nhật lên server
-                        }
-                    },
-                    eventResize: function(info) { // Xử lý sau khi thay đổi thời gian xong
-                        console.log("Event resized:", info.event);
-                         if (!confirm("Bạn có chắc muốn thay đổi thời gian đặt này?")) {
-                            info.revert();
-                        } else {
-                            updateBookingTime(info.event);
-                        }
-                    },
-                    // eventOverlap: false, // Ngăn các sự kiện đè lên nhau (nếu cần)
-
-                    // === XỬ LÝ KHI CLICK VÀO SỰ KIỆN ===
-                    eventClick: function(info) {
-                        console.log("Event clicked:", info.event);
-                        // Ví dụ: Hiển thị thông tin chi tiết trong Modal
-                        alert('Khách hàng: ' + info.event.title + '\n' +
-                              'Thời gian: ' + info.event.start.toLocaleString() + ' - ' + info.event.end.toLocaleString() + '\n' +
-                              'ID: ' + info.event.id);
-                        // Bạn có thể mở modal chỉnh sửa chi tiết ở đây
-                        // info.jsEvent.preventDefault(); // Ngăn các hành động mặc định (nếu event có URL)
-                    },
-
-                     // === THAY ĐỔI MÀU SẮC SỰ KIỆN ===
-                    eventDidMount: function(info) {
-                      // Bạn có thể thêm class hoặc style dựa trên trạng thái booking (nếu API trả về)
-                      // Ví dụ: if (info.event.extendedProps.status === 'pending') { ... }
-                    }
-
-                });
-
-                calendar.render(); // Vẽ lịch ra màn hình
-
-                // === HÀM GỬI CẬP NHẬT LÊN SERVER (AJAX) ===
-                function updateBookingTime(event) {
-                    // Chuẩn bị dữ liệu gửi đi (Start, End theo ISO 8601)
-                    const updatedData = {
-                        start: event.start.toISOString(),
-                        end: event.end.toISOString(),
-                        _token: '{{ csrf_token() }}' // Gửi kèm CSRF token (quan trọng)
-                    };
-
-                    // Lấy URL từ route name, thay thế :id bằng ID của booking
-                    let updateUrl = '{{ route("manager.bookings.updateTime", ["booking" => ":id"]) }}';
-                    updateUrl = updateUrl.replace(':id', event.id);
-
-                    // Gửi yêu cầu PUT bằng Fetch API
-                    fetch(updateUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}' // Thêm CSRF token vào header
-                        },
-                        body: JSON.stringify(updatedData) // Chuyển dữ liệu thành JSON string
-                    })
-                    .then(response => {
-                        if (!response.ok) { // Kiểm tra nếu server báo lỗi (vd: 422 Validation Error)
-                           return response.json().then(errorData => {
-                               throw new Error(errorData.message || 'Lỗi không xác định từ server.');
-                           });
-                        }
-                        return response.json(); // Lấy dữ liệu JSON nếu thành công
-                    })
-                    .then(data => {
-                        console.log('Cập nhật thành công:', data);
-                        // Có thể hiển thị thông báo thành công ngắn gọn (Toast)
-                        // Ví dụ: bootstrap.Toast(document.getElementById('successToast')).show();
-                        // Không cần calendar.refetchEvents() vì FullCalendar tự cập nhật sau khi kéo thả thành công
-                    })
-                    .catch((error) => {
-                        console.error('Lỗi khi cập nhật:', error);
-                        alert('Đã xảy ra lỗi khi cập nhật lịch đặt: ' + error.message);
-                        // Quan trọng: Hoàn tác thay đổi trên giao diện nếu server báo lỗi
-                        event.revert();
-                    });
-                }
-            } // Kết thúc if (calendarEl)
-        });
-    </script>
-@endpush

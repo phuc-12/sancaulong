@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use App\Models\Users;
+use Illuminate\Support\Facades\DB;
+use App\Models\Facilities;
 
 class ManagerController extends Controller
 {
@@ -35,7 +37,7 @@ class ManagerController extends Controller
 
     // Trang Quản lý Sân bãi (trạng thái, lịch)
 
-    public function courts()
+    public function courts(Request $request)
     {
         // --- LẤY FACILITY ID---
         $manager = Auth::user();
@@ -43,15 +45,76 @@ class ManagerController extends Controller
             // Hoặc chuyển hướng hoặc báo lỗi nếu không tìm thấy facility_id
             abort(403, 'Không tìm thấy thông tin cơ sở của quản lý.');
         }
-        $facilityId = $manager->facility_id; // Giả sử User có cột facility_id
+        $idSan = $manager->facility_id; // Giả sử User có cột facility_id
 
-        $courts = Court::where('facility_id', $facilityId)
+        $courts = Court::where('facility_id', $idSan)
             ->orderBy('court_name', 'asc')
             ->get();
 
         $validStatuses = ['Hoạt động', 'Bảo trì', 'Đóng cửa'];
 
-        return view('manager.courts', compact('courts', 'validStatuses'));
+        $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
+        $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
+        $timeSlots = Time_slots::all();
+        // ✅ Nếu người dùng chọn ngày, dùng giá trị đó
+        $dateStart = $request->query('start', now()->format('Y-m-d'));
+        $dateEnd = $request->query('end', now()->addDays(31)->format('Y-m-d'));
+
+        // Sinh mảng ngày từ date_start → date_end
+        $dates = [];
+        $current = \Carbon\Carbon::parse($dateStart);
+        $end = \Carbon\Carbon::parse($dateEnd);
+
+        while ($current->lte($end)) {
+            $dates[] = $current->format('Y-m-d');
+            $current->addDay();
+        }
+
+        // Lấy danh sách đặt sân
+        $bookings = Bookings::where('facility_id', $idSan)
+            ->whereBetween('booking_date', [$dateStart, $dateEnd])
+            ->get(['booking_date', 'time_slot_id', 'court_id']);
+
+        $bookingsData = [];
+        foreach ($bookings as $b) {
+            $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
+        }
+
+        $thuTiengViet = [
+            'Mon' => 'Thứ hai',
+            'Tue' => 'Thứ ba',
+            'Wed' => 'Thứ tư',
+            'Thu' => 'Thứ năm',
+            'Fri' => 'Thứ sáu',
+            'Sat' => 'Thứ bảy',
+            'Sun' => 'Chủ nhật',
+        ];
+
+        $soLuongSan = $thongtinsan->quantity_court;
+        $dsSanCon = [];
+        for ($i = 1; $i <= $soLuongSan; $i++) {
+            $dsSanCon[] = [
+                'id' => $thongtinsan->facility_id . '-' . $i,
+                'ten' => 'Sân ' . $i
+            ];
+        }
+
+        return view('manager.courts', compact(
+            'courts', 
+            'validStatuses', 
+            'thongtinsan',
+            'customer',
+            'timeSlots',
+            'dates',
+            'bookingsData',
+            'thuTiengViet',
+            'soLuongSan',
+            'dsSanCon',
+            'dateStart',
+            'dateEnd',
+            'dateStart',
+            'dateEnd'
+        ));
     }
 
     /**

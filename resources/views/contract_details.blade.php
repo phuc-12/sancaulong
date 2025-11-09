@@ -82,7 +82,11 @@
 									Từ {{ \Carbon\Carbon::parse($long_term_contracts->start_date)->format('d/m/Y') }} 
 									đến {{ \Carbon\Carbon::parse($long_term_contracts->end_date)->format('d/m/Y') }}
 								</p>
-								<p><strong>Ngày trong tuần:</strong> {{ $daysOfWeek }}</p>
+								<p>
+                                    <strong>Ngày trong tuần:</strong>
+                                    {{-- Kiểm tra: Nếu $daysOfWeek là 8, hiển thị 'CN', nếu không, hiển thị 'Thứ ' + giá trị của biến --}}
+                                    {{ $daysOfWeek == 8 ? 'CN' : 'Thứ ' . $daysOfWeek }}
+                                </p>
                                 <p><strong>Sân:</strong> {{ $courts }}</p>
 							</div>
 
