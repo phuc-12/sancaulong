@@ -12,6 +12,8 @@ return new class extends Migration {
     {
         Schema::table('facilities', function (Blueprint $table) {
             $table->timestamps(); // Tự động thêm created_at và updated_at (kiểu TIMESTAMP, nullable)
+            $table->decimal('default_price', 10, 2)->nullable();
+            $table->decimal('special_price', 10, 2)->nullable();
         });
     }
 

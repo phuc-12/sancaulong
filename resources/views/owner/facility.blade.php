@@ -31,13 +31,17 @@
                         <i class="bi bi-info-circle-fill me-1"></i> Thông Tin Chung
                     </button>
                 </li>
-                {{-- Thêm các tab khác (Sân con & Giá, Hình ảnh) ở đây nếu cần --}}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing" type="button"
+                        role="tab" aria-controls="pricing" aria-selected="false">
+                        <i class="bi bi-currency-dollar me-1"></i> Giá Sân
+                    </button>
+                </li>
             </ul>
         </div>
 
         <div class="card-body p-4">
-            <form action="{{ route('owner.facility.store') }}" method="POST" enctype="multipart/form-data"> {{-- enctype để
-                upload file --}}
+            <form action="{{ route('owner.facility.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="tab-content" id="facilityTabsContent">
                     {{-- TAB 1: THÔNG TIN CHUNG --}}
@@ -46,14 +50,13 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="facility_name" class="form-label">Tên đơn vị sân <span
+                                <label for="facility_name" class="form-label"><b>Tên đơn vị sân </b><span
                                         class="text-danger">*</span></label>
-                                {{-- Ưu tiên giá trị cũ (nếu validation lỗi), sau đó mới lấy giá trị từ CSDL (nếu có) --}}
                                 <input type="text" class="form-control" id="facility_name" name="facility_name"
                                     value="{{ old('facility_name', $facility->facility_name ?? '') }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="phone" class="form-label">Số điện thoại liên hệ <span
+                                <label for="phone" class="form-label"><b>Số điện thoại liên hệ </b><span
                                         class="text-danger">*</span></label>
                                 <input type="tel" class="form-control" id="phone" name="phone"
                                     value="{{ old('phone', $facility->phone ?? '') }}" required>
@@ -61,30 +64,28 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="address" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                            <label for="address" class="form-label"><b>Địa chỉ</b><span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="address" name="address"
-                                value="{{ old('address', $facility->address ?? '') }}" required>
+                                value="{{ old('address', $facility->address ?? '') }}"  required>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="open_time" class="form-label">Giờ mở cửa <span
+                                <label for="open_time" class="form-label"><b>Giờ mở cửa</b> <span
                                         class="text-danger">*</span></label>
-                                {{-- Mặc định là 05:00 nếu không có giá trị cũ hoặc CSDL --}}
                                 <input type="time" class="form-control" id="open_time" name="open_time"
                                     value="{{ old('open_time', $facility->open_time ?? '05:00') }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="close_time" class="form-label">Giờ đóng cửa <span
+                                <label for="close_time" class="form-label"><b>Giờ đóng cửa</b> <span
                                         class="text-danger">*</span></label>
-                                {{-- Mặc định là 22:00 --}}
                                 <input type="time" class="form-control" id="close_time" name="close_time"
                                     value="{{ old('close_time', $facility->close_time ?? '22:00') }}" required>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="description" class="form-label">Mô tả cơ sở</label>
+                            <label for="description" class="form-label"><b>Mô tả cơ sở</b></label>
                             <textarea class="form-control" id="description" name="description"
                                 rows="4">{{ old('description', $facility->description ?? '') }}</textarea>
                             <div class="form-text">Giới thiệu về cơ sở vật chất, số lượng sân, tiện ích...</div>
@@ -92,46 +93,52 @@
 
                         <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Chủ Sở Hữu (Sẽ hiển thị cho Admin
                             duyệt)</h5>
-                        {{-- Lấy thông tin từ Auth::user() để điền vào value --}}
                         @php $ownerUser = Auth::user(); @endphp
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="owner_phone" class="form-label">Số điện thoại Chủ sân</label>
+                                <label for="owner_phone" class="form-label"><b>Số điện thoại Chủ sân</b></label>
                                 <input type="tel" class="form-control" id="owner_phone" name="owner_phone"
                                     value="{{ old('owner_phone', $ownerUser->phone ?? '') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="owner_cccd" class="form-label">Số CCCD Chủ sân</label>
+                                <label for="owner_cccd" class="form-label"><b>Số CCCD Chủ sân</b></label>
                                 <input type="text" class="form-control" id="owner_cccd" name="owner_cccd"
                                     value="{{ old('owner_cccd', $ownerUser->CCCD ?? '') }}">
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="owner_address" class="form-label">Địa chỉ liên hệ Chủ sân</label>
+                            <label for="owner_address" class="form-label"><b>Địa chỉ liên hệ Chủ sân</b></label>
                             <input type="text" class="form-control" id="owner_address" name="owner_address"
                                 value="{{ old('owner_address', $ownerUser->address ?? '') }}">
                         </div>
-                        <!-- Giấy phép KD -->
-                        <div class="mb-4">
-                            <label for="image_upload" class="form-label">Giấy phép kinh doanh (PDF, JPG, PNG)</label>
-                            <input class="form-control" type="file" id="image_upload" name="image"
+
+                        <div class="mb-3">
+                            <label for="business_license_upload" class="form-label"><b>Giấy phép kinh doanh (PDF, JPG, PNG)</b></label>
+                            <input class="form-control" type="file" id="business_license_upload" name="business_license"
                                 accept=".pdf,.jpg,.jpeg,.png">
-                            {{-- Hiển thị link file hiện tại nếu đang cập nhật và đã có file --}}
+                            @if(isset($facility) && $facility->business_license)
+                                <div class="mt-2">
+                                    <a href="{{ asset($facility->business_license) }}" target="_blank">
+                                        Xem file hiện tại
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="image_upload" class="form-label"><b>Ảnh đại diện sân (JPG, PNG)</b></label>
+                            <input class="form-control" type="file" id="image_upload" name="image"
+                                accept="image/jpeg, image/png, image/jpg">
                             @if(isset($facility) && $facility->image)
                                 <div class="mt-2">
-                                    <!-- File hiện tại: -->
-                                    <a href="{{ asset($facility->image) }}" target="_blank">
-                                        <!-- Xem file -->
-                                        <i class="bi bi-box-arrow-up-right small"></i>
-                                    </a>
-                                    <small class="text-muted">(Tải file mới sẽ thay thế file này)</small>
+                                    <img src="{{ asset($facility->image) }}" alt="Ảnh sân" height="200px" width="200px"
+                                        class="rounded">
                                 </div>
                             @endif
                         </div>
 
                         <hr>
-                        {{-- Hiển thị trạng thái hiện tại của cơ sở (nếu có) --}}
                         @if(isset($facility) && $facility->status)
                             <p><strong>Trạng thái hiện tại:</strong>
                                 @if($facility->status == 'chờ duyệt') <span class="badge bg-warning text-dark">Chờ duyệt</span>
@@ -141,13 +148,86 @@
                                 @endif
                             </p>
                         @endif
-                        <p class="text-muted small">Sau khi gửi, thông tin sẽ được quản trị viên xem xét và phê duyệt.</p>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-send-check-fill me-2"></i>
-                            Gửi Yêu Cầu Đăng Ký / Cập Nhật
-                        </button>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="text-muted small mb-0">Sau khi gửi, thông tin sẽ được quản trị viên xem xét và phê
+                                duyệt.</p>
+                            <button type="button" class="btn btn-outline-primary"
+                                onclick="document.getElementById('pricing-tab').click()">
+                                Tiếp theo: Giá Sân <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
 
+                    {{-- TAB 2: GIÁ SÂN --}}
+                    <div class="tab-pane fade" id="pricing" role="tabpanel" aria-labelledby="pricing-tab">
+                        <h5 class="card-title mb-3">Thiết Lập Giá Sân</h5>
+                        <p class="text-muted">Nhập giá cho các khung giờ khác nhau trong ngày</p>
+
+                        {{-- Giá mặc định --}}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-0">
+                                            <i class="bi bi-sun text-warning"></i>
+                                            <strong>Giờ mặc định</strong>
+                                            <small class="d-block text-muted">05:00 - 16:00</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="default_price"
+                                                value="{{ old('default_price', $facility->courtPrice->default_price ?? '') }}">
+                                            <span class="input-group-text">VNĐ / giờ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Giá cao điểm --}}
+                        <div class="card mb-4 border-primary">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-0">
+                                            <i class="bi bi-calendar-week text-success"></i>
+                                            <strong>Giờ cao điểm</strong>
+                                            <small class="d-block text-muted">16:00 - 23:00</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="special_price"
+                                                value="{{ old('special_price', $facility->courtPrice->special_price ?? '') }}">
+                                            <span class="input-group-text">VNĐ / giờ</span>
+                                        </div>
+                                        <!-- <small class="form-text text-muted">
+                                                    <i class="bi bi-info-circle"></i> Giá áp dụng cho cả ngày cuối tuần (nếu để trống sẽ theo giá khung giờ thường)
+                                                </small> -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-lightbulb"></i>
+                            <strong>Lưu ý:</strong> Giá áp dụng cho cả ngày cuối tuần
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary"
+                                onclick="document.getElementById('info-tab').click()">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send-check-fill me-2"></i>
+                                Gửi Yêu Cầu Đăng Ký / Cập Nhật
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>

@@ -39,7 +39,7 @@ class Users extends Authenticatable
     }
     public function facility()
     {
-        return $this->belongsTo(Facility::class, 'facility_id', 'facility_id');
+        return $this->belongsTo(Facilities::class, 'facility_id', 'facility_id');
     }
     protected $casts = [
         'email_verified_at' => 'datetime',
