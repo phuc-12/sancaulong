@@ -87,9 +87,11 @@
 								@endphp
 								<p><strong>Ngày trong tuần:</strong>
 									@foreach ($summary['selected_days'] as $d)
-										Thứ {{ $d }}@if (!$loop->last), @endif
+										{{-- Kiểm tra nếu $d bằng 8 thì hiển thị 'CN', ngược lại hiển thị 'Thứ ' . $d --}}
+										{{ $d == 8 ? 'Chủ Nhật' : 'Thứ ' . $d }}@if (!$loop->last), @endif
 									@endforeach
 								</p>
+								
 							</div>
 
 							<table>
