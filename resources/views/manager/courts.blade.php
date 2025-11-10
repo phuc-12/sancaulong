@@ -426,8 +426,8 @@
                                                                             $isBooked = isset($bookingsData[$d][$slot->time_slot_id][$i]);
 
                                                                             $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
-                                                                                ? $thongtinsan->Court_prices->default_price
-                                                                                : $thongtinsan->Court_prices->special_price;
+                                                                                ? $thongtinsan->courtPrice->default_price
+                                                                                : $thongtinsan->courtPrice->special_price;
                                                                         @endphp
 
                                                                         

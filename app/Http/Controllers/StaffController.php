@@ -76,11 +76,78 @@ class StaffController extends Controller
      */
     public function paymentPage(Request $request)
     {
-        // Lấy booking được flash từ session (nếu có)
-        $booking = $request->session()->get('found_booking');
+        $facilityId = $this->getStaffFacilityId();
+
+        $invoices = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+        ->where('facilities.facility_id',$facilityId)
+        ->select(
+            'invoices.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'invoices.issue_date as issue_date',
+            'invoices.final_amount as final_amount',
+            'invoice_details.invoice_detail_id as invoice_detail_id',
+            'invoice_details.facility_id as facility_id'
+        )
+        ->orderBy('invoices.invoice_id', 'desc')
+        ->get();
+
+        $mybooking_details = [];
+
+        foreach ($invoices as $invoice) {
+            $details = DB::table('bookings')
+                ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )->get();
+
+            $mybooking_details[$invoice->invoice_detail_id] = $details;
+        }
+
+        $long_term_contracts = DB::table('long_term_contracts')
+        ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+        ->where('facilities.facility_id',$facilityId)
+        ->select(
+            'long_term_contracts.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'long_term_contracts.issue_date as issue_date',
+            'long_term_contracts.final_amount as final_amount'
+        )
+        ->orderBy('long_term_contracts.contract_id', 'desc')
+        ->get();
+
+        $mycontract_details = [];
+
+        foreach ($long_term_contracts as $ct) {
+            $details = DB::table('bookings')
+                ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )
+                ->get();
+
+            $mycontract_details[$ct->invoice_detail_id] = $details;
+        }
 
         return view('staff.payment', [
-            'booking' => $booking,
+            'invoices' => $invoices,
+            'mybooking_details' => $mybooking_details,
+            'long_term_contracts' => $long_term_contracts,
+            'mycontract_details' => $mycontract_details,
             // (Thêm biến $invoice nếu tìm thấy hóa đơn)
         ]);
     }
@@ -91,35 +158,101 @@ class StaffController extends Controller
     public function searchBooking(Request $request)
     {
         $facilityId = $this->getStaffFacilityId();
-        $searchTerm = $request->input('search_term');
 
-        // Tìm booking tại cơ sở này, CHƯA THANH TOÁN
-        // Dựa trên Mã đặt (booking_id) HOẶC SĐT của user
-        $booking = Bookings::query()
-            ->where('bookings.facility_id', $facilityId)
-            ->whereIn('bookings.status', ['Chưa thanh toán', null]) // Chỉ tìm booking chưa trả tiền
-            ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
-            ->leftJoin('courts', 'bookings.court_id', '=', 'courts.court_id')
-            ->leftJoin('users', 'bookings.user_id', '=', 'users.user_id')
-            ->where(function ($query) use ($searchTerm) {
-                $query->where('bookings.booking_id', $searchTerm) // Tìm theo Mã đặt
-                    ->orWhere('users.phone', $searchTerm); // Hoặc tìm theo SĐT
-            })
+        $query = DB::table('invoices')
+            ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+            ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+            ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+            ->where('facilities.facility_id',$facilityId)
             ->select(
-                'bookings.*',
-                DB::raw("CONCAT(time_slots.start_time, ' - ', time_slots.end_time) as time_range"), // Ghép giờ
-                'users.fullname as user_fullname',
-                'courts.court_name'
+                'invoices.*',
+                'facilities.facility_name as facility_name',
+                'users.fullname as fullname',
+                'invoices.issue_date as issue_date',
+                'invoices.final_amount as final_amount',
+                'invoice_details.invoice_detail_id as invoice_detail_id',
+                'invoice_details.facility_id as facility_id',
+                'users.phone as phone',
             )
-            ->first(); // Lấy 1 kết quả đầu tiên
+            ->orderBy('invoices.invoice_id', 'desc');
 
-        if (!$booking) {
-            return redirect()->route('staff.payment')->with('error', 'Không tìm thấy lượt đặt nào chưa thanh toán với thông tin này.');
+        // ✅ Thêm điều kiện sau khi query còn là builder
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('users.phone', 'like', "%$search%")
+                ->orWhere('users.fullname', 'like', "%$search%");
+            });
         }
 
-        // Lưu booking tìm thấy vào session và chuyển hướng về trang payment
-        return redirect()->route('staff.payment')->with('found_booking', $booking);
+        // ✅ Chỉ gọi get() sau khi thêm hết điều kiện
+        $invoices = $query->get();
+
+        $mybooking_details = [];
+
+        foreach ($invoices as $invoice) {
+            $details = DB::table('bookings')
+                ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )->get();
+
+            $mybooking_details[$invoice->invoice_detail_id] = $details;
+        }
+
+        $query_contract = DB::table('long_term_contracts')
+            ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+            ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+            ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+            ->where('facilities.facility_id',$facilityId)
+            ->select(
+                'long_term_contracts.*',
+                'facilities.facility_name as facility_name',
+                'users.fullname as fullname',
+                'long_term_contracts.issue_date as issue_date',
+                'long_term_contracts.final_amount as final_amount'
+            )
+            ->orderBy('long_term_contracts.contract_id', 'desc');
+        
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query_contract->where(function($q) use ($search) {
+                $q->where('users.phone', 'like', "%$search%")
+                ->orWhere('users.fullname', 'like', "%$search%");
+            });
+        }
+        
+        $long_term_contracts = $query_contract->get();
+
+        $mycontract_details = [];
+
+        foreach ($long_term_contracts as $ct) {
+            $details = DB::table('bookings')
+                ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )
+                ->get();
+
+            $mycontract_details[$ct->invoice_detail_id] = $details;
+        }
+        
+        return view('staff.payment', [
+            'invoices' => $invoices,
+            'mybooking_details' => $mybooking_details,
+            'long_term_contracts' => $long_term_contracts,
+            'mycontract_details' => $mycontract_details,
+        ]);
     }
+
 
     /**
      * 3. Xử lý "Xác nhận Thanh toán" (Func 3)

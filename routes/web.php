@@ -11,7 +11,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 
 
-
 //Trang chu
 Route::get('/', function () {
     return view('index');
@@ -43,7 +42,6 @@ Route::prefix('/')->controller(HomeController::class)
     Route::post('/contract_details','contract_details')->name('chi_tiet_ct');
     Route::post('/cancel_contract','cancel_contract')->name('cancel_contract');
 });
-
 
 Route::prefix('users')->controller(UserController::class)
     ->name('users.')->group(function () {

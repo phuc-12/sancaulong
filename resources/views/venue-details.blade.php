@@ -298,7 +298,7 @@
             </div>
             <div class="col-md-6 text-end">
                 <p class="d-inline-block me-2 mb-0">Giá từ:</p>   
-                 <h3 class="primary-text d-inline-block">{{ $thongtinsan->courtPrice?->default_price ?? 'Chưa có giá' }}</span>/Giờ</span></h3>
+                 <h3 class="primary-text d-inline-block">{{ $thongtinsan->courtPrice->default_price ?? 'Chưa có giá' }}</span>/Giờ</span></h3>
             </div>
         </div>
     </div>
@@ -732,81 +732,81 @@
 
                 <!-- Sidebar -->
                 <aside class="col-12 col-sm-12 col-md-12 col-lg-4 theiaStickySidebar" style="margin-top: 49px;">
-    {{-- THÔNG TIN GIÁ --}}
-    <div class="white-bg book-court" style="border-radius: 10px;" align="center">
-        <h4 style="padding-top: 10px;">Đặt sân trực tiếp</h4>
-        <h5 class="d-inline-block" style="text-align: center">{{ $thongtinsan->facility_name }}</h5>
-        <p class="d-inline-block">, có sẵn ngay bây giờ</p>
+                    {{-- THÔNG TIN GIÁ --}}
+                    <div class="white-bg book-court" style="border-radius: 10px;" align="center">
+                        <h4 style="padding-top: 10px;">Đặt sân trực tiếp</h4>
+                        <h5 class="d-inline-block" style="text-align: center">{{ $thongtinsan->facility_name }}</h5>
+                        <p class="d-inline-block">, có sẵn ngay bây giờ</p>
 
-        <ul class="d-sm-flex align-items-center justify-content-evenly">
-            <li>
-                <h3 class="d-inline-block primary-text">{{ number_format($thongtinsan->courtPrice->default_price) }}</h3><span>/hr</span>
-                <p>Giá Mặc Định</p>
-            </li>
-            <li><span><i class="feather-plus"></i></span></li>
-            <li>
-                <h4 class="d-inline-block primary-text">{{ number_format($thongtinsan->courtPrice->special_price) }}</h4><span>/hr</span>
-                <p>Giá Giờ Vàng</p>
-            </li>
-        </ul>
-    </div>
+                        <ul class="d-sm-flex align-items-center justify-content-evenly">
+                            <li>
+                                <h3 class="d-inline-block primary-text">{{ number_format($thongtinsan->courtPrice->default_price) }}</h3><span>/hr</span>
+                                <p>Giá Mặc Định</p>
+                            </li>
+                            <li><span><i class="feather-plus"></i></span></li>
+                            <li>
+                                <h4 class="d-inline-block primary-text">{{ number_format($thongtinsan->courtPrice->special_price) }}</h4><span>/hr</span>
+                                <p>Giá Giờ Vàng</p>
+                            </li>
+                        </ul>
+                    </div>
 
-    {{-- THÔNG TIN ĐẶT SÂN --}}
-    <div class="white-bg" style="padding-top: 30px;">
-        <h4 style="text-align: center;">Thông tin đặt sân</h4>
-            @if($success_message)
-                <div class="alert alert-success">
-                    <p>{{ $success_message }}</p>
-                </div>
-            @else 
-            @endif
-        <div class="text-end mb-3">
-            <strong>Tổng tiền: </strong>
-            <span id="total-price" style="color: red; font-size: 20px; font-weight: bold;"><b>0 đ</b></span>
-        </div>
-        <table class="table table-bordered">
-            <thead>
-                <tr class="text-center">
-                    <th>Sân số</th>
-                    <th>Bắt đầu</th>
-                    <th>Kết thúc</th>
-                    <th>Ngày</th>
-                </tr>
-            </thead>
-            <tbody >
-                {{-- Body sẽ được JS render --}}
-            </tbody>
-        </table>
-        <form id="paymentForm" action="{{ route('thanh.toan') }}" method="POST">
-        @csrf
-        {{-- THÔNG TIN NGƯỜI ĐẶT --}}
-            <div class="mb-3" style="padding: 0px 10px;">
-                <h6 class="form-label">Họ tên:</h6>
-                <input type="text" name="fullname" class="form-control"
-                    value="{{ old('fullname', auth()->user()->fullname ?? '') }}">
-            </div>
+                    {{-- THÔNG TIN ĐẶT SÂN --}}
+                    <div class="white-bg" style="padding-top: 30px;">
+                        <h4 style="text-align: center;">Thông tin đặt sân</h4>
+                            @if($success_message)
+                                <div class="alert alert-success">
+                                    <p>{{ $success_message }}</p>
+                                </div>
+                            @else 
+                            @endif
+                        <div class="text-end mb-3">
+                            <strong>Tổng tiền: </strong>
+                            <span id="total-price" style="color: red; font-size: 20px; font-weight: bold;"><b>0 đ</b></span>
+                        </div>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr class="text-center">
+                                    <th>Sân số</th>
+                                    <th>Bắt đầu</th>
+                                    <th>Kết thúc</th>
+                                    <th>Ngày</th>
+                                </tr>
+                            </thead>
+                            <tbody >
+                                {{-- Body sẽ được JS render --}}
+                            </tbody>
+                        </table>
+                        <form id="paymentForm" action="{{ route('thanh.toan') }}" method="POST">
+                        @csrf
+                        {{-- THÔNG TIN NGƯỜI ĐẶT --}}
+                            <div class="mb-3" style="padding: 0px 10px;">
+                                <h6 class="form-label">Họ tên:</h6>
+                                <input type="text" name="fullname" class="form-control"
+                                    value="{{ old('fullname', auth()->user()->fullname ?? '') }}">
+                            </div>
 
-            <div class="mb-3" style="padding: 0px 10px;">
-                <h6 class="form-label">Số điện thoại:</h6>
-                <input type="text" name="phone" class="form-control"
-                    value="{{ old('phone', auth()->user()->phone ?? '') }}">
-            </div>
+                            <div class="mb-3" style="padding: 0px 10px;">
+                                <h6 class="form-label">Số điện thoại:</h6>
+                                <input type="text" name="phone" class="form-control"
+                                    value="{{ old('phone', auth()->user()->phone ?? '') }}">
+                            </div>
 
-            <div class="mb-3" style="padding: 0px 10px;">
-                <h6 class="form-label">Email:</h6>
-                <input type="email" name="email" class="form-control"
-                    value="{{ old('email', auth()->user()->email ?? '') }}">
-            </div>
+                            <div class="mb-3" style="padding: 0px 10px;">
+                                <h6 class="form-label">Email:</h6>
+                                <input type="email" name="email" class="form-control"
+                                    value="{{ old('email', auth()->user()->email ?? '') }}">
+                            </div>
 
-            <div class="d-grid">
-                <input type="hidden" name="slots" id="slotsInput">
-                <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
-                <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
-                <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
-            </div>
-        </form>
-    </div>
-</aside>
+                            <div class="d-grid">
+                                <input type="hidden" name="slots" id="slotsInput">
+                                <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
+                                <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
+                                <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </aside>
 
             </div>
         </div>

@@ -120,16 +120,9 @@
 							<p class="total">Số tiền cần thanh toán: <span class="highlight">{{ number_format($summary['total_amount'], 0, ',', '.') }} đ</span></p>
 							
 							<div>
-								<p><strong>Chủ tài khoản:</strong> {{ $userInfo['facility_name'] }}</p>
-								<p><strong>Số tài khoản:</strong> 1025183831</p>
+								<p><strong>Chủ tài khoản:</strong> {{ $userInfo['account_name'] }}</p>
+								<p><strong>Số tài khoản:</strong> {{ $userInfo['account_no'] }}</p>
 
-								<div class="course_qr mt-4" align="center">
-									<img class="course_qr_img" style="width: 300px;" >
-								</div>
-								<div class="d-flex justify-content-center gap-2">
-									<button type="submit" class="btn btn-primary btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">Chuyển Khoản</button>
-								</div>
-								
 								<form id="paymentCompleteForm" action="{{ route('payments_contract_complete') }}" method="POST">
 									@csrf
 									<input type="hidden" name="start_date" id="start_date" value="{{ $summary['start_date'] }} ">
@@ -140,6 +133,21 @@
 									<input type="hidden" name="facility_id" id="facility_id" value="{{ $userInfo["facility_id"] }}">
 									<input type="hidden" name="user_id" id="user_id" value="{{ $userInfo["user_id"] }}">
 									<input type="hidden" name="slot_details" value='@json($details["slot_details"])'>
+									<button 
+										type="button" 
+										class="btn btn-primary btn-lg" 
+										id="showQRBtn"
+										data-bank="{{ $userInfo['account_bank'] }}"
+										data-account="{{ $userInfo['account_name'] }}"
+										data-name="{{ $userInfo['account_name'] }}"
+										>
+											Hiển thị mã QR
+										</button>
+
+										<div class="mt-4" align="center">
+											<img id="qrImage" style="width:300px; display:none;">
+										</div>
+									</div>	
 								</form>
 
 							</div>
@@ -178,5 +186,45 @@
 			<!-- Container -->
 		</div>
 		<!-- /Page Content -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('showQRBtn');
+    const qrImage = document.getElementById('qrImage');
+    const total = {{ $summary['total_amount'] }};
+    let intervalId = null, isPaid = false;
 
+    btn.addEventListener('click', function() {
+        const bank = btn.dataset.bank || 'VCB';
+        const account = btn.dataset.account || '9704366899999';
+        const name = btn.dataset.name || 'SAN CAU LONG DEMO';
+
+        const qrUrl = `https://img.vietqr.io/image/${bank}-${account}-compact2.png?amount=${total}&addInfo=Thanh toan dat san&accountName=${encodeURIComponent(name)}`;
+        qrImage.src = qrUrl;
+        qrImage.style.display = 'block';
+
+        if (intervalId) clearInterval(intervalId);
+        intervalId = setInterval(checkPayment, 8000);
+    });
+
+    async function checkPayment() {
+        if (isPaid) return;
+
+        try {
+            const res = await fetch("https://script.google.com/macros/s/AKfycbwIKNqvZftMggqULAy8J-rPGwEsw1HVvJbJK5jfKkNJJ-EMf6km5_xJibYyLs04wM0xFQ/exec");
+            const data = await res.json();
+            const last = data.data[data.data.length - 1];
+            const value = parseInt(last["Giá trị"]);
+
+            if (value >= total) {
+                clearInterval(intervalId);
+                isPaid = true;
+                alert("Thanh toán thành công! "+value);
+                document.getElementById('paymentCompleteForm').submit();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+});
+</script>
 @endsection
