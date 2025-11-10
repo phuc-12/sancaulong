@@ -69,9 +69,6 @@ class HomeController extends Controller
             'hasMore' => $hasMore,
         ]);
     }
-
-
-
     public function show(Request $request)
     {
         $idSan = $request->input('facility_id');
@@ -351,6 +348,7 @@ class HomeController extends Controller
             ];
         }
         $courts = Court::where('facility_id', $idSan)->get();
+
         return view('contract', compact(
             'thongtinsan',
             'customer',
@@ -398,15 +396,17 @@ class HomeController extends Controller
             $combinations = [];
             foreach ($actualDates as $item) {
                 $date = $item['date'] ?? null;
+                $facilityId = $item['facility_id'] ?? ($facility_id ?? null); // thêm dòng này
                 $courtIds = $item['courts'] ?? [];
                 $timeSlotIds = $item['time_slots'] ?? [];
 
-                if (!$date || empty($courtIds) || empty($timeSlotIds)) continue;
+                if (!$date || !$facilityId || empty($courtIds) || empty($timeSlotIds)) continue;
 
                 foreach ($courtIds as $courtId) {
                     foreach ($timeSlotIds as $timeSlotId) {
                         $combinations[] = [
                             'date' => $date,
+                            'facility_id' => $facilityId,
                             'court_id' => $courtId,
                             'time_slot_id' => $timeSlotId,
                         ];
@@ -418,21 +418,23 @@ class HomeController extends Controller
                 return back()->with('error', 'Không có ngày hợp lệ để kiểm tra!');
             }
 
+            // Lấy danh sách booking trùng
             $existingBookings = DB::table('bookings')
                 ->whereIn('booking_date', collect($combinations)->pluck('date')->unique())
+                ->whereIn('facility_id', collect($combinations)->pluck('facility_id')->unique()) // thêm dòng này
                 ->whereIn('court_id', collect($combinations)->pluck('court_id')->unique())
                 ->whereIn('time_slot_id', collect($combinations)->pluck('time_slot_id')->unique())
-                ->select('booking_date', 'court_id', 'time_slot_id')
+                ->select('booking_date', 'facility_id', 'court_id', 'time_slot_id')
                 ->get();
 
             $existingMap = [];
             foreach ($existingBookings as $b) {
-                $existingMap["{$b->booking_date}_{$b->court_id}_{$b->time_slot_id}"] = true;
+                $existingMap["{$b->booking_date}_{$b->facility_id}_{$b->court_id}_{$b->time_slot_id}"] = true;
             }
 
             $conflicts = [];
             foreach ($combinations as $c) {
-                $key = "{$c['date']}_{$c['court_id']}_{$c['time_slot_id']}";
+                $key = "{$c['date']}_{$c['facility_id']}_{$c['court_id']}_{$c['time_slot_id']}";
                 if (isset($existingMap[$key])) {
                     $conflicts[] = $c;
                 }
@@ -574,6 +576,9 @@ class HomeController extends Controller
                 'facility_address' => $facilities->address ?? '---',
                 'facility_phone' => $facilities->phone ?? '---',
                 'facility_id' => $facility_id ?? '---',
+                'account_name' => $facilities->account_name ?? '---',
+                'account_no' => $facilities->account_no ?? '---',
+                'account_bank' => $facilities->account_bank ?? '---',
             ];
 
             $details = [
@@ -724,7 +729,7 @@ class HomeController extends Controller
                 'long_term_contracts.issue_date as issue_date',
                 'long_term_contracts.final_amount as final_amount'
             )
-            ->orderBy('long_term_contracts.invoice_detail_id', 'desc')
+            ->orderBy('long_term_contracts.issue_date', 'desc')
             ->get();
             $success_message = $request->success_message;
             $mycontract_details = [];

@@ -332,7 +332,7 @@
             </div>
             <div class="col-md-6 text-end">
                 <p class="d-inline-block me-2 mb-0">Giá từ:</p>
-                <h3 class="primary-text d-inline-block">{{ $thongtinsan->Court_prices->default_price }}<span>/giờ</span></h3>
+                <h3 class="primary-text d-inline-block">{{ $thongtinsan->courtPrice->default_price }}<span>/giờ</span></h3>
             </div>
         </div>
     </div>
@@ -437,8 +437,8 @@
             </div>
         </div>
         <div class="text-center mt-4">
-            <input type="hidden" name="default_price" id="default_price" value="{{ $thongtinsan->Court_prices->default_price }}">
-            <input type="hidden" name="special_price" id="special_price" value="{{ $thongtinsan->Court_prices->special_price  }}">
+            <input type="hidden" name="default_price" id="default_price" value="{{ $thongtinsan->courtPrice->default_price }}">
+            <input type="hidden" name="special_price" id="special_price" value="{{ $thongtinsan->courtPrice->special_price  }}">
             <input type="hidden" name="facility_id" id="facility_id" value="{{ $thongtinsan->facility_id }}">
             <input type="hidden" name="user_id" id="user_id" value="{{ $customer->user_id }}">
             <button type="submit" class="btn btn-warning px-5 py-2">XÁC NHẬN VÀ THANH TOÁN</button>
@@ -662,8 +662,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                                                             $isBooked = isset($bookingsData[$d][$slot->time_slot_id][$i]);
 
                                                                             $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
-                                                                                ? $thongtinsan->Court_prices->default_price
-                                                                                : $thongtinsan->Court_prices->special_price;
+                                                                                ? $thongtinsan->courtPrice->default_price
+                                                                                : $thongtinsan->courtPrice->special_price;
                                                                         @endphp
 
                                                                         <td>

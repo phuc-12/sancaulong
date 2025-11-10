@@ -25,58 +25,67 @@
                 </div>
                 <div class="card-body">
                     {{-- Form Tìm Kiếm --}}
-                    <form action="{{ route('staff.payment.search') }}" method="POST">
-                        @csrf
-                        <label for="search_term" class="form-label">Tìm kiếm SĐT khách hàng / Mã đặt</label>
-                        <div class="input-group mb-3">
-                            <input type="text" class="form-control" id="search_term" name="search_term" 
-                                   placeholder="Nhập SĐT hoặc Mã đặt..." 
-                                   value="{{ $booking->booking_id ?? old('search_term') }}">
-                            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+                    <form method="POST" action="{{ route("staff.payment.search") }}">
+                    @csrf
+                        <div>
+                            <input type="text" name="search" placeholder="Tìm kiếm SĐT hoặc tên khách hàng..."
+                                value="" class="form-control" style="margin:10px 0; width:300px; float: left">
+                            <button type="submit" class="btn btn-success" style="float: left; margin: 10px;">Tìm kiếm</button>
                         </div>
                     </form>
-
-                    {{-- Chỉ hiển thị nếu đã tìm thấy booking --}}
-                    @if(isset($booking) && $booking)
-                        <hr class="my-4">
-                        <h5 class="mb-3">Thông tin thanh toán:</h5>
-                        
-                        <dl class="row">
-                            <dt class="col-sm-3">Khách hàng:</dt>
-                            <dd class="col-sm-9">{{ $booking->user_fullname ?? 'N/A' }}</dd>
-
-                            <dt class="col-sm-3">Mã đặt:</dt>
-                            <dd class="col-sm-9">#{{ $booking->booking_id }}</dd>
-
-                            <dt class="col-sm-3">Sân:</dt>
-                            <dd class="col-sm-9">{{ $booking->court_name ?? 'N/A' }} ({{ $booking->time_range ?? 'N/A' }})</dd>
-
-                            <dt class="col-sm-3">Tổng tiền:</dt>
-                            <dd class="col-sm-9"><strong class="fs-4 text-danger">{{ number_format($booking->unit_price, 0, ',', '.') }}đ</strong></dd>
-                        </dl>
-                        
-                        {{-- Form Xác Nhận Thanh Toán --}}
-                        <form action="{{ route('staff.booking.pay', $booking->booking_id) }}" method="POST" onsubmit="return confirm('Xác nhận thanh toán?')">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="payment_method" class="form-label">Phương thức thanh toán</label>
-                                <select class="form-select" id="payment_method" name="payment_method">
-                                    <option value="Tiền mặt (Tại quầy)">Tiền mặt (Tại quầy)</option>
-                                    <option value="Chuyển khoản (Tại quầy)">Chuyển khoản (Tại quầy)</option>
-                                </select>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-1"></i> Xác nhận Thanh toán</button>
-                            
-                            {{-- Nút In Hóa Đơn (nếu đã thanh toán) --}}
-                            @if(session('last_invoice_id'))
-                                <a href="{{ route('staff.invoice.print', session('last_invoice_id')) }}" 
-                                   class="btn btn-outline-secondary ms-2" target="_blank"> {{-- target="_blank" để mở tab mới --}}
-                                    <i class="bi bi-printer me-1"></i> In Hóa đơn
-                                </a>
-                            @endif
-                        </form>
-                    @endif
+                    <div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Khách hàng</th>
+                                    <th>Ngày đặt</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Tình trạng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $index=0 @endphp
+                                @isset($invoices)
+                                    @forelse ($invoices as $invoice)
+                                        <tr>
+                                            <td>{{ $index+=1 }}</td>
+                                            <td>{{ $invoice->fullname }}</td>
+                                            <td>{{ date('d/m/Y', strtotime($invoice->issue_date)) }}</td>
+                                            <td>{{ $invoice->final_amount }}</td>
+                                            <td>
+                                                <form action="{{ route('chi_tiet_hd') }}" method="POST">
+                                                @csrf
+                                                    <input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
+                                                    <input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
+                                                    <input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
+                                                    <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
+                                                    <input type="hidden" name="invoices" value="{{ $invoices }}">
+                                                    @if ($invoice->payment_status === 'Đã Hủy')
+                                                        <p class="text-danger pt-3">Đã hủy</p>
+                                                    @elseif ($invoice->payment_status === 'Đã thanh toán')
+                                                        <p class="text-primary pt-3">Đã thanh toán</p>
+                                                    @else 
+                                                        <button type="submit" class="btn btn-success">
+                                                            Chi tiết
+                                                        </button>
+                                                    @endif
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">
+                                                Chưa có lịch đặt nào
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                @else
+                                    <tr><td colspan="6" class="text-center text-muted">Không có thông tin khách hàng này</td></tr>
+                                @endisset
+                            </tbody>
+                        </table>
+                    </div>
                     
                 </div>
             </div>
@@ -85,15 +94,62 @@
         {{-- Cột phải: Tìm Hóa đơn cũ --}}
         <div class="col-lg-5">
             <div class="card shadow-sm">
-                 <div class="card-header"><h5 class="mb-0">Tìm Hóa đơn cũ</h5></div>
+                 <div class="card-header"><h5 class="mb-0">Thông tin hợp đồng</h5></div>
                 <div class="card-body">
-                    <form action="#" method="GET"> {{-- Cần 1 route khác để tìm HĐ cũ --}}
-                        <label for="old_invoice_id" class="form-label">Nhập mã hóa đơn để in lại:</label>
-                        <input type="text" class="form-control" id="old_invoice_id" name="old_invoice_id" placeholder="Mã HĐ: 1256...">
-                        <button type="submit" class="btn btn-info mt-2"><i class="bi bi-search me-1"></i> Tìm & In lại</button>
-                    </form>
+                    <div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Khách hàng</th>
+                                    <th>Ngày đặt</th>
+                                    {{-- <th>Tổng tiền</th> --}}
+                                    <th>Tình trạng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $index=0 @endphp
+                                @isset($invoices)
+                                    @forelse ($long_term_contracts as $ct)
+                                        <tr>
+                                            <td>{{ $index+=1 }}</td>
+                                            <td>{{ $ct->fullname }}</td>
+                                            <td>{{ date('d/m/Y', strtotime($ct->issue_date)) }}</td>
+                                            {{-- <td>{{ $ct->final_amount }}</td> --}}
+                                            <td>
+                                                <form action="{{ route('chi_tiet_ct') }}" method="POST">
+                                                @csrf
+                                                    <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
+                                                    <input type="hidden" name="slots" value='@json($mycontract_details[$ct->invoice_detail_id] ?? [])'>
+                                                    @if ($ct->payment_status === 'Đã Hủy')
+                                                        <p class="text-danger pt-3">Đã hủy</p>
+                                                    @elseif ($ct->payment_status === 'Đã sử dụng')
+                                                        <p class="text-primary pt-3">Đã sử dụng</p>
+                                                    @else 
+                                                        <button type="submit" class="btn btn-success">
+                                                            Chi tiết
+                                                        </button>
+                                                    @endif
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">
+                                                Chưa có lịch đặt nào
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                @else
+                                    <tr><td colspan="6" class="text-center text-muted">Không có hợp đồng của khách này</td></tr>
+                                @endisset
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+        
+    </div>
     </div>
 @endsection

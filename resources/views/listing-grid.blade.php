@@ -62,7 +62,7 @@
                                     <div class="listing-img">
                                         <button type="submit" style="border: white;">
                                             <input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
-                                            <img src="{{ asset($thongtin->image) }}" alt="" style="width: 375px; height: 205px;">
+                                            <img src="{{ asset('img/venues/' . $thongtin->image) }}" alt="" style="width: 375px; height: 205px;">
                                         </button>
                                         <div class="fav-item-venues">
                                             <span class="tag tag-blue">Đang Hoạt Động</span>
