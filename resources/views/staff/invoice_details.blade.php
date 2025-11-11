@@ -44,7 +44,7 @@
 
 											{{-- THỜI GIAN DUY NHẤT --}}
 											<li>
-												<i class="feather-clock me-2" style="width:64px;"></i>
+												<i class="feather-clock me-2"></i>
 												{{ $uniqueTimes }}
 											</li>
 
