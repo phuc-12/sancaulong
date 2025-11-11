@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\InvoiceController;
 
 //Trang chu
 Route::get('/', function () {
@@ -172,8 +172,13 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
     Route::get('/payment', [StaffController::class, 'paymentPage'])
         ->name('payment');
     // POST: Tìm kiếm booking để thanh toán
-    Route::post('/payment/search', [StaffController::class, 'searchBooking'])
-        ->name('payment.search');
+    Route::post('/search', [StaffController::class, 'searchBooking'])
+        ->name('customer.search');
+
+    Route::post('/invoice_details', [StaffController::class, 'invoice_details'])
+        ->name('chi_tiet_hd_nv');
+
+    Route::post('/export-invoice', [InvoiceController::class, 'exportInvoice'])->name('export_invoice');
 
     // 4. Xử lý "Xác nhận Thanh toán" (Func 3)
     // {booking} là ID của booking cần thanh toán

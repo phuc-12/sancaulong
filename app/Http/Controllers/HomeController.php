@@ -252,7 +252,7 @@ class HomeController extends Controller
         }
         $promotion_id = null;
         $payment_method = 1;
-        $payment_status = 'Chuyển khoản';
+        $payment_status = 'Đã thanh toán';
         DB::table(table: 'invoice_details')->insert([
             'invoice_detail_id' => $invoiceDetailId,
             'sub_total' => $total,
@@ -628,7 +628,7 @@ class HomeController extends Controller
         }
         $promotion_id = null;
         $payment_method = 1;
-        $payment_status = 'Chuyển khoản';
+        $payment_status = 'Đã thanh toán';
         $deposit = 0;
         $note = null;
         DB::table(table: 'long_term_contracts')->insert([
