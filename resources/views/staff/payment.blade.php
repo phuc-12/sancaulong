@@ -95,7 +95,7 @@
         <div class="col-lg-5">
             <div class="card shadow-sm">
                  <div class="card-header"><h5 class="mb-0">Thông tin hợp đồng</h5></div>
-                <div class="card-body">
+                <div class="card-body" style="padding: 0;">
                     <div>
                         <table class="table table-striped">
                             <thead>

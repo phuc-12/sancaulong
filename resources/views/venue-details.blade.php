@@ -51,7 +51,7 @@
             position: relative;
             width: 100%;
             height: 320px; /* Bạn chỉnh thấp/cao hơn tùy thích */
-            background: url('{{ asset('img/venues/' . $thongtinsan->image) }}') center/cover no-repeat;
+            background: url('{{ asset($thongtinsan->image) }}') center/cover no-repeat;
             border-radius: 10px;
             overflow: hidden;
         }
