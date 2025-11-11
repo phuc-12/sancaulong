@@ -11,6 +11,7 @@ use App\Models\Bookings;
 use App\Models\Court;
 use App\Models\TimeSlot;
 use App\Models\Invoice;
+use App\Models\Facilities;
 use App\Models\InvoiceDetail;
 use Illuminate\Support\Facades\Log;
 
@@ -37,21 +38,84 @@ class StaffController extends Controller
         $facilityId = $this->getStaffFacilityId();
         $today = Carbon::today();
 
-        $bookingsToday = Bookings::where('bookings.facility_id', $facilityId)
-            ->where('bookings.booking_date', $today)
-            ->with(['user', 'court'])
-            ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
-            ->select(
-                'bookings.*', // Lấy tất cả cột từ bảng bookings
-                'time_slots.start_time',
-                'time_slots.end_time',
-                // 'users.fullname', 
-                // 'courts.court_name'
-            )
-            ->orderBy('time_slots.start_time', 'asc') // Sắp xếp
-            ->get();
-                // dd($bookingsToday->pluck('status'));
-        return view('staff.index', compact('bookingsToday'));
+        $invoices = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+        ->join('bookings','bookings.invoice_detail_id','=','invoice_details.invoice_detail_id')
+        ->where('facilities.facility_id',$facilityId)
+        ->where('bookings.booking_date',$today)
+        ->select(
+            'invoices.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'invoices.issue_date as issue_date',
+            'invoices.final_amount as final_amount',
+            'invoice_details.invoice_detail_id as invoice_detail_id',
+            'invoice_details.facility_id as facility_id',
+        )
+        ->distinct()
+        ->orderBy('invoices.invoice_id', 'desc')
+        ->get();
+
+        $mybooking_details = [];
+
+        foreach ($invoices as $invoice) {
+            $details = DB::table('bookings')
+                ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )->get();
+
+            $mybooking_details[$invoice->invoice_detail_id] = $details;
+        }
+
+        $long_term_contracts = DB::table('long_term_contracts')
+        ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+        ->join('bookings','bookings.invoice_detail_id','=','invoice_details.invoice_detail_id')
+        ->where('facilities.facility_id',$facilityId)
+        ->where('bookings.booking_date',$today)
+        ->select(
+            'long_term_contracts.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'long_term_contracts.issue_date as issue_date',
+            'long_term_contracts.final_amount as final_amount'
+        )
+        ->distinct()
+        ->orderBy('long_term_contracts.contract_id', 'desc')
+        ->get();
+
+        $mycontract_details = [];
+
+        foreach ($long_term_contracts as $ct) {
+            $details = DB::table('bookings')
+                ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )
+                ->get();
+
+            $mycontract_details[$ct->invoice_detail_id] = $details;
+        }
+
+        return view('staff.index', [
+            'invoices' => $invoices,
+            'mybooking_details' => $mybooking_details,
+            'long_term_contracts' => $long_term_contracts,
+            'mycontract_details' => $mycontract_details,
+            // (Thêm biến $invoice nếu tìm thấy hóa đơn)
+        ]);
     }
 
     /**
@@ -83,6 +147,7 @@ class StaffController extends Controller
         ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
         ->join('users', 'users.user_id', '=', 'invoices.customer_id')
         ->where('facilities.facility_id',$facilityId)
+        ->where('invoices.payment_status','Chưa thanh toán')
         ->select(
             'invoices.*',
             'facilities.facility_name as facility_name',
@@ -158,12 +223,15 @@ class StaffController extends Controller
     public function searchBooking(Request $request)
     {
         $facilityId = $this->getStaffFacilityId();
+        $today = Carbon::today();
 
         $query = DB::table('invoices')
             ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
             ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
             ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+            ->join('bookings','bookings.invoice_detail_id','=','invoice_details.invoice_detail_id')
             ->where('facilities.facility_id',$facilityId)
+            ->where('bookings.booking_date',$today)
             ->select(
                 'invoices.*',
                 'facilities.facility_name as facility_name',
@@ -174,6 +242,7 @@ class StaffController extends Controller
                 'invoice_details.facility_id as facility_id',
                 'users.phone as phone',
             )
+            ->distinct()
             ->orderBy('invoices.invoice_id', 'desc');
 
         // ✅ Thêm điều kiện sau khi query còn là builder
@@ -208,7 +277,9 @@ class StaffController extends Controller
             ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
             ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
             ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+            ->join('bookings','bookings.invoice_detail_id','=','invoice_details.invoice_detail_id')
             ->where('facilities.facility_id',$facilityId)
+            ->where('bookings.booking_date',$today)
             ->select(
                 'long_term_contracts.*',
                 'facilities.facility_name as facility_name',
@@ -216,6 +287,7 @@ class StaffController extends Controller
                 'long_term_contracts.issue_date as issue_date',
                 'long_term_contracts.final_amount as final_amount'
             )
+            ->distinct()
             ->orderBy('long_term_contracts.contract_id', 'desc');
         
         if ($request->has('search')) {
@@ -245,7 +317,7 @@ class StaffController extends Controller
             $mycontract_details[$ct->invoice_detail_id] = $details;
         }
         
-        return view('staff.payment', [
+        return view('staff.index', [
             'invoices' => $invoices,
             'mybooking_details' => $mybooking_details,
             'long_term_contracts' => $long_term_contracts,
@@ -253,82 +325,48 @@ class StaffController extends Controller
         ]);
     }
 
-
-    /**
-     * 3. Xử lý "Xác nhận Thanh toán" (Func 3)
-     */
-    public function processPayment(Request $request, Bookings $booking)
+    public function invoice_details(Request $request)
     {
-        // Kiểm tra quyền
-        if ($booking->facility_id !== $this->getStaffFacilityId()) {
-            abort(403, 'Không có quyền.');
+        $slots = json_decode($request->slots, true);
+        $slotCollection = collect($slots);
+        
+        $uniqueCourts = $slotCollection->pluck('court_id')->unique()->implode(' , ');
+        $uniqueDates = $slotCollection->pluck('booking_date')->unique()->implode(' / ');
+        $uniqueTimes = $slotCollection->map(function ($slot) {
+            return $slot['start_time'] . ' đến ' . $slot['end_time'];
+        })->unique()->implode(' / ');
+        // dd($uniqueCourts,$uniqueDates,$uniqueTimes);
+        $customer = Users::find($request->input('user_id'));
+        $facilities = Facilities::find($request->input('facility_id'));
+        $countSlots = count($slots);
+
+        $tempCustomer = [
+            'user_id' => $customer->user_id, // thêm user_id để không lỗi
+            'fullname' => $request->input('fullname') ?: $customer->fullname,
+            'phone' => $request->input('phone') ?: $customer->phone,
+            'email' => $request->input('email') ?: $customer->email,
+        ];
+        if ($countSlots % 2 === 0) {
+            $result = ($countSlots / 2) . ' tiếng';
+        } else {
+            $result = (($countSlots - 1) / 2) . ' tiếng rưỡi';
         }
 
-        // Validate
-        $validated = $request->validate([
-            'payment_method' => 'required|string', // vd: 'Tiền mặt (Tại quầy)'
+        $invoice_detail_id = $request->invoice_detail_id;
+        $invoices = $request->invoices;
+        // Truyền sang view thanh toán
+        return view('staff.invoice_details', [
+            'slots' => $slots,
+            'result' => $result,
+            'customer' => (object) $tempCustomer,
+            'facilities' => $facilities,
+            'invoice_detail_id' => $invoice_detail_id,
+            'invoices' => $invoices,
+            // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
+            'uniqueCourts' => $uniqueCourts,
+            'uniqueDates' => $uniqueDates,
+            'uniqueTimes' => $uniqueTimes,
         ]);
-
-        // Bắt đầu Transaction (Đảm bảo tất cả cùng thành công hoặc thất bại)
-        DB::beginTransaction();
-        try {
-            // 1. Tạo Hóa đơn mới (Invoices)
-            $invoice = Invoice::create([
-                'customer_id' => $booking->user_id,
-                'issue_date' => Carbon::today(),
-                'total_amount' => $booking->unit_price,
-                // 'promotion_id' => null, // Xử lý nếu có khuyến mãi
-                'final_amount' => $booking->unit_price,
-                'payment_status' => 'Đã thanh toán',
-                'payment_method' => $validated['payment_method'],
-            ]);
-
-            // 2. Tạo Chi tiết Hóa đơn (InvoiceDetail)
-            $detail = InvoiceDetail::create([
-                'invoice_id' => $invoice->invoice_id,
-                'booking_id' => $booking->booking_id,
-                'sub_total' => $booking->unit_price,
-                'quantity' => 1,
-            ]);
-
-            // 3. Cập nhật Booking (liên kết invoice_detail và đổi status)
-            $booking->update([
-                'invoice_detail_id' => $detail->invoice_detail_id,
-                'status' => 'Đã thanh toán' // Cập nhật trạng thái
-            ]);
-
-            // 4. Commit Transaction
-            DB::commit();
-
-            // Chuyển hướng về trang payment với thông báo thành công
-            // Truyền luôn invoice_id để có thể In
-            return redirect()->route('staff.payment')
-                ->with('success', 'Thanh toán thành công! Mã hóa đơn: ' . $invoice->invoice_id)
-                ->with('last_invoice_id', $invoice->invoice_id);
-
-        } catch (\Exception $e) {
-            // 5. Rollback nếu có lỗi
-            DB::rollBack();
-            Log::error("Lỗi khi thanh toán: " . $e->getMessage());
-            return redirect()->route('staff.payment')->with('error', 'Đã xảy ra lỗi khi xử lý thanh toán.');
-        }
     }
-
-    /**
-     * 4. In Hóa đơn (Func 4)
-     */
-    public function printInvoice(Invoice $invoice)
-    {
-        // --- KIỂM TRA QUYỀN (Rất quan trọng) ---
-        // Lấy booking đầu tiên liên quan đến hóa đơn này
-        $booking = $invoice->invoiceDetails()->first()->booking ?? null; // Cần định nghĩa relationship
-
-        if (!$booking || $booking->facility_id !== $this->getStaffFacilityId()) {
-            abort(403, 'Không có quyền xem hóa đơn này.');
-        }
-
-        // Bạn cần tạo 1 view riêng cho việc in
-        // View này chỉ có HTML của hóa đơn, không có layout
-        return view('staff.invoice_print', compact('invoice'));
-    }
+    
 }
