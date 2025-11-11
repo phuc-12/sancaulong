@@ -66,7 +66,7 @@
                         <div class="mb-3">
                             <label for="address" class="form-label"><b>Địa chỉ</b><span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="address" name="address"
-                                value="{{ old('address', $facility->address ?? '') }}"  required>
+                                value="{{ old('address', $facility->address ?? '') }}" required>
                         </div>
 
                         <div class="row">
@@ -91,6 +91,7 @@
                             <div class="form-text">Giới thiệu về cơ sở vật chất, số lượng sân, tiện ích...</div>
                         </div>
 
+                        <!-- Thông tin chủ sân -->
                         <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Chủ Sở Hữu (Sẽ hiển thị cho Admin
                             duyệt)</h5>
                         @php $ownerUser = Auth::user(); @endphp
@@ -112,9 +113,48 @@
                             <input type="text" class="form-control" id="owner_address" name="owner_address"
                                 value="{{ old('owner_address', $ownerUser->address ?? '') }}">
                         </div>
+                        <!-- Thông tin tài khoản ngân hàng -->
+                        <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Tài Khoản Ngân Hàng</h5>
+
+                        <div class="row">
+                            <!-- Số tài khoản -->
+                            <div class="col-md-6 mb-3">
+                                <label for="account_no" class="form-label"><b>Số tài khoản</b></label>
+                                <input type="text" class="form-control" id="account_no" name="account_no"
+                                    value="{{ old('account_no', $facility->account_no ?? '') }}"
+                                    placeholder="Nhập số tài khoản ngân hàng">
+                            </div>
+
+                            <!-- Tên ngân hàng -->
+                            <div class="col-md-6 mb-3">
+                                <label for="account_bank" class="form-label"><b>Ngân hàng</b></label>
+                                <select class="form-select" id="account_bank" name="account_bank" required>
+                                    <option value="">-- Chọn ngân hàng --</option>
+                                    <option value="VCB" {{ old('account_bank', $facility->account_bank ?? '') == 'VCB' ? 'selected' : '' }}>Vietcombank</option>
+                                    <option value="TCB" {{ old('account_bank', $facility->account_bank ?? '') == 'TCB' ? 'selected' : '' }}>Techcombank</option>
+                                    <option value="BIDV" {{ old('account_bank', $facility->account_bank ?? '') == 'BIDV' ? 'selected' : '' }}>BIDV</option>
+                                    <option value="MB" {{ old('account_bank', $facility->account_bank ?? '') == 'MB' ? 'selected' : '' }}>MB Bank</option>
+                                    <option value="ACB" {{ old('account_bank', $facility->account_bank ?? '') == 'ACB' ? 'selected' : '' }}>ACB</option>
+                                    <option value="AGRIBANK" {{ old('account_bank', $facility->account_bank ?? '') == 'AGRIBANK' ? 'selected' : '' }}>Agribank</option>
+                                    <option value="VPB" {{ old('account_bank', $facility->account_bank ?? '') == 'VPB' ? 'selected' : '' }}>VPBank</option>
+                                    <option value="STB" {{ old('account_bank', $facility->account_bank ?? '') == 'STB' ? 'selected' : '' }}>Sacombank</option>
+                                    <option value="TPB" {{ old('account_bank', $facility->account_bank ?? '') == 'TPB' ? 'selected' : '' }}>TPBank</option>
+                                    <option value="SHB" {{ old('account_bank', $facility->account_bank ?? '') == 'SHB' ? 'selected' : '' }}>SHB</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Chủ tài khoản -->
+                        <div class="mb-3">
+                            <label for="account_name" class="form-label"><b>Tên chủ tài khoản</b></label>
+                            <input type="text" class="form-control" id="account_name" name="account_name"
+                                value="{{ old('account_name', $facility->account_name ?? $ownerUser->name ?? '') }}"
+                                placeholder="Nhập tên chủ tài khoản (không dấu)">
+                        </div>
 
                         <div class="mb-3">
-                            <label for="business_license_upload" class="form-label"><b>Giấy phép kinh doanh (PDF, JPG, PNG)</b></label>
+                            <label for="business_license_upload" class="form-label"><b>Giấy phép kinh doanh (PDF, JPG,
+                                    PNG)</b></label>
                             <input class="form-control" type="file" id="business_license_upload" name="business_license"
                                 accept=".pdf,.jpg,.jpeg,.png">
                             @if(isset($facility) && $facility->business_license)
@@ -204,8 +244,8 @@
                                             <span class="input-group-text">VNĐ / giờ</span>
                                         </div>
                                         <!-- <small class="form-text text-muted">
-                                                    <i class="bi bi-info-circle"></i> Giá áp dụng cho cả ngày cuối tuần (nếu để trống sẽ theo giá khung giờ thường)
-                                                </small> -->
+                                                        <i class="bi bi-info-circle"></i> Giá áp dụng cho cả ngày cuối tuần (nếu để trống sẽ theo giá khung giờ thường)
+                                                    </small> -->
                                     </div>
                                 </div>
                             </div>
