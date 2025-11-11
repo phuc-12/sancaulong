@@ -112,16 +112,23 @@
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="{{ route('staff.index') }}"
-                    class="nav-link {{ request()->routeIs('staff.index') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('staff.index','staff.customer.search') ? 'active' : '' }}">
                     <i class="bi bi-calendar-day"></i>
                     Lịch Đặt Sân (Hôm nay)
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('staff.payment') }}"
-                    class="nav-link {{ request()->routeIs('staff.payment') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('staff.payment','staff.chi_tiet_hd_nv') ? 'active' : '' }}">
                     <i class="bi bi-cash-coin"></i>
                     Thanh Toán & Hóa Đơn
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('staff.bookDirectly') }}"
+                    class="nav-link {{ request()->routeIs('staff.bookDirectly') ? 'active' : '' }}">
+                    <i class="feather-clock me-2"></i>
+                    Đặt trực tiếp
                 </a>
             </li>
         </ul>

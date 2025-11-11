@@ -24,9 +24,7 @@ Route::prefix('/')->controller(HomeController::class)
     Route::get('/','index')->name('trang_chu');
     Route::get('/listing-grid','listing_grid')->name('danh_sach_san');
     Route::get('/api/load-more-san','load_more_san')->name('api.load_san');
-    // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
     Route::post('/venue', 'show')->name('chi_tiet_san');
-    // Route::post('/booking-process', 'processBooking')->name('booking.process');
     Route::post('/thanh-toan', 'payments')->name('thanh.toan');
     Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
     Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
@@ -180,15 +178,12 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
 
     Route::post('/export-invoice', [InvoiceController::class, 'exportInvoice'])->name('export_invoice');
 
-    // 4. Xử lý "Xác nhận Thanh toán" (Func 3)
-    // {booking} là ID của booking cần thanh toán
-    Route::post('/booking/{booking}/pay', [StaffController::class, 'processPayment'])
-        ->name('booking.pay');
-
-    // 5. In Hóa Đơn (Func 4)
-    // {invoice} là ID của hóa đơn
-    Route::get('/invoice/{invoice}/print', [StaffController::class, 'printInvoice'])
-        ->name('invoice.print');
+    Route::get('/booking_directly', [StaffController::class, 'booking_directly'])->name('bookDirectly');
+    Route::post('/booking_directly/add-slot', [StaffController::class,'addSlot'])->name('booking.addSlot');
+    Route::post('/booking_directly/remove-slot', [StaffController::class,'removeSlot'])->name('booking.removeSlot');
+    // Route::post('/venue', 'show')->name('chi_tiet_san');
+    // Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
+    // Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
 });
 
 //=============================================================================================================
