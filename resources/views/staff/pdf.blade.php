@@ -30,11 +30,16 @@
             <p>Tổng thời gian: {{ $result }}</p>
         </div>
         
-        <div style="float:right;width: 50%;padding-left: 10px;">
+        <div style="float:right;width: 50%;padding-left: 10px;border-left: 1px solid black;">
             <h3 style="text-align: center">Thông tin khách hàng</h3>
-            <p>Tên: {{ $customer->fullname }}</p>
-            <p>SĐT: {{ $customer->phone }}</p>
-            <p>Email: {{ $customer->email }}</p>
+                <p>Tên: {{ $customer->fullname }}</p>
+                <p>SĐT: {{ $customer->phone }}</p>
+                <p>Email: {{ $customer->email }}</p>
+            <hr>
+            <h3 style="text-align: center">Nhân viên thanh toán</h3>
+                <p>Mã: {{ $user_id_nv }}</p>
+                <p>Tên: {{ $fullname_nv }}</p>
+                <p>Thời gian xuất: <br> - {{ $invoice_time }}</p>
         </div>
 
         <div style="clear: both">

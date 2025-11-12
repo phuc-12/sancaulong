@@ -131,6 +131,13 @@
                     Đặt trực tiếp
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('staff.invoiceHistory') }}"
+                    class="nav-link {{ request()->routeIs('staff.invoiceHistory','staff.history.search') ? 'active' : '' }}">
+                    <i class="feather-file-text me-2"></i>
+                    Lịch sử hóa đơn
+                </a>
+            </li>
         </ul>
         <hr style="border-color: #495057;">
         <ul class="nav header-navbar-rht">

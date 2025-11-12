@@ -101,7 +101,7 @@
 							</h5>
 							<p>Đặt sân cầu lông nhanh chóng để được trải nghiệm cơ sở vật chất cao cấp và dịch vụ chuyên
 								nghiệp.</p>
-							<a class="btn" href="listing-grid.php?id=">
+							<a class="btn" href="{{ route('danh_sach_san') }}">
 								Đến Danh Sách Sân <i class="feather-arrow-right"></i>
 							</a>
 						</div>

@@ -109,13 +109,110 @@ class StaffController extends Controller
 
             $mycontract_details[$ct->invoice_detail_id] = $details;
         }
-
+        
         return view('staff.index', [
             'invoices' => $invoices,
             'mybooking_details' => $mybooking_details,
             'long_term_contracts' => $long_term_contracts,
             'mycontract_details' => $mycontract_details,
-            // (Thêm biến $invoice nếu tìm thấy hóa đơn)
+        ]);
+    }
+
+    public function invoice_history (Request $request)
+    {
+        $facilityId = $this->getStaffFacilityId();
+
+        $invoices = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+        ->where('facilities.facility_id',$facilityId)
+        ->select(
+            'invoices.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'invoices.issue_date as issue_date',
+            'invoices.final_amount as final_amount',
+            'invoice_details.invoice_detail_id as invoice_detail_id',
+            'invoice_details.facility_id as facility_id',
+        )
+        ->orderBy('invoices.invoice_id', 'desc')
+        ->get();
+
+        $mybooking_details = [];
+
+        foreach ($invoices as $invoice) {
+            $details = DB::table('bookings')
+                ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )->get();
+
+            $mybooking_details[$invoice->invoice_detail_id] = $details;
+        }
+
+        return view('staff.invoice_history', [
+            'invoices' => $invoices,
+            'mybooking_details' => $mybooking_details,
+        ]);
+    }
+
+    public function searchHistory(Request $request)
+    {
+        $facilityId = $this->getStaffFacilityId();
+
+        $query = DB::table('invoices')
+            ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+            ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+            ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+            ->where('facilities.facility_id',$facilityId)
+            ->select(
+                'invoices.*',
+                'facilities.facility_name as facility_name',
+                'users.fullname as fullname',
+                'invoices.issue_date as issue_date',
+                'invoices.final_amount as final_amount',
+                'invoice_details.invoice_detail_id as invoice_detail_id',
+                'invoice_details.facility_id as facility_id',
+                'users.phone as phone',
+            )
+            ->orderBy('invoices.invoice_id', 'desc');
+
+        // ✅ Thêm điều kiện sau khi query còn là builder
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('users.phone', 'like', "%$search%")
+                ->orWhere('users.fullname', 'like', "%$search%");
+            });
+        }
+
+        // ✅ Chỉ gọi get() sau khi thêm hết điều kiện
+        $invoices = $query->get();
+
+        $mybooking_details = [];
+
+        foreach ($invoices as $invoice) {
+            $details = DB::table('bookings')
+                ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )->get();
+
+            $mybooking_details[$invoice->invoice_detail_id] = $details;
+        }
+
+        return view('staff.invoice_history', [
+            'invoices' => $invoices,
+            'mybooking_details' => $mybooking_details,
         ]);
     }
 
@@ -354,7 +451,10 @@ class StaffController extends Controller
         }
 
         $invoice_detail_id = $request->invoice_detail_id;
-        $invoices = $request->invoices;
+        $invoice_id = $request->invoice_id;
+        $success = session('success');
+        $invoices = DB::table('invoices')->where('invoice_id',$invoice_id)->first();
+        // dd($invoices);
         // Truyền sang view thanh toán
         return view('staff.invoice_details', [
             'slots' => $slots,
@@ -363,6 +463,7 @@ class StaffController extends Controller
             'facilities' => $facilities,
             'invoice_detail_id' => $invoice_detail_id,
             'invoices' => $invoices,
+            'success' => $success,
             // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
             'uniqueCourts' => $uniqueCourts,
             'uniqueDates' => $uniqueDates,
@@ -466,4 +567,5 @@ class StaffController extends Controller
         return response()->json(array_values($slots));
     }
     
+
 }
