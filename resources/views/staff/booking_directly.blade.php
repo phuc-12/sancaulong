@@ -435,7 +435,7 @@
                             <input type="hidden" name="slots" id="slotsInput">
                             <input type="hidden" name="user_id" value="">
                             <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
-                            <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
+                            <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Lưu lịch <i class="feather-arrow-right-circle ms-2"></i></button>
                         </div>
                     </form>
                 </div>

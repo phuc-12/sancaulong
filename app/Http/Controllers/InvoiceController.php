@@ -18,6 +18,10 @@ class InvoiceController extends Controller
         $total = $request->input('total');
         $slotCollection = collect($slots);
         
+        $user_id_nv = $request->user_id_nv;
+        $fullname_nv = $request->fullname_nv;
+        $invoice_time = now()->format('d/m/Y H:i:s');
+        // dd($user_id_nv,$fullname_nv);
         $uniqueCourts = $slotCollection->pluck('court_id')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('booking_date')->unique()->implode(' / ');
         $uniqueTimes = $slotCollection->map(function ($slot) {
@@ -51,8 +55,10 @@ class InvoiceController extends Controller
             'facilities' => $facilities,
             'invoice_detail_id' => $invoice_detail_id,
             'total' => $total,
-            // 'invoices' => $invoices,
-            // TRUYỀN CÁC GIÁ TRỊ DUY NHẤT ĐÃ XỬ LÝ
+            'user_id_nv' => $user_id_nv,
+            'fullname_nv' => $fullname_nv,
+            'invoice_time' => $invoice_time,
+
             'uniqueCourts' => $uniqueCourts,
             'uniqueDates' => $uniqueDates,
             'uniqueTimes' => $uniqueTimes,
@@ -67,5 +73,31 @@ class InvoiceController extends Controller
 
         // Tải xuống PDF
         return $pdf->download('hoa_don_' . $invoice_detail_id . '.pdf');
+    }
+
+    public function confirm_payment(Request $request)
+    {
+        $request->validate([
+            'payment_status' => 'required|in:paid,unpaid',
+            'invoice_detail_id' => 'required',
+        ]);
+
+        $invoice_detail_id = $request->invoice_detail_id;
+        $payment_status = $request->payment_status;
+
+        $status = $payment_status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
+
+        DB::table('invoices')
+            ->join('invoice_details','invoice_details.invoice_id','=','invoices.invoice_id')
+            ->where('invoice_details.invoice_detail_id', $invoice_detail_id)
+            ->update([
+                'payment_status' => $status,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái thanh toán thành công!',
+            'payment_status' => $status
+        ]);
     }
 }
