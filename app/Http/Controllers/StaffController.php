@@ -327,7 +327,6 @@ class StaffController extends Controller
             abort(403, 'Không có quyền xem hóa đơn này.');
         }
 
-        // Bạn cần tạo 1 view riêng cho việc in
         // View này chỉ có HTML của hóa đơn, không có layout
         return view('staff.invoice_print', compact('invoice'));
     }

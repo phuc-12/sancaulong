@@ -83,7 +83,14 @@
                                     value="{{ old('close_time', $facility->close_time ?? '22:00') }}" required>
                             </div>
                         </div>
-
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="quantity_court" class="form-label"><b>Số lượng sân cầu lông</b></label>
+                                <input type="number" class="form-control" id="quantity_court" name="quantity_court" min="1"
+                                    value="{{ old('quantity_court', $facility->quantity_court ?? 1) }}"
+                                    placeholder="Nhập số lượng sân...">
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label for="description" class="form-label"><b>Mô tả cơ sở</b></label>
                             <textarea class="form-control" id="description" name="description"
@@ -244,8 +251,8 @@
                                             <span class="input-group-text">VNĐ / giờ</span>
                                         </div>
                                         <!-- <small class="form-text text-muted">
-                                                        <i class="bi bi-info-circle"></i> Giá áp dụng cho cả ngày cuối tuần (nếu để trống sẽ theo giá khung giờ thường)
-                                                    </small> -->
+                                                            <i class="bi bi-info-circle"></i> Giá áp dụng cho cả ngày cuối tuần (nếu để trống sẽ theo giá khung giờ thường)
+                                                        </small> -->
                                     </div>
                                 </div>
                             </div>

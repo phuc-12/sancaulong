@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookings;
+use App\Models\Courts;
 use App\Models\Facility;
 use Illuminate\Http\Request;
 use App\Models\facilities;
@@ -347,7 +348,7 @@ class HomeController extends Controller
                 'ten' => 'Sân ' . $i
             ];
         }
-        $courts = Court::where('facility_id', $idSan)->get();
+        $courts = Courts::where('facility_id', $idSan)->get();
 
         return view('contract', compact(
             'thongtinsan',
@@ -483,7 +484,7 @@ class HomeController extends Controller
                         'ten' => 'Sân ' . $i
                     ];
                 }
-                $courts = Court::where('facility_id', $idSan)->get();
+                $courts = Courts::where('facility_id', $idSan)->get();
 
                 return view('contract', compact(
                     'thongtinsan', 'customer', 'timeSlots', 'dates',

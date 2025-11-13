@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookings;
+use App\Models\Courts;
 use App\Models\Time_slots;
-use App\Models\Court;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -47,7 +47,7 @@ class ManagerController extends Controller
         }
         $idSan = $manager->facility_id; // Giả sử User có cột facility_id
 
-        $courts = Court::where('facility_id', $idSan)
+        $courts = Courts::where('facility_id', $idSan)
             ->orderBy('court_name', 'asc')
             ->get();
 
@@ -56,7 +56,7 @@ class ManagerController extends Controller
         $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
         $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
         $timeSlots = Time_slots::all();
-        // ✅ Nếu người dùng chọn ngày, dùng giá trị đó
+        // Nếu người dùng chọn ngày, dùng giá trị đó
         $dateStart = $request->query('start', now()->format('Y-m-d'));
         $dateEnd = $request->query('end', now()->addDays(31)->format('Y-m-d'));
 
@@ -120,7 +120,7 @@ class ManagerController extends Controller
     /**
      * Xử lý cập nhật trạng thái sân con
      */
-    public function updateCourtStatus(Request $request, Court $court)
+    public function updateCourtStatus(Request $request, Courts $court)
     {
         // --- KIỂM TRA QUYỀN ---
         $manager = Auth::users();

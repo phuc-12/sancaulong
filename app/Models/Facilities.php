@@ -18,6 +18,9 @@ class Facilities extends Model
         'owner_id',
         'facility_name',
         'address',
+        'account_no',        
+        'account_bank', 
+        'account_name',
         'phone',
         'open_time',
         'close_time',
@@ -47,5 +50,5 @@ class Facilities extends Model
         return $this->belongsTo(Users::class, 'owner_id', 'user_id');
     }
 
-    }
+}
 

@@ -131,8 +131,8 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('owner.reports') }}"
-                    class="nav-link {{ request()->routeIs('owner.reports*') ? 'active' : '' }}">
+                <a href="{{ route('owner.report') }}"
+                    class="nav-link {{ request()->routeIs('owner.report*') ? 'active' : '' }}">
                     <i class="bi bi-graph-up me-2"></i>
                     Báo Cáo Kinh Doanh
                 </a>
@@ -196,7 +196,7 @@
     <main id="main-content">
         @yield('owner_content')
         @yield('admin_content')
-        @yield('reports_content')
+        @yield('report_content')
     </main>
     <!-- --------------------------------------------- -->
 

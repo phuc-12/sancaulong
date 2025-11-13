@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -20,28 +22,28 @@ Route::get('/search', [HomeController::class, 'search'])->name('search.results')
 
 //Dat san
 Route::prefix('/')->controller(HomeController::class)
-->group(function () {
-    Route::get('/','index')->name('trang_chu');
-    Route::get('/listing-grid','listing_grid')->name('danh_sach_san');
-    Route::get('/api/load-more-san','load_more_san')->name('api.load_san');
-    // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
-    Route::post('/venue', 'show')->name('chi_tiet_san');
-    // Route::post('/booking-process', 'processBooking')->name('booking.process');
-    Route::post('/thanh-toan', 'payments')->name('thanh.toan');
-    Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
-    Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
-    Route::post('/thanh-toan/thanh-toan-complete','payments_complete')->name('payments_complete');
-    Route::post('/contract_bookings','contract_bookings')->name('contract_bookings');
-    Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
-    Route::match(['get', 'post'],'/payment_contract', 'payment_contract')->name('payment_contract');
-    Route::post('/thanh-toan/thanh-toan-contract-complete','payments_contract_complete')->name('payments_contract_complete');
-    Route::post('/list_Invoices','list_Invoices')->name('lich_dat_san');
-    Route::post('/list_Contracts','list_Contracts')->name('lich_co_dinh');
-    Route::post('/invoice_details','invoice_details')->name('chi_tiet_hd');
-    Route::post('/cancel_invoice','cancel_invoice')->name('cancel_invoice');
-    Route::post('/contract_details','contract_details')->name('chi_tiet_ct');
-    Route::post('/cancel_contract','cancel_contract')->name('cancel_contract');
-});
+    ->group(function () {
+        Route::get('/', 'index')->name('trang_chu');
+        Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
+        Route::get('/api/load-more-san', 'load_more_san')->name('api.load_san');
+        // Route::get('/venue-details','venue_details')->name('chi_tiet_san');
+        Route::post('/venue', 'show')->name('chi_tiet_san');
+        // Route::post('/booking-process', 'processBooking')->name('booking.process');
+        Route::post('/thanh-toan', 'payments')->name('thanh.toan');
+        Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
+        Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
+        Route::post('/thanh-toan/thanh-toan-complete', 'payments_complete')->name('payments_complete');
+        Route::post('/contract_bookings', 'contract_bookings')->name('contract_bookings');
+        Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
+        Route::match(['get', 'post'], '/payment_contract', 'payment_contract')->name('payment_contract');
+        Route::post('/thanh-toan/thanh-toan-contract-complete', 'payments_contract_complete')->name('payments_contract_complete');
+        Route::post('/list_Invoices', 'list_Invoices')->name('lich_dat_san');
+        Route::post('/list_Contracts', 'list_Contracts')->name('lich_co_dinh');
+        Route::post('/invoice_details', 'invoice_details')->name('chi_tiet_hd');
+        Route::post('/cancel_invoice', 'cancel_invoice')->name('cancel_invoice');
+        Route::post('/contract_details', 'contract_details')->name('chi_tiet_ct');
+        Route::post('/cancel_contract', 'cancel_contract')->name('cancel_contract');
+    });
 
 Route::prefix('users')->controller(UserController::class)
     ->name('users.')->group(function () {
@@ -127,11 +129,33 @@ Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () 
     // DELETE: Xóa nhân viên
     Route::delete('/staff/{staff}', [OwnerController::class, 'destroyStaff'])->name('staff.destroy');
 
-    Route::get('/reports', [OwnerController::class, 'reports'])
-        ->name('reports'); 
-    
-    Route::get('/reports/data', [OwnerController::class, 'getReportData'])
-        ->name('reports.data');
+    //Báo cáo thống kê
+    // Trang dashboard báo cáo
+    Route::get('/report', [ReportController::class, 'index'])->name('report');
+
+    // API trả dữ liệu KPI (dùng AJAX)
+    Route::get('/report/kpi-data', [ReportController::class, 'kpiData'])->name('report.kpiData');
+
+    // API biểu đồ doanh thu theo thời gian (Line Chart)
+    Route::get('/report/revenue-chart', [ReportController::class, 'revenueChart'])->name('report.revenueChart');
+
+    // API biểu đồ đặt sân theo giờ (Bar Chart)
+    Route::get('/report/bookings-by-hour', [ReportController::class, 'bookingsByHour'])->name('report.bookingsByHour');
+
+    // API biểu đồ doanh thu theo sân con (Pie Chart)
+    Route::get('/report/revenue-by-court', [ReportController::class, 'revenueByCourt'])->name('report.revenueByCourt');
+
+    // API so sánh hiệu suất các sân
+    Route::get('/report/courts-comparison', [ReportController::class, 'courtsComparison'])->name('report.courtsComparison');
+
+    // API top khách hàng
+    Route::get('/report/top-customers', [ReportController::class, 'topCustomers'])->name('report.topCustomers');
+
+    // Xuất báo cáo Excel
+    Route::get('report/bookings/export', [ReportController::class, 'exportExcel'])->name('report.exportExcel');
+
+    // Xuất báo cáo PDF
+    Route::get('/report/export-pdf', [ReportController::class, 'exportPdf'])->name('report.exportPdf');
 });
 
 //=============================================================================================================
