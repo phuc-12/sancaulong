@@ -410,8 +410,11 @@
                             {{-- Body sẽ được JS render --}}
                         </tbody>
                     </table>
-                    <form id="paymentForm" action="{{ route('thanh.toan') }}" method="POST">
+                    <form id="paymentForm" action="{{ route('staff.addInvoice') }}" method="POST">
                     @csrf
+                    @php
+                        $invoice_detail_id = 'new_' . $thongtinsan->facility_id . '_' . date('Ymd_His') .'_'. rand(1000, 9999);
+                    @endphp
                     {{-- THÔNG TIN NGƯỜI ĐẶT --}}
                         <div class="mb-3" style="padding: 0px 10px;">
                             <h6 class="form-label">Họ tên:</h6>
@@ -425,15 +428,10 @@
                                 value="{{ old('phone', auth()->user()->phone ?? '') }}">
                         </div>
 
-                        <div class="mb-3" style="padding: 0px 10px;">
-                            <h6 class="form-label">Email:</h6>
-                            <input type="email" name="email" class="form-control"
-                                value="{{ old('email', auth()->user()->email ?? '') }}">
-                        </div>
-
                         <div class="d-grid">
                             <input type="hidden" name="slots" id="slotsInput">
                             <input type="hidden" name="user_id" value="">
+                            <input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}">
                             <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
                             <button type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;">Lưu lịch <i class="feather-arrow-right-circle ms-2"></i></button>
                         </div>

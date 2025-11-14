@@ -39,8 +39,8 @@ class InvoiceController extends Controller
         }
 
         $invoice_detail_id = $request->invoice_detail_id;
-        $invoices = $request->invoices;
-        
+        $invoices = DB::table('invoice_details')->where('invoice_detail_id',$invoice_detail_id)
+        ->first();
         // Tạo URL QR code
         $bank = $facilities->account_bank ?? 'VCB';
         $account = $facilities->account_no ?? '9704366899999';
@@ -58,6 +58,7 @@ class InvoiceController extends Controller
             'user_id_nv' => $user_id_nv,
             'fullname_nv' => $fullname_nv,
             'invoice_time' => $invoice_time,
+            'invoice_id' => $invoices->invoice_id,
 
             'uniqueCourts' => $uniqueCourts,
             'uniqueDates' => $uniqueDates,
