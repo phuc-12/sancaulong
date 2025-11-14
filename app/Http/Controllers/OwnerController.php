@@ -62,144 +62,136 @@ class OwnerController extends Controller
     }
 
     public function storeFacility(Request $request)
-{
-    // --- VALIDATION ---
-    $validatedData = $request->validate([
-        'facility_name' => 'required|string|max:100',
-        'address' => 'required|string|max:255',
-        'phone' => 'required|string|max:20',
-        'open_time' => 'required',
-        'close_time' => 'required|after:open_time',
-        'description' => 'nullable|string|max:65535',
-        
-        // Input cho Giấy phép KD (lưu vào cột business_license)
-        'business_license' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048', 
-        
-        // Input cho Ảnh sân (lưu vào cột image)
-        'image' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
+    {
+        // --- VALIDATION ---
+        $validatedData = $request->validate([
+            'facility_name' => 'required|string|max:100',
+            'address' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'open_time' => 'required',
+            'close_time' => 'required|after:open_time',
+            'description' => 'nullable|string|max:65535',
 
-        'default_price' => 'nullable|numeric|min:0',
-        'special_price' => 'nullable|numeric|min:0',
+            // Giấy phép kinh doanh & ảnh sân
+            'business_license' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
 
-        'owner_phone' => 'nullable|string|max:20',
-        'owner_address' => 'nullable|string|max:255',
-        'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
-    ]);
+            // Giá
+            'default_price' => 'nullable|numeric|min:0',
+            'special_price' => 'nullable|numeric|min:0',
 
-    try {
-        DB::beginTransaction();
+            // Thông tin chủ sở hữu
+            'owner_phone' => 'nullable|string|max:20',
+            'owner_address' => 'nullable|string|max:255',
+            'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
 
-        // --- CẬP NHẬT THÔNG TIN USER ---
-        $user = Auth::user();
-        DB::table('users')->where('user_id', $user->user_id)->update([
-            'phone' => $validatedData['owner_phone'],
-            'address' => $validatedData['owner_address'],
-            'CCCD' => $validatedData['owner_cccd'],
+            // 🆕 Thêm validate cho các trường mới
+            'quantity_court' => 'required|integer|min:1',
+            'account_no' => 'nullable|string|max:50',
+            'account_bank' => 'nullable|string|max:20',
+            'account_name' => 'nullable|string|max:100',
         ]);
 
-        // --- CHUẨN BỊ DỮ LIỆU FACILITY (Chưa có ảnh) ---
-        $facilityData = [
-            'facility_name' => $validatedData['facility_name'],
-            'address' => $validatedData['address'],
-            'phone' => $validatedData['phone'],
-            'open_time' => $validatedData['open_time'],
-            'close_time' => $validatedData['close_time'],
-            'description' => $validatedData['description'],
-            'status' => 'chờ duyệt',
-            // 'quantity_court' => $request->input('quantity_court')
-        ];
-        
-        // Lấy facility cũ (nếu có) để xóa ảnh cũ
-        $existingFacility = Facilities::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
+        try {
+            DB::beginTransaction();
 
-        // --- XỬ LÝ UPLOAD GIẤY PHÉP KD (Input 'business_license') ---
-        if ($request->hasFile('business_license')) {
-            $file = $request->file('business_license');
-            $newFileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('img/licenses');
-            
-            try {
-                if (!file_exists($destinationPath)) mkdir($destinationPath, 0755, true);
+            // --- CẬP NHẬT THÔNG TIN USER ---
+            $user = Auth::user();
+            DB::table('users')->where('user_id', $user->user_id)->update([
+                'phone' => $validatedData['owner_phone'],
+                'address' => $validatedData['owner_address'],
+                'CCCD' => $validatedData['owner_cccd'],
+            ]);
+
+            // --- CHUẨN BỊ DỮ LIỆU FACILITY ---
+            $facilityData = [
+                'facility_name' => $validatedData['facility_name'],
+                'address' => $validatedData['address'],
+                'phone' => $validatedData['phone'],
+                'open_time' => $validatedData['open_time'],
+                'close_time' => $validatedData['close_time'],
+                'description' => $validatedData['description'],
+                'status' => 'chờ duyệt',
+
+                // 🆕 Thêm các trường mới
+                'quantity_court' => $validatedData['quantity_court'],
+                'account_no' => $validatedData['account_no'],
+                'account_bank' => $validatedData['account_bank'],
+                'account_name' => $validatedData['account_name'],
+            ];
+
+            // --- LẤY FACILITY CŨ (nếu có) ---
+            $existingFacility = Facilities::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
+
+            // --- UPLOAD FILE GIẤY PHÉP KINH DOANH ---
+            if ($request->hasFile('business_license')) {
+                $file = $request->file('business_license');
+                $newFileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $destinationPath = public_path('img/licenses');
+
+                if (!file_exists($destinationPath))
+                    mkdir($destinationPath, 0755, true);
                 $file->move($destinationPath, $newFileName);
-                $facilityData['business_license'] = 'img/licenses/' . $newFileName; // Lưu vào cột 'business_license'
+                $facilityData['business_license'] = 'img/licenses/' . $newFileName;
 
-                // Xóa file cũ
-                if ($existingFacility && $existingFacility->business_license) {
-                    if (file_exists(public_path($existingFacility->business_license))) {
-                        unlink(public_path($existingFacility->business_license));
-                    }
+                // Xóa file cũ nếu có
+                if ($existingFacility && $existingFacility->business_license && file_exists(public_path($existingFacility->business_license))) {
+                    unlink(public_path($existingFacility->business_license));
                 }
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Lỗi upload Giấy phép KD: ' . $e->getMessage());
-                return back()->withInput()->withErrors(['business_license' => 'Không thể lưu file Giấy phép KD.']);
             }
-        }
 
-        // --- XỬ LÝ UPLOAD ẢNH SÂN (Input 'image') ---
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $newFileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('img/venues'); // Lưu vào 'img/venues'
-            
-            try {
-                if (!file_exists($destinationPath)) mkdir($destinationPath, 0755, true);
+            // --- UPLOAD ẢNH SÂN ---
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $newFileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $destinationPath = public_path('img/venues');
+
+                if (!file_exists($destinationPath))
+                    mkdir($destinationPath, 0755, true);
                 $file->move($destinationPath, $newFileName);
-                $facilityData['image'] = 'img/venues/' . $newFileName; // Lưu vào cột 'image'
+                $facilityData['image'] = 'img/venues/' . $newFileName;
 
-                // Xóa file cũ
-                if ($existingFacility && $existingFacility->image) {
-                    if (file_exists(public_path($existingFacility->image))) {
-                        unlink(public_path($existingFacility->image));
-                    }
+                // Xóa ảnh cũ
+                if ($existingFacility && $existingFacility->image && file_exists(public_path($existingFacility->image))) {
+                    unlink(public_path($existingFacility->image));
                 }
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Lỗi upload Ảnh Sân: ' . $e->getMessage());
-                return back()->withInput()->withErrors(['image' => 'Không thể lưu file Ảnh Sân.']);
             }
-        }
-        
-        // --- CHUẨN BỊ DỮ LIỆU GIÁ ---
-        $priceData = [
-            'default_price' => $validatedData['default_price'],
-            'special_price' => $validatedData['special_price'],
-        ];
 
-        // --- LƯU FACILITY VÀ GIÁ VÀO CSDL ---
-        $facility = Facilities::updateOrCreate(
-            ['owner_id' => Auth::id()],
-            $facilityData
-        );
-
-        if ($facility) {
-            $facility->courtPrice()->updateOrCreate(
-                ['facility_id' => $facility->facility_id],
-                $priceData
+            // --- LƯU HOẶC CẬP NHẬT FACILITY ---
+            $facility = Facilities::updateOrCreate(
+                ['owner_id' => Auth::id()],
+                $facilityData
             );
 
-            if ($user->facility_id !== $facility->facility_id) {
-                DB::table('users')->where('user_id', $user->user_id)->update([
-                    'facility_id' => $facility->facility_id,
-                ]);
+            // --- LƯU GIÁ ---
+            if ($facility) {
+                $facility->courtPrice()->updateOrCreate(
+                    ['facility_id' => $facility->facility_id],
+                    [
+                        'default_price' => $validatedData['default_price'],
+                        'special_price' => $validatedData['special_price'],
+                    ]
+                );
+
+                if ($user->facility_id !== $facility->facility_id) {
+                    DB::table('users')->where('user_id', $user->user_id)->update([
+                        'facility_id' => $facility->facility_id,
+                    ]);
+                }
+            } else {
+                throw new \Exception('Không thể tạo hoặc cập nhật facility.');
             }
-        } else {
-            throw new \Exception('Không thể tạo hoặc cập nhật facility.');
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi lưu thông tin cơ sở: ' . $e->getMessage());
+            return back()->withInput()->withErrors(['general' => 'Lỗi lưu thông tin cơ sở. Vui lòng thử lại.']);
         }
-                
-        // --- COMMIT TRANSACTION ---
-        DB::commit();
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Lỗi lưu thông tin cơ sở: ' . $e->getMessage());
-        return back()->withInput()->withErrors(['general' => 'Lỗi lưu thông tin cơ sở. Vui lòng thử lại.']);
+        return redirect()->route('owner.index')->with('success', 'Thông tin cơ sở đã được gửi đi chờ duyệt!');
     }
-
-    // --- PHẢN HỒI ---
-    return redirect()->route('owner.index')
-        ->with('success', 'Thông tin cơ sở đã được gửi đi chờ duyệt!');
-}
 
     public function staff()
     {
@@ -379,7 +371,7 @@ class OwnerController extends Controller
         $facilityId = $owner->facility_id;
 
         // Bạn có thể lấy danh sách các sân con để điền vào bộ lọc dropdown
-        $courts = \App\Models\Court::where('facility_id', $facilityId)->get(['court_id', 'court_name']);
+        $courts = \App\Models\Courts::where('facility_id', $facilityId)->get(['court_id', 'court_name']);
 
         return view('owner.reports', compact('facilityId', 'courts'));
     }

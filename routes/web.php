@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -127,11 +129,33 @@ Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () 
     // DELETE: Xóa nhân viên
     Route::delete('/staff/{staff}', [OwnerController::class, 'destroyStaff'])->name('staff.destroy');
 
-    Route::get('/reports', [OwnerController::class, 'reports'])
-        ->name('reports'); 
-    
-    Route::get('/reports/data', [OwnerController::class, 'getReportData'])
-        ->name('reports.data');
+    //Báo cáo thống kê
+    // Trang dashboard báo cáo
+    Route::get('/report', [ReportController::class, 'index'])->name('report');
+
+    // API trả dữ liệu KPI (dùng AJAX)
+    Route::get('/report/kpi-data', [ReportController::class, 'kpiData'])->name('report.kpiData');
+
+    // API biểu đồ doanh thu theo thời gian (Line Chart)
+    Route::get('/report/revenue-chart', [ReportController::class, 'revenueChart'])->name('report.revenueChart');
+
+    // API biểu đồ đặt sân theo giờ (Bar Chart)
+    Route::get('/report/bookings-by-hour', [ReportController::class, 'bookingsByHour'])->name('report.bookingsByHour');
+
+    // API biểu đồ doanh thu theo sân con (Pie Chart)
+    Route::get('/report/revenue-by-court', [ReportController::class, 'revenueByCourt'])->name('report.revenueByCourt');
+
+    // API so sánh hiệu suất các sân
+    Route::get('/report/courts-comparison', [ReportController::class, 'courtsComparison'])->name('report.courtsComparison');
+
+    // API top khách hàng
+    Route::get('/report/top-customers', [ReportController::class, 'topCustomers'])->name('report.topCustomers');
+
+    // Xuất báo cáo Excel
+    Route::get('report/bookings/export', [ReportController::class, 'exportExcel'])->name('report.exportExcel');
+
+    // Xuất báo cáo PDF
+    Route::get('/report/export-pdf', [ReportController::class, 'exportPdf'])->name('report.exportPdf');
 });
 
 //=============================================================================================================

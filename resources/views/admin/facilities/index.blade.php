@@ -150,6 +150,11 @@
                                 <dt class="col-sm-4">Số ĐT:</dt> <dd class="col-sm-8">{{ $facility->owner->phone ?? 'N/A' }}</dd>
                                 <dt class="col-sm-4">Địa chỉ:</dt> <dd class="col-sm-8">{{ $facility->owner->address ?? 'N/A' }}</dd>
                                 <dt class="col-sm-4">CCCD:</dt> <dd class="col-sm-8">{{ $facility->owner->CCCD ?? 'N/A' }}</dd>
+
+                                <dt class="col-sm-4">STK:</dt> <dd class="col-sm-8">{{ $facility->account_no ?? 'N/A' }}</dd>
+                                <dt class="col-sm-4">Chủ tài khoản:</dt> <dd class="col-sm-8">{{ $facility->account_name ?? 'N/A' }}</dd>
+                                <dt class="col-sm-4">Ngân hàng:</dt> <dd class="col-sm-8">{{ $facility->account_bank ?? 'N/A' }}</dd>
+                                <dt class="col-sm-4">Số sân con:</dt> <dd class="col-sm-8">{{ $facility->quantity_court ?? 'N/A' }}</dd>
                             </dl>
                             @else
                             <p class="text-danger small">Không tìm thấy thông tin chủ sân liên kết.</p>
@@ -165,6 +170,9 @@
                                 <dt class="col-sm-5">Địa chỉ sân:</dt> <dd class="col-sm-7">{{ $facility->address }}</dd>
                                 <dt class="col-sm-5">Số ĐT sân:</dt> <dd class="col-sm-7">{{ $facility->phone }}</dd>
                                 <dt class="col-sm-5">Giờ hoạt động:</dt> <dd class="col-sm-7">{{ \Carbon\Carbon::parse($facility->open_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($facility->close_time)->format('H:i') }}</dd>
+                                <dt class="col-sm-5">Giá mặc định:</dt> <dd class="col-sm-7">{{ $facility->courtPrice->default_price }}</dd>
+                                <dt class="col-sm-5">Giá giờ vàng</dt> <dd class="col-sm-7">{{ $facility->courtPrice->special_price }}</dd>
+
                                 <dt class="col-sm-5">Mô tả:</dt> <dd class="col-sm-7">{{ $facility->description ?? '(Không có)' }}</dd>
                                 <!-- <dt class="col-sm-5">Giấy phép KD:</dt>  -->
                                 <dd class="col-sm-7">
