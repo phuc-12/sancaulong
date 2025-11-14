@@ -7,82 +7,134 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm"  style="float: left; width: 49%;margin-bottom: 10px;">
+        <form method="POST" action="{{ route("staff.customer.search") }}">
+        @csrf
+            <div>
+                <input type="text" name="search" placeholder="Tìm kiếm SĐT hoặc tên khách hàng..."
+                    value="" class="form-control" style="margin:10px 0; width:300px; float: left">
+                <button type="submit" class="btn btn-success" style="float: left; margin: 10px;">Tìm kiếm</button>
+            </div>
+        </form>
         <div class="card-header">
-            <h5 class="mb-0">Danh sách khách check-in</h5>
+            <h5 class="mb-0">Danh sách</h5>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Khách hàng</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Tình trạng</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php $index=0 @endphp
+                                    @isset($invoices)
+                                        @forelse ($invoices as $invoice)
+                                            <tr>
+                                                <td>{{ $index+=1 }}</td>
+                                                <td>{{ $invoice->fullname }}</td>
+                                                <td>{{ date('d/m/Y', strtotime($invoice->issue_date)) }}</td>
+                                                <td>{{ $invoice->final_amount }}</td>
+                                                <td>
+                                                    @if ($invoice->payment_status === 'Đã thanh toán')
+                                                        <p class="text-primary pt-3">Đã thanh toán</p>
+                                                    @elseif ($invoice->payment_status === 'Chưa thanh toán')
+                                                        <p class="text-primary pt-3">Chưa thanh toán</p>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <form action="{{ route('chi_tiet_hd') }}" method="POST">
+                                                    @csrf
+                                                        <input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
+                                                        <input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
+                                                        <input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
+                                                        <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
+                                                        <input type="hidden" name="invoices" value="{{ $invoices }}">
+                                                        @if ($invoice->payment_status === 'Đã Hủy')
+                                                            <p class="text-danger pt-3">Đã hủy</p>
+                                                        @else 
+                                                            <button type="submit" class="btn btn-success">
+                                                                Chi tiết
+                                                            </button>
+                                                        @endif
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">
+                                                    Chưa có lịch đặt nào
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    @else
+                                        <tr><td colspan="6" class="text-center text-muted">Không có thông tin khách hàng này</td></tr>
+                                    @endisset
+                                </tbody>
+                            </table>
+                    </div>
+                </div>
         </div>
-        <div class="card-body">
-            @if($bookingsToday->isEmpty())
-                <div class="alert alert-secondary text-center mb-0">Không có lượt đặt nào hôm nay.</div>
-            @else
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+    </div>
+    <div class="card shadow-sm" style="float: right; width: 50%">
+        <div class="card-header"><h5 class="mb-0">Thông tin hợp đồng</h5></div>
+            <div class="card-body" style="padding: 0;">
+                <div>
+                    <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Giờ đặt</th>
+                                <th></th>
                                 <th>Khách hàng</th>
-                                <th>Sân</th>
-                                <th class="text-center">Trạng thái (Thanh toán)</th>
-                                <th class="text-center">Check-in (Chức năng)</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Tình trạng</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($bookingsToday as $booking)
-                                <tr>
-                                    {{-- Giờ đặt--}}
-                                    <td>{{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} -
-                                        {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}
-                                    </td>
-
-                                    {{-- HIỂN THỊ KHÁCH HÀNG --}}
-                                    <td>
-                                        {{-- Truy cập qua relationship: $booking->user->fullname --}}
-                                        {{-- Nếu $booking->user là null (vd: user_id không tồn tại), nó sẽ lấy 'Khách vãng lai' --}}
-                                        <div>{{ $booking->user->fullname ?? 'Khách vãng lai' }}</div>
-
-                                        {{-- Kiểm tra $booking->user TỒN TẠI VÀ $booking->user->phone CÓ GIÁ TRỊ --}}
-                                        @if(isset($booking->user) && $booking->user->phone)
-                                            <div class="small text-muted">({{ $booking->user->phone }} )</div>
-                                        @else
-                                            <div class="small text-muted">(Chưa có SĐT)</div> {{-- Hiển thị nếu SĐT là NULL --}}
-                                        @endif
-                                    </td>
-                                    <td>
-                                        {{-- Truy cập qua relationship: $booking->court->court_name --}}
-                                        {{ $booking->court->court_name ?? 'N/A' }}
-                                    </td>
-                                    {{-- Trạng thái --}}
-                                    <td class="text-center">
-                                        @if($booking->status == 'Đã sử dụng')
-                                            <span class="badge bg-secondary">Đã sử dụng</span>
-                                        @elseif($booking->status == 'Đã thanh toán' || $booking->status == 'Đã thanh toán (Online)')
-                                            <span class="badge bg-success">Đã thanh toán</span>
-                                        @elseif($booking->status == 'Chưa thanh toán' || $booking->status == null)
-                                            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
-                                        @else
-                                            <span class="badge bg-danger">{{ $booking->status == 'Đã hủy'}}</span>
-                                        @endif
-                                    </td>
-                                    {{-- Nút Check-in --}}
-                                    <td class="text-center">
-                                        @if($booking->status == 'Đã sử dụng')
-                                            <button class="btn btn-sm btn-outline-secondary" disabled>Đã check-in</button>
-                                        @elseif($booking->status == 'Đã thanh toán' || $booking->status == 'Đã thanh toán (Online)' || $booking->status == 'Chưa thanh toán' || $booking->status == null)
-                                            <form class="d-inline" action="{{ route('staff.booking.confirm', $booking->booking_id) }}" method="POST"
-                                                onsubmit="return confirm('Xác nhận khách đã đến sân?')">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-success">Xác nhận đến sân</button>
+                            @php $index=0 @endphp
+                            @isset($invoices)
+                                @forelse ($long_term_contracts as $ct)
+                                    <tr>
+                                        <td>{{ $index+=1 }}</td>
+                                        <td>{{ $ct->fullname }}</td>
+                                        <td>{{ date('d/m/Y', strtotime($ct->issue_date)) }}</td>
+                                        <td>{{ $ct->final_amount }}</td>
+                                        <td>
+                                            <form action="{{ route('chi_tiet_ct') }}" method="POST">
+                                            @csrf
+                                                <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
+                                                <input type="hidden" name="slots" value='@json($mycontract_details[$ct->invoice_detail_id] ?? [])'>
+                                                @if ($ct->payment_status === 'Đã Hủy')
+                                                    <p class="text-danger pt-3">Đã hủy</p>
+                                                @elseif ($ct->payment_status === 'Đã sử dụng')
+                                                    <p class="text-primary pt-3">Đã sử dụng</p>
+                                                @else 
+                                                    <button type="submit" class="btn btn-success">
+                                                        Chi tiết
+                                                    </button>
+                                                @endif
                                             </form>
-                                        @else
-                                            {{-- (Không hiển thị nút nếu đã hủy) --}}
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">
+                                            Chưa có lịch đặt nào
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            @else
+                                <tr><td colspan="6" class="text-center text-muted">Không có hợp đồng của khách này</td></tr>
+                            @endisset
                         </tbody>
                     </table>
                 </div>
-            @endif
+            </div>  
         </div>
     </div>
 @endsection

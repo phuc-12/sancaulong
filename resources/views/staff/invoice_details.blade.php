@@ -1,20 +1,11 @@
-@extends('layouts.main')
+@extends('layouts.staff')
 
-@section('invoice_details_content')
-		<!-- Breadcrumb -->
-		<div class="breadcrumb mb-0">
-			<span class="primary-right-round"></span>
-			<div class="container" style="margin-top: 40px;">
-				<h1 class="text-white">Hoàn Thành Đặt Sân</h1>
-				<ul>
-					<li><a href="index.html">Trang Chủ</a></li>
-					<li>Thanh Toán</li>
-				</ul>
-			</div>
-		</div>
+@section('staff_content')
+    <h1 class="h3 mb-4">Thanh Toán Tại Quầy & In Hóa Đơn</h1>
 
-		<!-- Page Content -->
-		<div class="content">
+    <div class="row">
+        <!-- Page Content -->
+		<div class="content" style="padding: 0;">
 			<div class="container">
 				<section>
 					<div class="row checkout">
@@ -53,8 +44,8 @@
 								</ul>
 								
 							</div>
-							<div class="card booking-details">
-								<h3 class="'border-bottom">Thông tin khách hàng</h3>
+							<div class="card booking-details" style="margin-bottom: 10px;">
+								<h3 class="border-bottom">Thông tin khách hàng</h3>
 								<ul>
 									<div style="float:left; width: 350px;">
 										<li><i class="feather-user me-2"></i>Tên: {{ $customer_name ?? $customer->fullname }}</li>
@@ -64,9 +55,30 @@
 								</ul>
 								
 							</div>
-							
+							<div class="card booking-details">
+								<h3 class="border-bottom">Thông tin nhân viên</h3>
+								<ul>
+									<div style="float:left; width: 100%;">
+										<li><i class="feather-user me-2"></i>Mã: <input type="text" name="user_id_nv" value="{{ auth()->user()->user_id }}" style="border: white"></li>
+										<li><i class="feather-phone me-2"></i>Tên: <input type="text" name="fullname_nv" value="{{ auth()->user()->fullname }}" style="border: white"></li>
+										<li>
+											<div style="width: 100%;">
+												<i class="feather-credit-card me-2"></i>Thanh toán:
+												<select id="payment_status_select" class="form-select form-select-sm" style="width: 180px; display:inline-block; margin-left:10px;">
+													<option value="unpaid" {{ $invoices->payment_status == 'Chưa thanh toán' ? 'selected' : '' }}>Chưa thanh toán</option>
+													<option value="paid" {{ $invoices->payment_status == 'Đã thanh toán' ? 'selected' : '' }}>Đã thanh toán</option>
+												</select>
+												<input type="hidden" id="invoice_detail_id" value="{{ $invoice_detail_id }}">
+												<button id="confirm_payment_btn" class="btn btn-success">Xác nhận</button>
+												<div id="payment_alert" class="mt-2"></div>
+											</div>
+											
+										</li>
+									</div>
+								</ul>
+							</div>
 						</div>
-						<div class="col-12 col-sm-12 col-md-12 col-lg-5">
+						<div class="col-12 col-sm-12 col-md-12 col-lg-5 p-0">
 							<aside class="card payment-modes">
 								<h3 class="border-bottom">Xác nhận thông tin thanh toán</h3>
 
@@ -107,24 +119,24 @@
 								<p>Không có dữ liệu khung giờ nào!</p>
 							@endif
 
-								<form action="{{ route('cancel_invoice') }}" method="POST">
+								<form action="{{ route('cancel_invoice') }}" method="POST" class="mb-3">
 									@csrf
 									<input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}">
 									
                                     <div class="d-flex justify-content-center gap-2">
 										<input type="hidden" name="user_id" value="{{ $customer->user_id}}">
-										<input type="hidden" name="invoices" value="{{ $invoices }}">
+										{{-- <input type="hidden" name="invoices" value="{{ $invoices }}"> --}}
                                         <button type="submit" class="btn btn-danger btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">HỦY LỊCH</button>
                                     </div>
-									<p style="text-align: center">Khi hủy, vui lòng liên hệ chủ sân qua số điện thoại hoặc email để được hoàn tiền.</p>
+									{{-- <p style="text-align: center">Khi hủy, vui lòng liên hệ chủ sân qua số điện thoại hoặc email để được hoàn tiền.</p> --}}
 								</form>
-								<form action="{{ route('export_invoice') }}" method="POST">
+                                <form action="{{ route('staff.export_invoice') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="slots" value="{{ json_encode($slots) }}">
                                     <input type="hidden" name="total" value="{{ $total }}">
 									<input type="hidden" name="facility_id" value="{{ $facilities->facility_id }}">
-									<input type="hidden" name="user_id_nv" value="">
-									<input type="hidden" name="fullname_nv" value="">
+									<input type="hidden" name="user_id_nv" value="{{ auth()->user()->user_id }}">
+									<input type="hidden" name="fullname_nv" value="{{ auth()->user()->fullname }}">
 									<input type="hidden" name="user_id" value="{{ $customer->user_id }}">
                                     <input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}"> <!-- Giữ lại để lấy dữ liệu khác nếu cần -->
                                     <button type="submit" class="btn btn-primary btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">XUẤT HÓA ĐƠN</button>
@@ -138,6 +150,7 @@
 		</div>
 		<!-- /Page Content -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 document.querySelector('form[action="{{ route('cancel_invoice') }}"]').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -154,5 +167,35 @@ document.querySelector('form[action="{{ route('cancel_invoice') }}"]').addEventL
         }
     });
 });
+
+$(document).ready(function() {
+    $('#confirm_payment_btn').click(function(e) {
+        e.preventDefault(); // tránh submit form mặc định
+
+        let payment_status = $('#payment_status_select').val();
+        let invoice_detail_id = $('#invoice_detail_id').val();
+
+        $.ajax({
+            url: "{{ route('staff.confirm_payment') }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                payment_status: payment_status,
+                invoice_detail_id: invoice_detail_id
+            },
+            success: function(response) {
+                $('#payment_alert').html(
+                    '<div class="alert alert-success">' + response.message + '</div>'
+                );
+            },
+            error: function(xhr) {
+                $('#payment_alert').html(
+                    '<div class="alert alert-danger">Có lỗi xảy ra, vui lòng thử lại!</div>'
+                );
+            }
+        });
+    });
+});
 </script>
+    </div>
 @endsection

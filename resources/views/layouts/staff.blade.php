@@ -10,6 +10,20 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/owl-carousel/owl.carousel.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/owl-carousel/owl.theme.default.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/aos/aos.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/fontawesome/css/all.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
+	<link rel="stylesheet" href="{{ asset('css/feather.css') }}">
+	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	{{--
+	<link rel="stylesheet" href="{{ asset('css/chatbox.css') }}"> --}}
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="{{ asset('img/favicon.png') }}">
     <style>
         :root {
             --sidebar-width: 280px;
@@ -98,16 +112,30 @@
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="{{ route('staff.index') }}"
-                    class="nav-link {{ request()->routeIs('staff.index') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('staff.index','staff.customer.search') ? 'active' : '' }}">
                     <i class="bi bi-calendar-day"></i>
                     Lịch Đặt Sân (Hôm nay)
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('staff.payment') }}"
-                    class="nav-link {{ request()->routeIs('staff.payment') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('staff.payment','staff.chi_tiet_hd_nv') ? 'active' : '' }}">
                     <i class="bi bi-cash-coin"></i>
                     Thanh Toán & Hóa Đơn
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('staff.bookDirectly') }}"
+                    class="nav-link {{ request()->routeIs('staff.bookDirectly') ? 'active' : '' }}">
+                    <i class="feather-clock me-2"></i>
+                    Đặt trực tiếp
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('staff.invoiceHistory') }}"
+                    class="nav-link {{ request()->routeIs('staff.invoiceHistory','staff.history.search') ? 'active' : '' }}">
+                    <i class="feather-file-text me-2"></i>
+                    Lịch sử hóa đơn
                 </a>
             </li>
         </ul>
