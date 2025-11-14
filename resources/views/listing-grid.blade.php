@@ -17,9 +17,9 @@
     </section>
     <div class="content">
         <div class="container">
-
             <div class="row">
                 <div class="col-lg-12">
+                    
                     <div class="sortby-section">
                         <div class="sorting-info">
                             <div class="row d-flex align-items-center">
@@ -50,6 +50,16 @@
                     </div>
                 </div>
             </div>
+            <div class="search-box" style="margin-bottom: 10px;">
+                <form action="{{ route('search.results') }}" method="GET">
+                    <input type="search" name="keyword" placeholder="Tìm theo tên sân, địa chỉ..."
+                        autocomplete="off"
+                        style="width: 50%; border-radius: 10px; margin-right: 10px; border: solid 1px black;">
+
+                    <input type="submit" class="btn btn-gradient write-review add-review"
+                        name="btn" id="btn" value="Tìm Kiếm">
+                </form>
+            </div>
             {{-- THÊM ID CHO CONTAINER ĐỂ CHÈN DỮ LIỆU MỚI --}}
             <div class="justify-content-center" id="san-cau-long-list"> 
                 @isset($danhsachsan)
@@ -58,10 +68,10 @@
                             @csrf
                             <div class="featured-venues-item aos" data-aos="fade-up"
                                 style="width: 380px; height: 582.8px; margin: 10px; float: left;">
-                                <div class="listing-item mb-0">
+                                <div class="listing-item mb-0" style="height: 100%;">
                                     <div class="listing-img">
                                         <button type="submit" style="border: white;">
-                                            <input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
+                                            <input type="hidden" name="facility_id" value="{{ $thongtin->facility_id }}">
                                             <img src="{{ asset($thongtin->image) }}" alt="" style="width: 375px; height: 205px;">
                                         </button>
                                         <div class="fav-item-venues">
@@ -83,25 +93,25 @@
                                                 <i class="feather-heart"></i>
                                             </a>
                                         </div>
-                                        <h3 class="listing-title">
-                                            <button type="submit" style="background-color: white; border: 1px solid white;">
+                                        <h3 class="listing-title mb-0">
+                                            <button type="submit" style="background-color: white; border: 1px solid white; height: 62px;">
                                                 {{ $thongtin->facility_name }}
                                             </button>
                                         </h3>
                                         <div class="listing-details-group">
-                                            <p style="height: 48px;">{{ $thongtin['description'] }}</p>
+                                            <p style="height: 48px;margin-bottom: 0px;">{{ $thongtin->description }}</p>
                                             <ul>
                                                 <li>
                                                     <span style="height: 48px;">
-                                                        <i class="feather-map-pin"></i>{{ $thongtin['address'] }}
+                                                        <i class="feather-map-pin"></i>{{ $thongtin->address }}
                                                         
                                                     </span>
                                                     
                                                 </li>
                                                 <li>
                                                     @php
-                                                            $open = \Carbon\Carbon::parse($thongtin['open_time'])->format('H:i');
-                                                            $close = \Carbon\Carbon::parse($thongtin['close_time'])->format('H:i');
+                                                            $open = \Carbon\Carbon::parse($thongtin->open_time)->format('H:i');
+                                                            $close = \Carbon\Carbon::parse($thongtin->close_time)->format('H:i');
                                                         @endphp
 
                                                         <i class="fa fa-clock-o"></i> {{ $open }} - {{ $close }} 
@@ -127,7 +137,7 @@
                 @endisset
 
                     {{-- Nút "TẢI THÊM SÂN CẦU" --}}
-                    <div class="col-12 text-center">
+                    {{-- <div class="col-12 text-center">
                         <div class="more-details">
                             <a href="javascript:void(0)" 
                             id="load-more-btn" 
@@ -137,12 +147,12 @@
                                 <img src="{{ asset('img/icons/u_plus-square.svg') }}" class="ms-2" alt="img">
                             </a>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
     </div>
     {{-- PHẦN SCRIPT XỬ LÝ AJAX LOAD MORE --}}
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', function () {
 
             const loadMoreBtn = document.getElementById('load-more-btn');
@@ -164,7 +174,7 @@
                         <div class="listing-item mb-0">
                             <div class="listing-img">
                                 <button type="submit" style="border: white;">
-                                    <input type="hidden" name="facility_id" value="{{ $thongtin['facility_id'] }}">
+                                    <input type="hidden" name="facility_id" value="{{ $thongtin->facility_id }}">
                                     <img src="{{ asset($thongtin->image) }}" alt="" style="width: 375px; height: 205px;">
                                 </button>
                                 <div class="fav-item-venues">
@@ -193,19 +203,19 @@
                                     </button>
                                 </h3>
                                 <div class="listing-details-group">
-                                    <p style="height: 48px;">{{ $thongtin['description'] }}</p>
+                                    <p style="height: 48px;">{{ $thongtin->description }}</p>
                                     <ul>
                                         <li>
                                             <span style="height: 48px;">
-                                                <i class="feather-map-pin"></i>{{ $thongtin['address'] }}
+                                                <i class="feather-map-pin"></i>{{ $thongtin->address }}
                                                 
                                             </span>
                                             
                                         </li>
                                         <li>
                                             @php
-                                                    $open = \Carbon\Carbon::parse($thongtin['open_time'])->format('H:i');
-                                                    $close = \Carbon\Carbon::parse($thongtin['close_time'])->format('H:i');
+                                                    $open = \Carbon\Carbon::parse($thongtin->open_time)->format('H:i');
+                                                    $close = \Carbon\Carbon::parse($thongtin->close_time)->format('H:i');
                                                 @endphp
 
                                                 <i class="fa fa-clock-o"></i> {{ $open }} - {{ $close }} 
@@ -223,6 +233,6 @@
                 `;
             }
         }
-    </script>
+    </script> --}}
 
 @endsection

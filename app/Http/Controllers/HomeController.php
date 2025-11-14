@@ -28,7 +28,7 @@ class HomeController extends Controller
 
     public function listing_grid()
     {
-        $limit = self::LIMIT_PER_LOAD;
+        // $limit = self::LIMIT_PER_LOAD;
 
         // 1. Lấy tổng số sân đang hoạt động (cho mục đích hiển thị tổng số)
         $total_count = Facilities::where('status', 'đã duyệt')->count();
@@ -36,15 +36,19 @@ class HomeController extends Controller
         // 2. Lấy danh sách sân lần đầu tiên (Chỉ 10 sân)
         $danhsachsan = Facilities::query()
             ->where('status', 'đã duyệt')
-            ->take($limit)
+            // ->take($limit)
             ->get();
-
         // 3. Kiểm tra trạng thái còn dữ liệu để tải nữa hay không
         // Nếu số lượng sân lấy được bằng LIMIT, thì chắc chắn còn dữ liệu tiếp theo.
-        $hasMoreData = $danhsachsan->count() === $limit;
+        // $hasMoreData = $danhsachsan->count() === $limit;
 
         // 4. Truyền các biến cần thiết sang Blade
-        return view('listing-grid', compact('danhsachsan', 'hasMoreData', 'total_count', 'limit'));
+        return view('listing-grid', compact(
+            'danhsachsan', 
+            // 'hasMoreData', 
+            'total_count', 
+            // 'limit'
+        ));
     }
 
     //  Xử lý request AJAX/Fetch (Trả về JSON)
@@ -760,12 +764,11 @@ class HomeController extends Controller
 
         // 2. Kiểm tra nếu keyword rỗng thì quay về trang chủ
         if (empty($keyword)) {
-            return redirect()->route('trang_chu');
+            return redirect()->route('danh_sach_san');
         }
 
         // 3. Truy vấn với JOIN giữa facilities và court_prices
-        $sancaulong = DB::table('facilities')
-            ->join('court_prices', 'facilities.facility_id', '=', 'court_prices.facility_id')
+        $danhsachsan = Facilities::query()
             ->select(
                 'facilities.facility_id',
                 'facilities.facility_name',
@@ -773,18 +776,25 @@ class HomeController extends Controller
                 'facilities.status',
                 'facilities.image',
                 'facilities.description',
-                'court_prices.default_price'
+                'facilities.open_time as open_time',
+                'facilities.close_time as close_time',
             )
             ->where('facilities.status', 'đã duyệt')
             ->where(function ($query) use ($keyword) {
                 $query->where('facilities.facility_name', 'LIKE', "%{$keyword}%")
                     ->orWhere('facilities.address', 'LIKE', "%{$keyword}%");
             })
-            ->paginate(10);
+            ->get();
 
-
+        $total_count = Facilities::query()
+            ->where('facilities.status', 'đã duyệt')
+            ->where(function ($query) use ($keyword) {
+                $query->where('facilities.facility_name', 'LIKE', "%{$keyword}%")
+                    ->orWhere('facilities.address', 'LIKE', "%{$keyword}%");
+            })->count();
+        // dd($danhsachsan);
         // 4. Trả về view hiển thị kết quả
-        return view('users.search_results', compact('sancaulong', 'keyword'));
+        return view('listing-grid', compact('danhsachsan', 'keyword','total_count'));
     }
 
 
