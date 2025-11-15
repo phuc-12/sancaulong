@@ -156,7 +156,7 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
     Route::get('/', [ManagerController::class, 'index'])->name('index');
 
     // Quản lý hợp đồng thuê dài hạn
-    Route::get('/contracts', [ManagerController::class, 'contracts'])->name('contracts');
+    Route::get('/contracts', [ManagerController::class, 'contract_manager'])->name('contracts');
 
     // Quản lý sân bãi
     Route::get('/courts', [ManagerController::class, 'courts'])->name('courts');

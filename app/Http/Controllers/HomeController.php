@@ -313,7 +313,10 @@ class HomeController extends Controller
         // Lấy ngày bắt đầu và kết thúc từ form
         $dateStart = $request->input('date_start') ?? now()->format('Y-m-d');
         $dateEnd = $request->input('date_end') ?? now()->addDays(7)->format('Y-m-d');
-
+        
+        $fullname = $request->name;
+        $phone = $request->phonenumber;
+        
         // Sinh mảng ngày từ date_start → date_end
         $dates = [];
         $current = \Carbon\Carbon::parse($dateStart);
@@ -353,7 +356,7 @@ class HomeController extends Controller
             ];
         }
         $courts = Courts::where('facility_id', $idSan)->get();
-
+        
         return view('contract', compact(
             'thongtinsan',
             'customer',
@@ -367,7 +370,9 @@ class HomeController extends Controller
             'dateEnd',
             'courts',
             'dateStart',
-            'dateEnd'
+            'dateEnd',
+            'fullname',
+            'phone'
         ));
     }
 
@@ -489,11 +494,12 @@ class HomeController extends Controller
                     ];
                 }
                 $courts = Courts::where('facility_id', $idSan)->get();
-
+                $fullname = $request->fullname;
+                $phone = $request->phone;
                 return view('contract', compact(
                     'thongtinsan', 'customer', 'timeSlots', 'dates',
                     'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon',
-                    'dateStart', 'dateEnd', 'courts'
+                    'dateStart', 'dateEnd', 'courts','fullname','phone',
                 ))->with([
                     'message' => 'Có khung giờ đã được đặt trước, vui lòng chọn lại!',
                     'conflicts' => $conflicts // <--- phải truyền conflicts vào view
@@ -527,7 +533,16 @@ class HomeController extends Controller
             $totalDays = count($actualDates);
             $totalCourts = count($courts);
             $totalAmount = $slotDetails->sum('amount') * $totalDays * $totalCourts;
-            $user = DB::table('users')->get()->where('user_id', $user_id)->first();
+            if($request->fullname && $request->phone)
+            {
+                $fullname = $request->fullname;
+                $phone = $request->phone;
+            }
+            else 
+            {
+                $user = DB::table('users')->get()->where('user_id', $user_id)->first();
+            }
+            
             $facilities = Facilities::with('Users')->get()->where('facility_id', $facility_id)->first();
             $startDate = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
             $endDate = isset($endDate) ? trim($endDate, '"') : now()->addDays(7)->format('Y-m-d');
@@ -575,8 +590,8 @@ class HomeController extends Controller
             // Thông tin user/facility
             $userInfo = [
                 'user_id' => $user_id ?? '---',
-                'user_name' => $user->fullname ?? '---',
-                'phone' => $user->phone ?? '---',
+                'user_name' => $user->fullname ?? $fullname,
+                'phone' => $user->phone ?? $phone,
                 'facility_name' => $facilities->facility_name ?? '---',
                 'facility_address' => $facilities->address ?? '---',
                 'facility_phone' => $facilities->phone ?? '---',
@@ -585,7 +600,7 @@ class HomeController extends Controller
                 'account_no' => $facilities->account_no ?? '---',
                 'account_bank' => $facilities->account_bank ?? '---',
             ];
-
+            
             $details = [
                 'actual_dates' => $actualDates,
                 'slot_details' => $slotDetails,
@@ -614,11 +629,26 @@ class HomeController extends Controller
         $total = $request->input('tongtien');
         $start_date = $request->start_date;
         $end_date = $request->end_date;
-        // dd([
-        //     'details' => $details,
-        //     'slot_details' => $slot_details,
-        //     'total' => $total,
-        // ]);
+
+        $fullname = $request->input('fullname');
+        $phone = $request->input('phone');
+
+        $currentUser = Users::where('phone', $phone)
+        ->where('fullname', 'like', "%$fullname%")
+        ->first();
+
+        if (!$currentUser) {
+            $newUser = Users::create([
+                'fullname' => $fullname,
+                'phone' => $phone,
+                'password' => bcrypt('123456789'), // hoặc tạo password mặc định
+                'role_id' => '5', // ví dụ
+            ]);
+            $userId = $newUser->user_id;
+        } else {
+            $userId = $currentUser->user_id;
+        }
+
         if (!$details || !$slot_details) {
             return back()->with('error', 'Dữ liệu không hợp lệ!');
         }
@@ -671,11 +701,23 @@ class HomeController extends Controller
             }
         }
 
-        return view('layouts.redirect_post', [
-            'facility_id' => $facility_id,
-            'user_id' => $userId,
-            'success_message' => 'Thanh toán và đặt sân cố định thành công!!!'
-        ]);
+        $userMana = $request->input('user_id');
+        $checkMana = Users::where('user_id', $userMana)
+        ->select('role_id')
+        ->first();
+        // dd($userMana, $checkMana);
+        if($checkMana->role_id === 4)
+        {
+            return redirect()->route('manager.contracts')->with('success', 'Thành công!');
+        }
+        else 
+        {
+            return view('layouts.redirect_post', [
+                'facility_id' => $facility_id,
+                'user_id' => $userId,
+                'success_message' => 'Thanh toán và đặt sân cố định thành công!!!'
+            ]);
+        }
     }
 
     public function list_Invoices(Request $request)

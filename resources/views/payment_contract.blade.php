@@ -1,4 +1,4 @@
-@extends('layouts.main');
+@extends('layouts.contract');
 
 @section('payment_contract_content')
     <style>
@@ -78,9 +78,18 @@
 							<div class="customer-info">
 								<p><strong>Khách hàng:</strong> {{ $userInfo['user_name'] ?? '---' }}</p>
 								<p><strong>Số điện thoại:</strong> {{ $userInfo['phone'] ?? '---' }}</p>
-								<p><strong>Thời gian:</strong> 
+								<p><strong>Ngày:</strong> 
 									Từ {{ \Carbon\Carbon::parse($summary['start_date'])->format('d/m/Y') }} 
 									đến {{ \Carbon\Carbon::parse($summary['end_date'])->format('d/m/Y') }}
+								</p>
+								<p><strong>Giờ:</strong>
+									@php
+										$slotDetails = $details['slot_details'];
+
+										$firstStart = $slotDetails->first()['start'];
+										$lastStart  = $slotDetails->last()['end'];
+									@endphp	
+									Từ {{ $firstStart }} đến {{ $lastStart }}
 								</p>
 								@php 
 									$invoice_detail_id = 'HD_' . $userInfo['user_id'] . '_' . $userInfo['facility_id'] . '_' . date('Ymd_His') .'_'. rand(1000, 9999);
@@ -133,6 +142,8 @@
 									<input type="hidden" name="facility_id" id="facility_id" value="{{ $userInfo["facility_id"] }}">
 									<input type="hidden" name="user_id" id="user_id" value="{{ $userInfo["user_id"] }}">
 									<input type="hidden" name="slot_details" value='@json($details["slot_details"])'>
+									<input type="hidden" name="fullname" id="fullname" value="{{ $userInfo["user_name"] }}">
+									<input type="hidden" name="phone" id="phone" value="{{ $userInfo["phone"] }}">
 									<button 
 										type="button" 
 										class="btn btn-primary btn-lg" 

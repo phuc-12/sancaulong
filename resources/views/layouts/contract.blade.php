@@ -34,12 +34,12 @@
 						<a id="mobile_btn" href="javascript:void(0);">
 							<span class="bar-icon"><span></span><span></span><span></span></span>
 						</a>
-						<a href="{{ route('trang_chu') }}" class="navbar-brand logo">
+						<a class="navbar-brand logo">
 							<img src="{{ asset('img/logo.svg') }}" class="img-fluid" alt="Logo">
 						</a>
 					</div>
 
-					<div class="main-menu-wrapper">
+					{{-- <div class="main-menu-wrapper">
 						<div class="menu-header">
 							<a href="{{ route('trang_chu') }}" class="menu-logo">
 								<img src="{{ asset('img/logo-black.svg') }}" class="img-fluid" alt="Logo">
@@ -56,16 +56,16 @@
 								<a href="#">Sân Cầu Lông <i class="fas fa-chevron-down"></i></a>
 								<ul class="submenu">
 									<li><a href="{{ route('danh_sach_san') }}">Danh sách sân</a></li>
-									{{-- <li><a href="#">Profile Settings</a></li> --}}
+									
 								</ul>
 							</li>
 							<li><a href="#">Liên Hệ</a></li>
 						</ul>
-					</div>
+					</div> --}}
 
 					<ul class="nav header-navbar-rht">
 						@auth
-							<li class="nav-item">
+							{{-- <li class="nav-item">
 								<form method="POST" action="{{ route('lich_dat_san') }}">
 									@csrf
 									<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
@@ -84,7 +84,7 @@
 									</button>
 								</form>
 
-							</li>
+							</li> --}}
 							<li class="nav-item dropdown">
 								<a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
 									id="userDropdown" role="button" data-bs-toggle="dropdown">
@@ -247,231 +247,10 @@
 	</script>
 
 	{{-- -------------------------------------- --}}
-	@yield('index_content')
-	@yield('listing-grid_content')
-	@yield('venue-details_content')
-	@yield('payments_content')
-	@yield('login')
-	@yield('payment_content')
-	{{-- @yield('contract_content')
-	@yield('payment_contract_content') --}}
-	@yield('my_bookings_content')
-	@yield('my_contracts_content')
-	@yield('search_content')
-	@yield('invoice_details_content')
-	@yield('contract_details_content')
+	@yield('contract_content')
+	@yield('payment_contract_content')
 	{{-- -------------------------------------- --}}
 
-	<footer class="footer">
-		<div class="container">
-			<!-- Footer Join -->
-			<div class="footer-join aos" data-aos="fade-up">
-				<h2>We Welcome Your Passion And Expertise</h2>
-				<p class="sub-title">Join our empowering sports community today and grow with us.</p>
-				<a href="register.php" class="btn btn-primary"><i class="feather-user-plus"></i> Tham gia cùng chúng
-					tôi</a>
-			</div>
-			<!-- /Footer Join -->
-
-			<!-- Footer Top -->
-			<div class="footer-top">
-				<div class="row">
-					<div class="col-lg-2 col-md-6">
-						<!-- Footer Widget -->
-						<div class="footer-widget footer-menu">
-							<h4 class="footer-title">Contact us</h4>
-							<div class="footer-address-blk">
-								<div class="footer-call">
-									<span>Toll free Customer Care</span>
-									<p>+017 123 456 78</p>
-								</div>
-								<div class="footer-call">
-									<span>Need Live Suppot</span>
-									<p><a href="https://dreamsports.dreamstechnologies.com/cdn-cgi/l/email-protection"
-											class="__cf_email__"
-											data-cfemail="94f0e6f1f5f9e7e4fbe6e0e7d4f1ecf5f9e4f8f1baf7fbf9">[email&#160;protected]</a>
-									</p>
-								</div>
-							</div>
-							<div class="social-icon">
-								<ul>
-									<li>
-										<a href="javascript:void(0);" class="facebook"><i class="fab fa-facebook-f"></i>
-										</a>
-									</li>
-									<li>
-										<a href="javascript:void(0);" class="twitter"><i class="fab fa-twitter"></i>
-										</a>
-									</li>
-									<li>
-										<a href="javascript:void(0);" class="instagram"><i
-												class="fab fa-instagram"></i></a>
-									</li>
-									<li>
-										<a href="javascript:void(0);" class="linked-in"><i
-												class="fab fa-linkedin-in"></i></a>
-									</li>
-								</ul>
-							</div>
-						</div>
-						<!-- /Footer Widget -->
-					</div>
-					<div class="col-lg-2 col-md-6">
-						<!-- Footer Widget -->
-						<div class="footer-widget footer-menu">
-							<h4 class="footer-title">Quick Links</h4>
-							<ul>
-								<li>
-									<a href="about-us.html">About us</a>
-								</li>
-								<li>
-									<a href="services.html">Services</a>
-								</li>
-								<li>
-									<a href="events.html">Events</a>
-								</li>
-								<li>
-									<a href="blog-grid.html">Blogs</a>
-								</li>
-								<li>
-									<a href="contact-us.html">Contact us</a>
-								</li>
-							</ul>
-						</div>
-						<!-- /Footer Widget -->
-					</div>
-					<div class="col-lg-2 col-md-6">
-						<!-- Footer Widget -->
-						<div class="footer-widget footer-menu">
-							<h4 class="footer-title">Support</h4>
-							<ul>
-								<li>
-									<a href="contact-us.html">Contact Us</a>
-								</li>
-								<li>
-									<a href="faq.html">Faq</a>
-								</li>
-								<li>
-									<a href="privacy-policy.html">Privacy Policy</a>
-								</li>
-								<li>
-									<a href="terms-condition.html">Terms & Conditions</a>
-								</li>
-								<li>
-									<a href="pricing.html">Pricing</a>
-								</li>
-							</ul>
-						</div>
-						<!-- /Footer Widget -->
-					</div>
-					<div class="col-lg-2 col-md-6">
-						<!-- Footer Widget -->
-						<div class="footer-widget footer-menu">
-							<h4 class="footer-title">Other Links</h4>
-							<ul>
-								<li>
-									<a href="coaches-grid.html">Coaches</a>
-								</li>
-								<li>
-									<a href="listing-grid.html">Sports Venue</a>
-								</li>
-								<li>
-									<a href="coach-details.html">Join As Coach</a>
-								</li>
-								<li>
-									<a href="coaches-map.html">Add Venue</a>
-								</li>
-								<li>
-									<a href="my-profile.html">My Account</a>
-								</li>
-							</ul>
-						</div>
-						<!-- /Footer Widget -->
-					</div>
-					<div class="col-lg-2 col-md-6">
-						<!-- Footer Widget -->
-						<div class="footer-widget footer-menu">
-							<h4 class="footer-title">Our Locations</h4>
-							<ul>
-								<li>
-									<a href="javascript:void(0);">Germany</a>
-								</li>
-								<li>
-									<a href="javascript:void(0);">Russia</a>
-								</li>
-								<li>
-									<a href="javascript:void(0);">France</a>
-								</li>
-								<li>
-									<a href="javascript:void(0);">UK</a>
-								</li>
-								<li>
-									<a href="javascript:void(0);">Colombia</a>
-								</li>
-							</ul>
-						</div>
-						<!-- /Footer Widget -->
-					</div>
-					<div class="col-lg-2 col-md-6">
-						<!-- Footer Widget -->
-						<div class="footer-widget footer-menu">
-							<h4 class="footer-title">Download</h4>
-							<ul>
-								<li>
-									<a href="#"><img src="{{ asset('img/icons/icon-apple.svg') }}" alt="Apple"></a>
-								</li>
-								<li>
-									<a href="#"><img src="{{ asset('img/icons/google-icon.svg') }}" alt="Google"></a>
-								</li>
-							</ul>
-						</div>
-						<!-- /Footer Widget -->
-					</div>
-				</div>
-			</div>
-			<!-- /Footer Top -->
-		</div>
-
-		<!-- Footer Bottom -->
-		<div class="footer-bottom">
-			<div class="container">
-				<!-- Copyright -->
-				<div class="copyright">
-					<div class="row align-items-center">
-						<div class="col-md-6">
-							<div class="copyright-text">
-								<p class="mb-0">&copy; 2025 DreamSports - All rights reserved.</p>
-							</div>
-						</div>
-						<div class="col-md-6">
-							<!-- Copyright Menu -->
-							<div class="dropdown-blk">
-								<ul class="navbar-nav selection-list">
-									<li class="nav-item dropdown">
-										<div class="lang-select">
-											<!-- <span class="select-icon" style="display: flex;"><i class="feather-globe"></i></span> -->
-											<select class="select">
-												<option>English (US)</option>
-												<option>UK</option>
-												<option>Vietnamese</option>
-											</select>
-										</div>
-									</li>
-									<li class="nav-item dropdown">
-									</li>
-								</ul>
-							</div>
-							<!-- /Copyright Menu -->
-						</div>
-					</div>
-				</div>
-				<!-- /Copyright -->
-			</div>
-		</div>
-		<!-- /Footer Bottom -->
-
-	</footer>
-	<!-- /Footer -->
 	<!-- chatbox -->
 
 	<!-- /chatbox -->
