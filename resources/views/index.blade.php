@@ -160,7 +160,7 @@
 
 													<h5 class="tag tag-primary">
 														<!-- $thongtin->Court_prices -->
-														{{ number_format($thongtin->Court_prices->default_price ?? 0) }}
+														{{ number_format($thongtin->courtPrice->default_price ?? 0) }}
 														<span>/Giờ</span>
 													</h5>
 
