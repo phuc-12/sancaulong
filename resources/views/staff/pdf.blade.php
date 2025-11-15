@@ -5,7 +5,7 @@
     <style>
         body { font-family: DejaVu Sans, sans-serif; }
         .container { width: 80%; margin: auto; }
-        .header { text-align: center; }
+        .header { text-align: left; }
         .table { width: 100%; border-collapse: collapse; }
         .table th, .table td { border: 1px solid #000; padding: 8px; text-align: center; }
         .total { text-align: right; font-weight: bold; }
@@ -16,9 +16,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>HÓA ĐƠN THANH TOÁN</h2>
+            <h2 style="text-align: center;">HÓA ĐƠN THANH TOÁN</h2>
             <p>Địa điểm: {{ $facilities->facility_name }}</p>
             <p>Địa chỉ: {{ $facilities->address }}</p>
+            <p>Mã hóa đơn: {{ $invoice_id }}</p>
         </div>
         
         <div style="float:left;width:48%; border-right: 1px solid black; padding-right: 3px;">
@@ -36,10 +37,14 @@
                 <p>SĐT: {{ $customer->phone }}</p>
                 <p>Email: {{ $customer->email }}</p>
             <hr>
-            <h3 style="text-align: center">Nhân viên thanh toán</h3>
+            @if ($user_id_nv && $fullname_nv)
+                <h3 style="text-align: center">Nhân viên thanh toán</h3>
                 <p>Mã: {{ $user_id_nv }}</p>
                 <p>Tên: {{ $fullname_nv }}</p>
-                <p>Thời gian xuất: <br> - {{ $invoice_time }}</p>
+                <p>Thời gian xuất hóa đơn: <br> - {{ $invoice_time }}</p>
+            @else 
+                <p>Thời gian xuất hóa đơn: <br> - {{ $invoice_time }}</p>
+            @endif
         </div>
 
         <div style="clear: both">
