@@ -45,8 +45,8 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.customers.index') }}" 
-                class="nav-link {{ request()->routeIs('admin.customers.index') ? 'active' : '' }}">
+                <a href="{{ route('admin.customers.index') }}"
+                    class="nav-link {{ request()->routeIs('admin.customers.index') ? 'active' : '' }}">
                     <i class="bi bi-people-fill"></i>
                     Quản lý Khách Hàng
                 </a>
@@ -91,7 +91,11 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        
+                        <li>
+                            <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
+                                <i class="fas fa-user me-2"></i> Hồ sơ
+                            </a>
+                        </li>
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

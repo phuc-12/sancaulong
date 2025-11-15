@@ -99,8 +99,7 @@
                         </div>
 
                         <!-- Thông tin chủ sân -->
-                        <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Chủ Sở Hữu (Sẽ hiển thị cho Admin
-                            duyệt)</h5>
+                        <h5 class="card-title mt-4 mb-3 border-bottom pb-2">Thông tin Chủ Sở Hữu (Sẽ hiển thị cho Admin duyệt)</h5>
                         @php $ownerUser = Auth::user(); @endphp
 
                         <div class="row">

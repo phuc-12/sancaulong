@@ -50,5 +50,9 @@ class Facilities extends Model
         return $this->belongsTo(Users::class, 'owner_id', 'user_id');
     }
 
+    public function courts()
+    {
+        return $this->hasMany(Courts::class, 'facility_id', 'facility_id');
+    }
 }
 
