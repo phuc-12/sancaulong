@@ -122,12 +122,12 @@
                     Quản lý Sân Bãi
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="bi bi-receipt-cutoff"></i>
                     Tài chính & Hóa đơn
                 </a>
-            </li>
+            </li> -->
         </ul>
         <hr style="border-color: #495057;">
         <ul class="nav header-navbar-rht">

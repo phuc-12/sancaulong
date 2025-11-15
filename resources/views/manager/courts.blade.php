@@ -312,11 +312,11 @@
                                 
                                 {{-- Trạng thái hiện tại (dùng Badge) --}}
                                 <td class="text-center">
-                                    @if($court->status == 'Hoạt động')
+                                    @if($court->status == 'Đang sử dụng')
                                         <span class="badge bg-success">{{ $court->status }}</span>
-                                    @elseif($court->status == 'Bảo trì')
+                                    @elseif($court->status == 'Trống')
                                         <span class="badge bg-warning text-dark">{{ $court->status }}</span>
-                                     @elseif($court->status == 'Đóng cửa')
+                                     @elseif($court->status == 'Đang chờ')
                                         <span class="badge bg-danger">{{ $court->status }}</span>
                                     @else
                                         <span class="badge bg-secondary">{{ $court->status ?? 'Chưa rõ' }}</span>
