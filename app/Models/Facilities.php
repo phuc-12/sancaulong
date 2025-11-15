@@ -10,10 +10,9 @@ class Facilities extends Model
 {
     use HasFactory;
 
-    protected $table = 'facilities'; // nếu chưa có
+    protected $table = 'facilities';
     protected $primaryKey = 'facility_id';
-    public $timestamps = false; // Nếu bảng không dùng created_at / updated_at
-
+    public $timestamps = true; 
     protected $fillable = [
         'owner_id',
         'facility_name',

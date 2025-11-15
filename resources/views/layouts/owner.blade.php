@@ -130,13 +130,13 @@
                     Quản lý Nhân Viên
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="{{ route('owner.report') }}"
                     class="nav-link {{ request()->routeIs('owner.report*') ? 'active' : '' }}">
                     <i class="bi bi-graph-up me-2"></i>
                     Báo Cáo Kinh Doanh
                 </a>
-            </li>
+            </li> -->
         </ul>
         <hr style="border-color: #495057;">
         <ul class="nav header-navbar-rht">

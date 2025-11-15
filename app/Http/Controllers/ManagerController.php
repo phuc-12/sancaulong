@@ -18,12 +18,92 @@ class ManagerController extends Controller
 {
 
     // Trang Tổng quan của Quản lý sân
-    public function index()
+    public function index(Request $request)
     {
-        // Tương lai: Lấy KPI, biểu đồ doanh thu... CỦA CƠ SỞ NÀY
-        return view('manager.index');
-    }
+        $manager = Auth::user();
+        $facilityId = $manager->facility_id;
 
+        // == Lọc thời gian ==
+        $query = Bookings::where('facility_id', $facilityId);
+
+        if ($request->date) {
+            $query->whereDate('booking_date', $request->date);
+        }
+
+        if ($request->from && $request->to) {
+            $query->whereBetween('booking_date', [$request->from, $request->to]);
+        }
+
+        if ($request->month) {
+            [$y, $m] = explode('-', $request->month);
+            $query->whereYear('booking_date', $y)->whereMonth('booking_date', $m);
+        }
+
+        $today = now()->toDateString();
+
+        // --- KPI ---
+        $bookingsToday = $query->clone()->whereDate('booking_date', $today)->count();
+        $cancelToday = $query->clone()->where('status', 'cancel')->whereDate('booking_date', $today)->count();
+
+        $facility = Facilities::find($facilityId);
+
+        // Busy courts
+        $currentTime = now()->format('H:i');
+        $slot = Time_slots::where('start_time', '<=', $currentTime)->where('end_time', '>=', $currentTime)->first();
+
+        $busy = $slot
+            ? Bookings::where('time_slot_id', $slot->time_slot_id)->where('status', 'booked')->count()
+            : 0;
+
+        $totalCourts = Courts::where('facility_id', $facilityId)->count();
+
+        // Revenue
+        $revenueToday = $query->clone()->whereDate('booking_date', $today)->sum('unit_price');
+        $revenueMonth = $query->clone()->whereMonth('booking_date', now()->month)->sum('unit_price');
+
+
+        // === BIỂU ĐỒ GIỜ ===
+        $hours = range(6, 23);
+        $hourData = [];
+
+        foreach ($hours as $h) {
+            $hourData[] = $query->clone()
+                ->whereTime('created_at', '>=', $h . ':00:00')
+                ->whereTime('created_at', '<=', $h . ':59:59')
+                ->count();
+        }
+
+        // === BIỂU ĐỒ TỪNG SÂN ===
+        $courts = Courts::where('facility_id', $facilityId)->get();
+        $courtLabels = [];
+        $courtData = [];
+
+        foreach ($courts as $c) {
+            $courtLabels[] = $c->court_name;
+            $courtData[] = $query->clone()->where('court_id', $c->court_id)->count();
+        }
+
+        return view('manager.index', [
+            'stats' => [
+                'bookings_today' => $bookingsToday,
+                'cancel_today' => $cancelToday,
+                'open_time' => $facility->open_time,
+                'close_time' => $facility->close_time,
+                'busy_courts' => $busy,
+                'free_courts' => $totalCourts - $busy,
+                'revenue_today' => $revenueToday,
+                'revenue_month' => $revenueMonth,
+            ],
+            'hourlyBookings' => [
+                'labels' => $hours,
+                'data' => $hourData
+            ],
+            'courtPerformance' => [
+                'labels' => $courtLabels,
+                'data' => $courtData
+            ]
+        ]);
+    }
 
     // Trang Quản lý Hợp đồng dài hạn
     public function contracts()
@@ -51,7 +131,7 @@ class ManagerController extends Controller
             ->orderBy('court_id', 'asc')
             ->get();
 
-        $validStatuses = ['Hoạt động', 'Bảo trì', 'Đóng cửa'];
+        $validStatuses = ['Trống', 'Đang sử dụng', 'Đang chờ'];
 
         $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
         $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
@@ -138,7 +218,7 @@ class ManagerController extends Controller
         }
 
         // Validate
-        $validStatuses = ['Hoạt động', 'Bảo trì', 'Đóng cửa'];
+        $validStatuses = ['Trống', 'Đang sử dụng', 'Đang chờ'];
 
         $validatedData = $request->validate([
             'status' => ['required', Rule::in($validStatuses)],
