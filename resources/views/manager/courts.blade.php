@@ -326,7 +326,9 @@
                                 {{-- Hành động (Form cập nhật) --}}
                                 <td>
                                     {{-- Mỗi hàng là một form riêng biệt --}}
-                                    <form action="{{ route('manager.courts.updateStatus', $court->court_id) }}" method="POST" class="d-flex align-items-center">
+                                    <form action="{{ route('manager.courts.updateStatus', [
+                                        'court' => $court->court_id
+                                    ]) }}" method="POST" class="d-flex align-items-center">
                                         @csrf {{-- Token bảo mật --}}
                                         @method('PUT') {{-- Giả lập phương thức PUT --}}
                                         

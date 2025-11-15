@@ -93,8 +93,7 @@
                                         @if(!empty($staff->permissions))
                                             @foreach($staff->permissions as $permission)
                                                 <span class="badge bg-info me-1" style="font-size: 0.75em;"> {{-- Thu nhỏ badge quyền --}}
-                                                    @if($permission == 'manage_bookings') <i class="bi bi-calendar-check me-1"></i> QL Đặt
-                                                        Sân
+                                                    @if($permission == 'manage_courts') <i class="bi bi-calendar-check me-1"></i> Quản Lý Sân
                                                     @elseif($permission == 'view_reports') <i class="bi bi-graph-up me-1"></i> Xem Tài chính
                                                         {{-- Thêm icon và tên rút gọn cho các quyền khác --}}
                                                     @else {{ ucfirst(str_replace('_', ' ', $permission)) }}
@@ -245,8 +244,8 @@
                         <h6 class="mb-2">Phân Quyền Chi Tiết (Tùy chọn)</h6>
                         <div class="form-check mb-2">
                             @php $oldPerms = old('permissions', []); @endphp
-                            <input class="form-check-input" type="checkbox" name="permissions[]" value="manage_bookings"
-                                id="perm_bookings" {{ in_array('manage_bookings', $oldPerms) ? 'checked' : '' }}>
+                            <input class="form-check-input" type="checkbox" name="permissions[]" value="manage_courts"
+                                id="perm_bookings" {{ in_array('manage_courts', $oldPerms) ? 'checked' : '' }}>
                             <label class="form-check-label" for="perm_bookings">
                                 <b>Quản lý Đặt Sân</b> (Xem lịch, xác nhận, hủy lịch)
                             </label>

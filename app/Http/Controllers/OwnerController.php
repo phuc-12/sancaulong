@@ -85,7 +85,6 @@ class OwnerController extends Controller
             'owner_address' => 'nullable|string|max:255',
             'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
 
-            // 🆕 Thêm validate cho các trường mới
             'quantity_court' => 'required|integer|min:1',
             'account_no' => 'nullable|string|max:50',
             'account_bank' => 'nullable|string|max:20',
@@ -113,7 +112,6 @@ class OwnerController extends Controller
                 'description' => $validatedData['description'],
                 'status' => 'chờ duyệt',
 
-                // 🆕 Thêm các trường mới
                 'quantity_court' => $validatedData['quantity_court'],
                 'account_no' => $validatedData['account_no'],
                 'account_bank' => $validatedData['account_bank'],

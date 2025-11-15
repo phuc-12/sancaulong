@@ -22,26 +22,26 @@ Route::get('/search', [HomeController::class, 'search'])->name('search.results')
 
 //Dat san
 Route::prefix('/')->controller(HomeController::class)
-->group(function () {
-    Route::get('/','index')->name('trang_chu');
-    Route::get('/listing-grid','listing_grid')->name('danh_sach_san');
-    Route::get('/api/load-more-san','load_more_san')->name('api.load_san');
-    Route::post('/venue', 'show')->name('chi_tiet_san');
-    Route::post('/thanh-toan', 'payments')->name('thanh.toan');
-    Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
-    Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
-    Route::post('/thanh-toan/thanh-toan-complete','payments_complete')->name('payments_complete');
-    Route::post('/contract_bookings','contract_bookings')->name('contract_bookings');
-    Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
-    Route::match(['get', 'post'],'/payment_contract', 'payment_contract')->name('payment_contract');
-    Route::post('/thanh-toan/thanh-toan-contract-complete','payments_contract_complete')->name('payments_contract_complete');
-    Route::post('/list_Invoices','list_Invoices')->name('lich_dat_san');
-    Route::post('/list_Contracts','list_Contracts')->name('lich_co_dinh');
-    Route::post('/invoice_details','invoice_details')->name('chi_tiet_hd');
-    Route::post('/cancel_invoice','cancel_invoice')->name('cancel_invoice');
-    Route::post('/contract_details','contract_details')->name('chi_tiet_ct');
-    Route::post('/cancel_contract','cancel_contract')->name('cancel_contract');
-});
+    ->group(function () {
+        Route::get('/', 'index')->name('trang_chu');
+        Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
+        Route::get('/api/load-more-san', 'load_more_san')->name('api.load_san');
+        Route::post('/venue', 'show')->name('chi_tiet_san');
+        Route::post('/thanh-toan', 'payments')->name('thanh.toan');
+        Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
+        Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
+        Route::post('/thanh-toan/thanh-toan-complete', 'payments_complete')->name('payments_complete');
+        Route::post('/contract_bookings', 'contract_bookings')->name('contract_bookings');
+        Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
+        Route::match(['get', 'post'], '/payment_contract', 'payment_contract')->name('payment_contract');
+        Route::post('/thanh-toan/thanh-toan-contract-complete', 'payments_contract_complete')->name('payments_contract_complete');
+        Route::post('/list_Invoices', 'list_Invoices')->name('lich_dat_san');
+        Route::post('/list_Contracts', 'list_Contracts')->name('lich_co_dinh');
+        Route::post('/invoice_details', 'invoice_details')->name('chi_tiet_hd');
+        Route::post('/cancel_invoice', 'cancel_invoice')->name('cancel_invoice');
+        Route::post('/contract_details', 'contract_details')->name('chi_tiet_ct');
+        Route::post('/cancel_contract', 'cancel_contract')->name('cancel_contract');
+    });
 
 Route::post('/export-invoice', [InvoiceController::class, 'exportInvoice'])->name('export_invoice');
 
@@ -169,8 +169,8 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
 
     // Quản lý sân bãi
     Route::get('/courts', [ManagerController::class, 'courts'])->name('courts');
-    Route::put('/courts/{court}/status', [ManagerController::class, 'updateCourtStatus'])
-        ->name('courts.updateStatus');
+    Route::put('/courts/{court:court_id}/status',
+        [ManagerController::class, 'updateCourtStatus'])->name('courts.updateStatus');
 
     // GET: Cung cấp dữ liệu Bookings cho Calendar (JSON)
     Route::get('/bookings/data', [ManagerController::class, 'getBookingsData'])

@@ -14,7 +14,8 @@ use App\Models\Facility;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
-
+use App\Models\Courts;
+use Illuminate\Support\Facades\Log;
 class AdminController extends Controller
 {
     // === Hiển thị thông tin ===
@@ -181,7 +182,6 @@ class AdminController extends Controller
 
     //=============================================================================================================
 //DOANH NGHIỆP
-
     // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ ===
     /**
      * Duyệt facility và tự động tạo court_prices
@@ -198,23 +198,41 @@ class AdminController extends Controller
                 return back()->withErrors(['error' => 'Cơ sở này không ở trạng thái chờ duyệt.']);
             }
 
-            // Cập nhật trạng thái facility
+            // 1. Cập nhật trạng thái facility
             $facility->status = 'đã duyệt';
             $facility->save();
 
-            // Tự động tạo các bản ghi court_prices dựa trên giá đã nhập
+            // 2. Tự động tạo bảng giá (court_prices)
             $this->createCourtPrices($facility);
+
+            // 3. ← THÊM MỚI: Tự động tạo sân con (courts)
+            $quantityCourt = $facility->quantity_court ?? 0;
+
+            if ($quantityCourt > 0) {
+                $this->autoCreateCourts($facility->facility_id, $quantityCourt);
+
+                Log::info('Courts auto-created', [
+                    'facility_id' => $facility->facility_id,
+                    'facility_name' => $facility->facility_name,
+                    'quantity' => $quantityCourt
+                ]);
+            }
 
             DB::commit();
 
-            return redirect()->route(route: 'admin.facilities.index')
-                ->with(key: 'success', value: 'Đã duyệt cơ sở thành công và tạo bảng giá!');
+            return redirect()->route('admin.facilities.index')
+                ->with('success', "Đã duyệt cơ sở '{$facility->facility_name}' và tạo {$quantityCourt} sân con thành công!");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Lỗi khi duyệt facility: ' . $e->getMessage());
 
-            return back()->withErrors(['error' => 'Có lỗi xảy ra khi duyệt cơ sở.']);
+            Log::error('Error approving facility', [
+                'facility_id' => $facilityId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['error' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
         }
     }
 
@@ -231,6 +249,48 @@ class AdminController extends Controller
             'special_price' => $facility->special_price,   // Giờ cao điểm (16:00-23:00)
             'effective_date' => $today,
         ]);
+    }
+
+    /**
+     *  Tự động tạo sân con
+     */
+    private function autoCreateCourts($facilityId, $quantity)
+    {
+        // Kiểm tra xem đã có sân nào chưa
+        $existingCount = Courts::where('facility_id', $facilityId)->count();
+
+        if ($existingCount > 0) {
+            Log::warning('Courts already exist, skipping creation', [
+                'facility_id' => $facilityId,
+                'existing_count' => $existingCount
+            ]);
+            return false;
+        }
+
+        // Tạo danh sách sân con
+        $courts = [];
+
+        for ($i = 1; $i <= $quantity; $i++) {
+            $courts[] = [
+                'court_id' => $i,
+                'facility_id' => $facilityId,
+                'court_name' => "Sân {$i}",
+                'status' => '1', // Hoạt động
+                // 'status' => 'Hoạt động',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        // Insert hàng loạt vào database
+        Courts::insert($courts);
+
+        Log::info('Courts created successfully', [
+            'facility_id' => $facilityId,
+            'courts_created' => count($courts)
+        ]);
+
+        return true;
     }
 
     /**

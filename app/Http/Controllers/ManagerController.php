@@ -48,7 +48,7 @@ class ManagerController extends Controller
         $idSan = $manager->facility_id; // Giả sử User có cột facility_id
 
         $courts = Courts::where('facility_id', $idSan)
-            ->orderBy('court_name', 'asc')
+            ->orderBy('court_id', 'asc')
             ->get();
 
         $validStatuses = ['Hoạt động', 'Bảo trì', 'Đóng cửa'];
@@ -100,8 +100,8 @@ class ManagerController extends Controller
         }
 
         return view('manager.courts', compact(
-            'courts', 
-            'validStatuses', 
+            'courts',
+            'validStatuses',
             'thongtinsan',
             'customer',
             'timeSlots',
@@ -120,24 +120,34 @@ class ManagerController extends Controller
     /**
      * Xử lý cập nhật trạng thái sân con
      */
-    public function updateCourtStatus(Request $request, Courts $court)
+    public function updateCourtStatus(Request $request, $court_id)
     {
-        // --- KIỂM TRA QUYỀN ---
-        $manager = Auth::users();
-        if (!$manager || !$manager->facility_id || $court->facility_id !== $manager->facility_id) {
+        $manager = Auth::user();
+
+        // Tìm sân
+        $court = Courts::where('court_id', $court_id)
+            ->where('facility_id', $manager->facility_id)
+            ->firstOrFail();
+
+        // Kiểm tra quyền
+        $permissions = is_array($manager->permissions) ? $manager->permissions : [];
+        $hasPermission = in_array('manage_courts', $permissions);
+
+        if (!$hasPermission) {
             abort(403, 'Bạn không có quyền cập nhật sân này.');
         }
 
-        // --- VALIDATE STATUS ---
+        // Validate
         $validStatuses = ['Hoạt động', 'Bảo trì', 'Đóng cửa'];
-        $validated = $request->validate([
+
+        $validatedData = $request->validate([
             'status' => ['required', Rule::in($validStatuses)],
         ]);
 
-        // --- CẬP NHẬT CSDL ---
-        $court->update(['status' => $validated['status']]);
+        // Cập nhật
+        $court->status = $validatedData['status'];
+        $court->save();
 
-        // --- PHẢN HỒI ---
         return redirect()->route('manager.courts')
             ->with('success', "Đã cập nhật trạng thái cho '{$court->court_name}' thành công!");
     }
@@ -148,7 +158,7 @@ class ManagerController extends Controller
     public function getBookingsData(Request $request)
     {
         // --- LẤY FACILITY ID ---
-        $manager = Auth::users();
+        $manager = Auth::user();
         if (!$manager || !$manager->facility_id) {
             return response()->json(['error' => 'Không tìm thấy cơ sở của quản lý.'], 403);
         }
@@ -210,10 +220,10 @@ class ManagerController extends Controller
             }
 
             return [
-                'id'    => $booking->booking_id,
+                'id' => $booking->booking_id,
                 'title' => ($booking->user_fullname ?? 'Khách') . ' - ' . ($booking->court_name ?? 'N/A'),
                 'start' => $start,
-                'end'   => $end,
+                'end' => $end,
                 'color' => ($booking->status === 'đã xác nhận' || $booking->status === 'đã thanh toán') ? '#28a745' : ($booking->status === 'chờ thanh toán' ? '#ffc107' : '#6c757d'),
                 'extendedProps' => ['status' => $booking->status]
             ];

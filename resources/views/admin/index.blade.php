@@ -56,65 +56,101 @@
                     Yêu cầu & Hỗ trợ
                 </a>
             </li> -->
-            <li>
+            <!-- <li>
                 <a href="#" class="nav-link">
                     <i class="bi bi-receipt-cutoff"></i>
                     Tài chính & Hóa đơn
                 </a>
-            </li>
+            </li> -->
         </ul>
         <hr>
         <ul class="nav header-navbar-rht">
-            @auth
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#" id="userDropdown"
-                        role="button" data-bs-toggle="dropdown">
+    @auth
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center text-white" 
+               href="#" 
+               id="userDropdown"
+               role="button" 
+               data-bs-toggle="dropdown" 
+               aria-expanded="false">
+                
+                <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
+                     alt="{{ auth()->user()->fullname ?? 'Avatar' }}" 
+                     class="rounded-circle me-2" 
+                     width="32" 
+                     height="32"
+                     style="object-fit: cover; border: 2px solid #fff;">
 
+                <span class="d-none d-md-inline me-1">{{ auth()->user()->fullname }}</span>
+                
+                {{-- Icon mũi tên xổ xuống --}}
+                <i class="fas fa-chevron-down ms-1" style="font-size: 0.75rem;"></i>
+            </a>
+            
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="min-width: 280px;">
+                {{-- Header với avatar lớn --}}
+                <li class="dropdown-header bg-light py-3 px-3">
+                    <div class="d-flex align-items-center">
                         <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
-                            alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="32">
+                             alt="{{ auth()->user()->fullname ?? 'Avatar' }}" 
+                             class="rounded-circle me-3" 
+                             width="50" 
+                             height="50"
+                             style="object-fit: cover; border: 3px solid #007bff;">
                         
-                        <span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li class="dropdown-header">
-                            <div class="d-flex align-items-center">
-
-                                <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
-                                    alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="40">
-                                
-                                <div>
-                                    <div class="fw-semibold">{{ auth()->user()->fullname }}</div>
-                                </div>
-                            </div>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
-                                <i class="fas fa-user me-2"></i> Hồ sơ
-                            </a>    
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="javascript:void(0)"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
-                            </a>
-                            <form id="logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
-                                @csrf
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            @else
-                <li class="nav-item">
-                    <div class="nav-link btn btn-outline-light log-register">
-                        <a href="{{ route('login') }}"><i class="feather-users"></i> Đăng Nhập</a> /
-                        <a href="{{ route('register') }}">Đăng Ký</a>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-dark mb-1">{{ auth()->user()->fullname }}</div>
+                            <small class="text-muted">{{ auth()->user()->email }}</small>
+                        </div>
                     </div>
                 </li>
-            @endauth
-        </ul>
+                
+                <li><hr class="dropdown-divider my-0"></li>
+                
+                {{-- Menu items --}}
+                <li>
+                    <a class="dropdown-item py-2 px-3 d-flex align-items-center" 
+                       href="{{ route('user.profile', ['id' => auth()->id()]) }}">
+                        <div class="icon-wrapper me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #e3f2fd; border-radius: 8px;">
+                            <i class="fas fa-user" style="color: #1976d2; font-size: 0.9rem;"></i>
+                        </div>
+                        <div>
+                            <div class="fw-medium">Hồ sơ</div>
+                            <small class="text-muted">Xem và chỉnh sửa thông tin</small>
+                        </div>
+                    </a>
+                </li>
+                
+                <li><hr class="dropdown-divider my-0"></li>
+                
+                <li>
+                    <a class="dropdown-item py-2 px-3 d-flex align-items-center text-danger" 
+                       href="javascript:void(0)"
+                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <div class="icon-wrapper me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #ffebee; border-radius: 8px;">
+                            <i class="fas fa-sign-out-alt" style="color: #d32f2f; font-size: 0.9rem;"></i>
+                        </div>
+                        <div>
+                            <div class="fw-medium">Đăng xuất</div>
+                            <small class="text-muted">Thoát khỏi tài khoản</small>
+                        </div>
+                    </a>
+                    <form id="logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
+                        @csrf
+                    </form>
+                </li>
+            </ul>
+        </li>
+    @else
+        <li class="nav-item">
+            <div class="nav-link btn btn-outline-light log-register">
+                <a href="{{ route('login') }}"><i class="feather-users"></i> Đăng Nhập</a> /
+                <a href="{{ route('register') }}">Đăng Ký</a>
+            </div>
+        </li>
+    @endauth
+</ul>
+
     </div>
 
     <main id="main-content">

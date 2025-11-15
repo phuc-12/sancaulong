@@ -27,7 +27,6 @@ class ReportController extends Controller
     }
 
     /**
-     *  SỬA LỖI HÀM INDEX
      * Hiển thị trang dashboard
      */
     public function index()
@@ -41,7 +40,7 @@ class ReportController extends Controller
             $courts = DB::table('courts')
                 ->where('facility_id', $facility_id)
                 ->where('status', '1') // Chỉ lấy sân đang hoạt động
-                ->orderBy('court_name', 'asc')
+                ->orderBy('court_id', 'asc')
                 ->get(['court_id', 'court_name']);
 
             \Log::info('Courts loaded:', ['facility_id' => $facility_id, 'count' => $courts->count()]);
@@ -49,9 +48,6 @@ class ReportController extends Controller
 
         return view('owner.report.dashboard', compact('courts', 'facility_id'));
     }
-
-    // (Hàm getCourtsForFacility đã bị xóa vì không cần nữa)
-
 
     /**
      * API trả dữ liệu KPI

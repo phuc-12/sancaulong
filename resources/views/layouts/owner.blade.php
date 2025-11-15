@@ -102,12 +102,12 @@
                     Tổng Quan
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="bi bi-calendar-check-fill"></i>
                     Quản lý Đặt Sân
                 </a>
-            </li>
+            </li> -->
             <li class="nav-item">
                 {{-- Trang "Đăng ký" --}}
                 <a href="{{ route('owner.facility') }}"
@@ -116,12 +116,12 @@
                     Cơ Sở Của Tôi
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="bi bi-bounding-box"></i>
                     Quản lý Hợp đồng
                 </a>
-            </li>
+            </li> -->
             <li class="nav-item">
                 {{-- Trang "Phân quyền" --}}
                 <a href="{{ route('owner.staff') }}"
