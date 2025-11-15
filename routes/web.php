@@ -206,10 +206,11 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
     Route::post('/confirm_payment', [InvoiceController::class, 'confirm_payment'])->name('confirm_payment');
 
     Route::get('/booking_directly', [StaffController::class, 'booking_directly'])->name('bookDirectly');
-    Route::post('/booking_directly/add-slot', [StaffController::class, 'addSlot'])->name('booking.addSlot');
-    Route::post('/booking_directly/remove-slot', [StaffController::class, 'removeSlot'])->name('booking.removeSlot');
-
-    Route::get('/invoice_history', [StaffController::class, 'invoice_history'])->name('invoiceHistory');
+    Route::post('/booking_directly/add-slot', [StaffController::class,'addSlot'])->name('booking.addSlot');
+    Route::post('/booking_directly/remove-slot', [StaffController::class,'removeSlot'])->name('booking.removeSlot');
+    Route::post('/booking_directly/add-invoice',[StaffController::class,'addInvoice'])->name('addInvoice');
+    
+    Route::get('/invoice_history',[StaffController::class,'invoice_history'])->name('invoiceHistory');
     Route::post('/search/history', [StaffController::class, 'searchHistory'])
         ->name('history.search');
 });

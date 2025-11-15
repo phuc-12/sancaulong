@@ -567,5 +567,83 @@ class StaffController extends Controller
         return response()->json(array_values($slots));
     }
     
+    public function addInvoice(Request $request)
+    {
+        $slots = json_decode($request->input('slots'), true);
+        $invoiceDetailId = $request->input('invoice_detail_id');
+        $userId = $request->input('user_id');
+        $facility_id = $request->input('facility_id');
+
+        $fullname = $request->input('fullname');
+        $phone = $request->input('phone');
+        
+        $currentUser = Users::where('phone', $phone)
+        ->where('fullname', 'like', "%$fullname%")
+        ->first();
+
+        if (!$currentUser) {
+            $newUser = Users::create([
+                'fullname' => $fullname,
+                'phone' => $phone,
+                'password' => bcrypt('123456789'), // hoặc tạo password mặc định
+                'role_id' => '5', // ví dụ
+            ]);
+            $userId = $newUser->user_id;
+        } else {
+            $userId = $currentUser->user_id;
+        }
+
+        $total = 0;
+        foreach ($slots as $slot) {
+            $total += $slot['price'];
+        }
+        $promotion_id = null;
+        $payment_method = 1;
+        $payment_status = 'Chưa thanh toán';
+        DB::table(table: 'invoice_details')->insert([
+            'invoice_detail_id' => $invoiceDetailId,
+            'sub_total' => $total,
+            'facility_id' => $facility_id,
+        ]);
+        $invoice_details = DB::table('invoice_details')
+            ->select('invoice_id')
+            ->where('invoice_detail_id', $invoiceDetailId)
+            ->first();
+
+        DB::table(table: 'invoices')->insert([
+            'invoice_id' => $invoice_details->invoice_id,
+            'customer_id' => $userId,
+            'issue_date' => now(),
+            'total_amount' => $total,
+            'promotion_id' => $promotion_id,
+            'final_amount' => $total,
+            'payment_status' => $payment_status,
+            'payment_method' => $payment_method,
+        ]);
+        if (!$slots || !is_array($slots)) {
+            return back()->with('error', 'Không có dữ liệu đặt sân!');
+        }
+
+        // dd($slots, $invoiceDetailId, $userId, $facility_id);
+        foreach ($slots as $slot) {
+            DB::table(table: 'bookings')->insert([
+                'invoice_detail_id' => $invoiceDetailId,
+                'user_id' => $userId,
+                'facility_id' => $facility_id,
+                'court_id' => $slot['court'],
+                'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
+                'time_slot_id' => $slot['time_slot_id'],
+                'unit_price' => $slot['price'],
+                'status' => 'Đã thanh toán (Online)'
+            ]);
+        }
+
+        return view('staff.redirect_post', [
+            'facility_id' => $facility_id,
+            'user_id' => $userId,
+            'success_message' => 'Thanh toán và đặt sân thành công!'
+        ]);
+
+    }
 
 }
