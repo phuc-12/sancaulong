@@ -275,8 +275,8 @@ class AdminController extends Controller
                 'court_id' => $i,
                 'facility_id' => $facilityId,
                 'court_name' => "Sân {$i}",
-                'status' => '1', // Hoạt động
-                // 'status' => 'Hoạt động',
+                // 'status' => '1',
+                'status' => 'Hoạt động', //giá trị mặc định
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
