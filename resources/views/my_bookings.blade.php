@@ -16,58 +16,6 @@
 
 		<div class="content court-bg">
 			<div class="container">
-				<!-- Sort By -->
-				{{-- <div class="row">
-					<div class="col-lg-12">
-						<div class="sortby-section court-sortby-section">
-							<div class="sorting-info">
-								<div class="row d-flex align-items-center">
-									<div class="col-xl-7 col-lg-7 col-sm-12 col-12">
-										<div class="coach-court-list">
-											<ul class="nav">
-												<li>
-                                                    <form method="POST" action="{{ route('lich_dat_san') }}">
-                                                        <input type="hidden" name="user_id" value="{{ $user_id }}">
-                                                        <button type="submit">Hóa đơn đặt</button>
-                                                    </form>
-                                                </li>
-												<li>
-                                                    <form method="POST" action="{{ route('lich_co_dinh') }}">
-                                                        <input type="hidden" name="user_id" value="{{ $user_id }}">
-                                                        <button type="submit">Hợp đồng dài hạn</button>
-                                                    </form>
-                                                </li>
-											</ul>
-										</div>
-									</div>
-									<div class="col-xl-5 col-lg-5 col-sm-12 col-12">
-										<div class="sortby-filter-group court-sortby">
-											<div class="sortbyset week-bg">
-												<div class="sorting-select">
-													<select class="form-control select">
-														<option>This Week</option>
-														<option>One Day</option>
-													</select>
-												</div>
-											</div>
-											<div class="sortbyset">
-												<span class="sortbytitle">Sort By</span>
-												<div class="sorting-select">
-													<select class="form-control select">
-														<option>Relevance</option>
-														<option>Price</option>
-													</select>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								
-							</div>
-						</div>
-					</div>
-				</div> --}}
-				<!-- Sort By -->
 				<div class="row">
 					<div class="col-sm-12">
 						<div class="court-tab-content">
@@ -101,6 +49,8 @@
                                                         <th>Khách hàng</th>
                                                         <th>Ngày đặt</th>
                                                         <th>Tổng tiền</th>
+														<th>Ngày áp dụng</th>
+														<th>Sử dụng</th>
 														<th>Tình trạng</th>
                                                     </tr>
                                                 </thead>
@@ -113,6 +63,25 @@
                                                             <td>{{ $invoice->fullname }}</td>
                                                             <td>{{ $invoice->issue_date }}</td>
                                                             <td>{{ $invoice->final_amount }}</td>
+															<td>
+																@php
+																	$firstBooking = $mybooking_details[$invoice->invoice_detail_id]->first() ?? null;
+																	$bookingDate = $firstBooking->booking_date ?? null;
+																@endphp
+																{{ $bookingDate }}
+															</td>
+															<td>
+																@php
+																	$firstBooking = $mybooking_details[$invoice->invoice_detail_id]->first() ?? null;
+																	$bookingDate = $firstBooking->booking_date ?? null;
+																	$isExpired = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->lt(\Carbon\Carbon::today()) : false;
+																@endphp
+																@if ($isExpired)
+																	<p class="text-warning pt-3">Đã quá hạn</p>
+																@else
+																	<p class="text-primary pt-3">Chưa sử dụng</p>
+																@endif
+															</td>
                                                             <td>
                                                                 <form action="{{ route('chi_tiet_hd') }}" method="POST">
 																@csrf
