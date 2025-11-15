@@ -202,7 +202,7 @@
             height: 500px !important;
         }
 
-        
+
         .chart-title {
             font-size: 1.25rem;
             font-weight: 600;
@@ -224,6 +224,22 @@
             50% {
                 opacity: 0.5;
             }
+        }
+
+        #courtFilter+button {
+            border-left: 0;
+        }
+
+        #courtFilter+button:hover {
+            background-color: #f8f9fa;
+        }
+
+        #courtFilter+button i {
+            transition: transform 0.3s ease;
+        }
+
+        #courtFilter+button:active i {
+            transform: rotate(180deg);
         }
 
         .loading {
@@ -268,17 +284,22 @@
                 </div>
 
                 <div class="col-auto">
-                    <select class="form-select" id="courtFilter">
-                        <option value="all">Tất cả sân con</option>
-
-                        @if(isset($courts) && $courts->count() > 0)
-                            @foreach($courts as $court)
-                                <option value="{{ $court->court_id }}">{{ $court->court_name }}</option>
-                            @endforeach
-                        @else
-                            <option disabled>Không có sân con nào</option>
-                        @endif
-                    </select>
+                    <div class="input-group" style="min-width: 200px;">
+                        <select class="form-select" id="courtFilter">
+                            <option value="all">Tất cả sân con</option>
+                            @if(isset($courts) && $courts->count() > 0)
+                                @foreach($courts as $court)
+                                    <option value="{{ $court->court_id }}">{{ $court->court_name }}</option>
+                                @endforeach
+                            @else
+                                <option disabled>Không có sân con nào</option>
+                            @endif
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" onclick="loadCourts()"
+                            title="Làm mới danh sách sân">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <input type="hidden" id="ownerFacilityId" value="{{ $facility_id ?? '' }}">
@@ -395,6 +416,7 @@
         const topCustomersUrl = "{{ route('owner.report.topCustomers') }}";
         const exportExcelUrl = "{{ route('owner.report.exportExcel') }}";
         const exportPdfUrl = "{{ route('owner.report.exportPdf') }}";
+        const getCourtsUrl = "{{ route('owner.getCourts') }}";
 
         let revenueChartInstance, hourlyChartInstance, courtPieInstance, courtsChartInstance;
 
@@ -440,6 +462,7 @@
             return params;
         }
 
+        //Các thẻ KPI
         async function loadKpis() {
             document.querySelectorAll('.kpi-value').forEach(el => el.classList.add('loading'));
             try {
@@ -462,6 +485,65 @@
             } catch (err) { console.error("Lỗi tải KPI:", err); }
         }
 
+        async function loadCourts() {
+            const select = document.getElementById('courtFilter');
+            if (!select) {
+                console.error('Không tìm thấy dropdown courtFilter');
+                return;
+            }
+
+            const currentValue = select.value;
+            console.log('🔄 Loading courts... Current value:', currentValue);
+
+            try {
+                const response = await fetch(getCourtsUrl);
+                console.log('📡 Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('📊 Courts data:', data);
+
+                if (data.success) {
+                    // Xóa tất cả options hiện tại
+                    select.innerHTML = '<option value="all">Tất cả sân con</option>';
+
+                    if (data.courts && data.courts.length > 0) {
+                        // Thêm từng sân vào dropdown
+                        data.courts.forEach(court => {
+                            const option = document.createElement('option');
+                            option.value = court.court_id;
+                            option.textContent = court.court_name;
+
+                            // Giữ nguyên lựa chọn trước đó
+                            if (court.court_id == currentValue) {
+                                option.selected = true;
+                            }
+
+                            select.appendChild(option);
+                        });
+
+                        console.log(`Đã load ${data.courts.length} sân con`);
+                    } else {
+                        const option = document.createElement('option');
+                        option.disabled = true;
+                        option.textContent = 'Không có sân con nào';
+                        select.appendChild(option);
+                        console.warn('Không có sân con nào');
+                    }
+                } else {
+                    console.error('API trả về success=false:', data);
+                }
+            } catch (error) {
+                console.error('Lỗi load courts:', error);
+                alert('Không thể tải danh sách sân. Vui lòng thử lại.');
+            }
+        }
+
+
+        //Các biểu đồ
         async function loadRevenueChart() {
             try {
                 const res = await fetch(`${revenueChartUrl}?${getQueryParams()}`);
@@ -639,11 +721,11 @@
 
                 data.forEach((c, i) => {
                     tbody.innerHTML += `
-                                                    <tr>
-                                                        <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
-                                                        <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
-                                                        <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
-                                                    </tr>`;
+                                                                        <tr>
+                                                                            <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
+                                                                            <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
+                                                                            <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
+                                                                        </tr>`;
                 });
             } catch (err) { console.error("Lỗi tải Top Khách hàng:", err); tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Lỗi khi tải dữ liệu.</td></tr>'; }
         }
@@ -672,6 +754,19 @@
         document.getElementById('exportExcel').addEventListener('click', () => window.location.href = `${exportExcelUrl}?${getQueryParams()}`);
         document.getElementById('exportPdf').addEventListener('click', () => window.location.href = `${exportPdfUrl}?${getQueryParams()}`);
 
-        document.addEventListener('DOMContentLoaded', loadAllData);
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Page loaded');
+
+            // Load danh sách sân trước
+            loadCourts();
+
+            // Sau đó load data sau 500ms
+            setTimeout(loadAllData, 500);
+        });
+
+        setInterval(function () {
+            console.log('Auto refresh courts');
+            loadCourts();
+        }, 30000);
     </script>
 @endpush
