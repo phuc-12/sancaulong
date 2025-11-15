@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.contract')
 
 @section('contract_content')
 <style>
@@ -274,69 +274,11 @@
     transition: 0.2s ease;
 }
     </style>
-<div class="venue-info white-bg py-4">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1>{{ $thongtinsan->facility_name }} 
-                    <span><i class="fas fa-check-double text-success ms-2"></i></span>
-                </h1>
-                <ul class="d-flex mt-2">
-                    <li><i class="feather-map-pin"></i>{{ $thongtinsan->address }}</li>
-                    <li><i class="feather-phone-call"></i>{{ $thongtinsan->phone }}</li>
-                    <li><i class="feather-mail"></i>{{ $thongtinsan->Users->email }}</li>
-                </ul>
-            </div>
-
-            <div class="col-lg-6 text-end">
-                <ul class="social-options d-flex justify-content-end">
-                    <li><a href="#"><i class="feather-share-2"></i> Chia sẻ</a></li>
-                    <li><a href="#" class="favour-adds"><i class="feather-star"></i> Lưu yêu thích</a></li>
-                    <li class="d-flex align-items-center">
-                        <span class="badge bg-success me-2">5.0</span>
-                        <div>
-                            <div class="rating text-warning">
-                                <i class="fas fa-star filled"></i>
-                                <i class="fas fa-star filled"></i>
-                                <i class="fas fa-star filled"></i>
-                                <i class="fas fa-star filled"></i>
-                                <i class="fas fa-star filled"></i>
-                            </div>
-                            <a href="#" class="text-muted">15 đánh giá</a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        
-        <hr>
-
-        <div class="row align-items-center mt-3">
-            <div class="col-md-6">
-                <ul class="details d-flex">
-                    <li>
-                        <img src="{{ asset('img/icons/venue-type.svg') }}" alt="" class="me-2" width="35" style="background-color: green; border-radius: 100px;">
-                        <div>
-                            <p style="margin-bottom: 0;">Loại sân</p>
-                            <h6 class="mb-0">Sân trong nhà</h6>
-                        </div>
-                    </li>
-                    <li>
-                        <img src="{{ asset('img/profiles/avatar-01.jpg') }}" alt="" class="rounded-circle me-2" width="35">
-                        <div>
-                            <p style="margin-bottom: 0;">Được đăng bởi</p>
-                            <h6 class="mb-0">Admin</h6>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <div class="col-md-6 text-end">
-                <p class="d-inline-block me-2 mb-0">Giá từ:</p>
-                <h3 class="primary-text d-inline-block">{{ $thongtinsan->courtPrice->default_price }}<span>/giờ</span></h3>
-            </div>
-        </div>
-    </div>
-</div>
+<button 
+    onclick="history.back()" 
+    style="margin-top: 85px; width: 60px; height: 60px; border: none; background: none; cursor: pointer;">
+    <i class="fas fa-arrow-circle-left" style="font-size: 60px; color: #333;"></i>
+</button>
 <div class="container">
     <form id="bookingForm" method="POST" action="{{ route('contracts.preview') }}">
     @csrf
@@ -441,6 +383,8 @@
             <input type="hidden" name="special_price" id="special_price" value="{{ $thongtinsan->courtPrice->special_price  }}">
             <input type="hidden" name="facility_id" id="facility_id" value="{{ $thongtinsan->facility_id }}">
             <input type="hidden" name="user_id" id="user_id" value="{{ $customer->user_id }}">
+            <input type="hidden" name="fullname" value="{{ $fullname }}">
+            <input type="hidden" name="phone" value="{{ $phone }}">
             <button type="submit" class="btn btn-warning px-5 py-2">XÁC NHẬN VÀ THANH TOÁN</button>
         </div>
     </form>

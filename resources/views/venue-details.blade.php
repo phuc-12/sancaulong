@@ -435,21 +435,21 @@
                                         </div>
                                         <div class="mb-10">
                                             <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email"
+                                            <input type="email" class="form-control" id="email" name="email" required
                                                 value="{{ $customer->email ?? '' }}">
                                         </div>
                                         <div class="mb-10">
                                             <label for="phonenumber" class="form-label">Số điện thoại</label>
-                                            <input type="text" class="form-control" id="phonenumber" name="phonenumber"
+                                            <input type="text" class="form-control" id="phonenumber" name="phonenumber" required
                                                 value="{{ $customer->phone ?? '' }}">
                                         </div>
                                         <div class="mb-10">
-                                            <label for="date_start" class="form-label">Ngày bắt đầu</label>
-                                            <input type="date" class="form-control" id="date_start" name="date_start">
+                                            <label for="date_start" class="form-label">Ngày bắt đầu (Cách ngày hiện tại 1 tuần)</label>
+                                            <input type="date" class="form-control" id="date_start" name="date_start" required>
                                         </div>
                                         <div class="mb-10">
-                                            <label for="date_end" class="form-label">Ngày kết thúc</label>
-                                            <input type="date" class="form-control" id="date_end" name="date_end">
+                                            <label for="date_end" class="form-label">Ngày kết thúc (Chọn từ 2 tuần trở lên)</label>
+                                            <input type="date" class="form-control" id="date_end" name="date_end" required>
                                         </div>
                                         <div class="form-check d-flex justify-content-start align-items-center policy">
                                             <input class="form-check-input" type="checkbox" value="1" id="policy" name="policy" checked>
@@ -467,6 +467,26 @@
                                             </button>
                                         </div>
                                     </form>
+                                    <script>
+    // Lấy các input
+    const startInput = document.getElementById('date_start');
+    const endInput = document.getElementById('date_end');
+
+    // Ngày hiện tại + 1 tuần
+    const today = new Date();
+    const minStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 8);
+    startInput.min = minStart.toISOString().split('T')[0]; // định dạng YYYY-MM-DD
+
+    // Khi thay đổi ngày bắt đầu
+    startInput.addEventListener('change', () => {
+        const startDate = new Date(startInput.value);
+        if (startDate) {
+            // Ngày kết thúc tối thiểu = ngày bắt đầu + 2 tuần
+            const minEnd = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 16);
+            endInput.min = minEnd.toISOString().split('T')[0];
+        }
+    });
+</script>
                                 </div>
                             </div>
                         </div>
