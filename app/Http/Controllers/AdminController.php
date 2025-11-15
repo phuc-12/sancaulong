@@ -184,7 +184,7 @@ class AdminController extends Controller
 //DOANH NGHIỆP
     // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ ===
     /**
-     * Duyệt facility và tự động tạo court_prices
+     * Duyệt facility
      */
     public function approve(Request $request, $facilityId)
     {
@@ -205,23 +205,28 @@ class AdminController extends Controller
             // 2. Tự động tạo bảng giá (court_prices)
             $this->createCourtPrices($facility);
 
-            // 3. ← THÊM MỚI: Tự động tạo sân con (courts)
+            // 3. Tự động tạo/cập nhật sân con (courts)
             $quantityCourt = $facility->quantity_court ?? 0;
+            $successMessage = "Đã duyệt cơ sở '{$facility->facility_name}' thành công!";
 
             if ($quantityCourt > 0) {
-                $this->autoCreateCourts($facility->facility_id, $quantityCourt);
+                $courtResult = $this->autoCreateCourts($facility->facility_id, $quantityCourt);
 
-                Log::info('Courts auto-created', [
+                Log::info('Courts processed successfully', [
                     'facility_id' => $facility->facility_id,
                     'facility_name' => $facility->facility_name,
-                    'quantity' => $quantityCourt
+                    'requested_quantity' => $quantityCourt,
+                    'action' => $courtResult['action'],
+                    'courts_affected' => $courtResult['courts_affected']
                 ]);
+
+                $successMessage .= ' ' . $courtResult['message'];
             }
 
             DB::commit();
 
             return redirect()->route('admin.facilities.index')
-                ->with('success', "Đã duyệt cơ sở '{$facility->facility_name}' và tạo {$quantityCourt} sân con thành công!");
+                ->with('success', $successMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -237,6 +242,121 @@ class AdminController extends Controller
     }
 
     /**
+     * Tự động tạo hoặc xóa sân con dựa trên số lượng yêu cầu
+     */
+    private function autoCreateCourts($facilityId, $quantity)
+    {
+        $existingCount = Courts::where('facility_id', $facilityId)->count();
+
+        // Trường hợp 1: Tạo thêm sân
+        if ($existingCount < $quantity) {
+            $courts = [];
+            $courtsToAdd = $quantity - $existingCount;
+
+            for ($i = $existingCount + 1; $i <= $quantity; $i++) {
+                $courts[] = [
+                    'court_id' => $i,
+                    'facility_id' => $facilityId,
+                    'court_name' => "Sân {$i}",
+                    'status' => 'Hoạt động',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            Courts::insert($courts);
+
+            Log::info('Additional courts created', [
+                'facility_id' => $facilityId,
+                'existing_count' => $existingCount,
+                'courts_added' => count($courts),
+                'new_total' => $quantity
+            ]);
+
+            return [
+                'action' => 'added',
+                'courts_affected' => count($courts),
+                'message' => "Đã tạo thêm {$courtsToAdd} sân mới (Sân " . ($existingCount + 1) . " đến Sân {$quantity})."
+            ];
+        }
+
+        // Trường hợp 2: Xóa bớt sân
+        if ($existingCount > $quantity) {
+            $courtsToRemove = Courts::where('facility_id', $facilityId)
+                ->where('court_id', '>', $quantity)
+                ->get();
+
+            $hasActiveBookings = false;
+            $bookingsInfo = [];
+
+            foreach ($courtsToRemove as $court) {
+                $bookingCount = DB::table('bookings')
+                    ->where('facility_id', $facilityId)
+                    ->where('court_id', $court->court_id)
+                    ->whereIn('status', ['confirmed', 'pending'])
+                    ->where('booking_date', '>=', now()->toDateString())
+                    ->count();
+
+                if ($bookingCount > 0) {
+                    $hasActiveBookings = true;
+                    $bookingsInfo[] = [
+                        'court_id' => $court->court_id,
+                        'court_name' => $court->court_name,
+                        'booking_count' => $bookingCount
+                    ];
+                }
+            }
+
+            if ($hasActiveBookings) {
+                $courtNames = implode(', ', array_column($bookingsInfo, 'court_name'));
+
+                Log::warning('Cannot remove courts with active bookings', [
+                    'facility_id' => $facilityId,
+                    'current_count' => $existingCount,
+                    'requested_quantity' => $quantity,
+                    'courts_with_bookings' => $bookingsInfo
+                ]);
+
+                throw new \Exception(
+                    "Không thể giảm số lượng sân từ {$existingCount} xuống {$quantity} vì một số sân đang có lịch đặt hoạt động. " .
+                    "Các sân có lịch đặt: {$courtNames}. " .
+                    "Vui lòng hủy các lịch đặt này trước khi giảm số lượng sân."
+                );
+            }
+
+            $courtsRemoved = $existingCount - $quantity;
+
+            Courts::where('facility_id', $facilityId)
+                ->where('court_id', '>', $quantity)
+                ->delete();
+
+            Log::info('Excess courts removed', [
+                'facility_id' => $facilityId,
+                'courts_removed' => $courtsRemoved,
+                'old_total' => $existingCount,
+                'new_total' => $quantity
+            ]);
+
+            return [
+                'action' => 'removed',
+                'courts_affected' => $courtsRemoved,
+                'message' => "Đã xóa {$courtsRemoved} sân dư thừa (từ Sân " . ($quantity + 1) . " đến Sân {$existingCount})."
+            ];
+        }
+
+        // Trường hợp 3: Không thay đổi
+        Log::info('Courts quantity unchanged', [
+            'facility_id' => $facilityId,
+            'quantity' => $quantity
+        ]);
+
+        return [
+            'action' => 'unchanged',
+            'courts_affected' => 0,
+            'message' => "Số lượng sân không thay đổi ({$quantity} sân)."
+        ];
+    }
+    /**
      * Tạo các bản ghi court_prices từ thông tin giá của facility
      */
     private function createCourtPrices(Facilities $facility)
@@ -251,47 +371,6 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     *  Tự động tạo sân con
-     */
-    private function autoCreateCourts($facilityId, $quantity)
-    {
-        // Kiểm tra xem đã có sân nào chưa
-        $existingCount = Courts::where('facility_id', $facilityId)->count();
-
-        if ($existingCount > 0) {
-            Log::warning('Courts already exist, skipping creation', [
-                'facility_id' => $facilityId,
-                'existing_count' => $existingCount
-            ]);
-            return false;
-        }
-
-        // Tạo danh sách sân con
-        $courts = [];
-
-        for ($i = 1; $i <= $quantity; $i++) {
-            $courts[] = [
-                'court_id' => $i,
-                'facility_id' => $facilityId,
-                'court_name' => "Sân {$i}",
-                // 'status' => '1',
-                'status' => 'Hoạt động', //giá trị mặc định
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-
-        // Insert hàng loạt vào database
-        Courts::insert($courts);
-
-        Log::info('Courts created successfully', [
-            'facility_id' => $facilityId,
-            'courts_created' => count($courts)
-        ]);
-
-        return true;
-    }
 
     /**
      * Từ chối facility

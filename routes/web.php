@@ -111,49 +111,40 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () {
     // Trang Tổng Quan
     Route::get('/', [OwnerController::class, 'index'])->name('index');
+
     // Trang Quản lý Cơ sở
     Route::get('/facility', [OwnerController::class, 'facility'])->name('facility');
     Route::post('/facility', [OwnerController::class, 'storeFacility'])->name('facility.store');
+
     // Trang Quản lý Nhân viên
     Route::get('/staff', [OwnerController::class, 'staff'])->name('staff');
-
     // POST: Lưu nhân viên mới
     Route::post('/staff', [OwnerController::class, 'storeStaff'])->name('staff.store');
-
-    // GET: Lấy dữ liệu nhân viên để sửa (cho AJAX hoặc form riêng)
-    // Route::get('/staff/{staff}/edit', [OwnerController::class, 'editStaff'])->name('staff.edit'); 
-
     // PUT/PATCH: Cập nhật thông tin nhân viên
     Route::put('/staff/{staff}', [OwnerController::class, 'updateStaff'])->name('staff.update');
-
     // DELETE: Xóa nhân viên
     Route::delete('/staff/{staff}', [OwnerController::class, 'destroyStaff'])->name('staff.destroy');
 
     //Báo cáo thống kê
     // Trang dashboard báo cáo
     Route::get('/report', [ReportController::class, 'index'])->name('report');
-
+    Route::get('/courts', [OwnerController::class, 'getCourts'])->name('getCourts');
+    
     // API trả dữ liệu KPI (dùng AJAX)
     Route::get('/report/kpi-data', [ReportController::class, 'kpiData'])->name('report.kpiData');
-
     // API biểu đồ doanh thu theo thời gian (Line Chart)
     Route::get('/report/revenue-chart', [ReportController::class, 'revenueChart'])->name('report.revenueChart');
-
     // API biểu đồ đặt sân theo giờ (Bar Chart)
     Route::get('/report/bookings-by-hour', [ReportController::class, 'bookingsByHour'])->name('report.bookingsByHour');
-
     // API biểu đồ doanh thu theo sân con (Pie Chart)
     Route::get('/report/revenue-by-court', [ReportController::class, 'revenueByCourt'])->name('report.revenueByCourt');
-
     // API so sánh hiệu suất các sân
     Route::get('/report/courts-comparison', [ReportController::class, 'courtsComparison'])->name('report.courtsComparison');
-
     // API top khách hàng
     Route::get('/report/top-customers', [ReportController::class, 'topCustomers'])->name('report.topCustomers');
 
     // Xuất báo cáo Excel
     Route::get('report/bookings/export', [ReportController::class, 'exportExcel'])->name('report.exportExcel');
-
     // Xuất báo cáo PDF
     Route::get('/report/export-pdf', [ReportController::class, 'exportPdf'])->name('report.exportPdf');
 });
@@ -169,8 +160,10 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
 
     // Quản lý sân bãi
     Route::get('/courts', [ManagerController::class, 'courts'])->name('courts');
-    Route::put('/courts/{court:court_id}/status',
-        [ManagerController::class, 'updateCourtStatus'])->name('courts.updateStatus');
+    Route::put(
+        '/courts/{court:court_id}/status',
+        [ManagerController::class, 'updateCourtStatus']
+    )->name('courts.updateStatus');
 
     // GET: Cung cấp dữ liệu Bookings cho Calendar (JSON)
     Route::get('/bookings/data', [ManagerController::class, 'getBookingsData'])
@@ -206,11 +199,11 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
     Route::post('/confirm_payment', [InvoiceController::class, 'confirm_payment'])->name('confirm_payment');
 
     Route::get('/booking_directly', [StaffController::class, 'booking_directly'])->name('bookDirectly');
-    Route::post('/booking_directly/add-slot', [StaffController::class,'addSlot'])->name('booking.addSlot');
-    Route::post('/booking_directly/remove-slot', [StaffController::class,'removeSlot'])->name('booking.removeSlot');
-    Route::post('/booking_directly/add-invoice',[StaffController::class,'addInvoice'])->name('addInvoice');
-    
-    Route::get('/invoice_history',[StaffController::class,'invoice_history'])->name('invoiceHistory');
+    Route::post('/booking_directly/add-slot', [StaffController::class, 'addSlot'])->name('booking.addSlot');
+    Route::post('/booking_directly/remove-slot', [StaffController::class, 'removeSlot'])->name('booking.removeSlot');
+    Route::post('/booking_directly/add-invoice', [StaffController::class, 'addInvoice'])->name('addInvoice');
+
+    Route::get('/invoice_history', [StaffController::class, 'invoice_history'])->name('invoiceHistory');
     Route::post('/search/history', [StaffController::class, 'searchHistory'])
         ->name('history.search');
 });

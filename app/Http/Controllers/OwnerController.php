@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 // --- SỬA LẠI USE STATEMENTS ---
 use App\Models\Bookings;
+use App\Models\Courts;
 use App\Models\Invoice;
 use App\Models\Users;
 use Illuminate\Http\Request;
@@ -355,10 +356,50 @@ class OwnerController extends Controller
         // --- PHẢN HỒI ---
         return redirect()->route('owner.staff')->with('success', 'Đã xóa nhân viên/quản lý thành công!');
     }
-
+    //=============================================================================================================
     /**
-     * Hiển thị trang Báo cáo Doanh thu & Sân
+     * API: Lấy danh sách sân con
      */
+    public function getCourts(Request $request)
+    {
+        try {
+            $owner = Auth::user();
+
+            if (!$owner || !$owner->facility_id) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Unauthorized'
+                ], 403);
+            }
+
+            $courts = Courts::where('facility_id', $owner->facility_id)
+                ->orderBy('court_id', 'asc')
+                ->get(['court_id', 'court_name', 'status']);
+
+            Log::info('Courts loaded for owner', [
+                'facility_id' => $owner->facility_id,
+                'court_count' => $courts->count()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'courts' => $courts,
+                'total' => $courts->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading courts', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Server error'
+            ], 500);
+        }
+    }    /**
+         * Hiển thị trang Báo cáo Doanh thu & Sân
+         */
     public function reports()
     {
         // Lấy facility_id của owner để truyền sang view (dùng cho JS sau này)
@@ -368,7 +409,7 @@ class OwnerController extends Controller
         }
         $facilityId = $owner->facility_id;
 
-        // Bạn có thể lấy danh sách các sân con để điền vào bộ lọc dropdown
+        // Lấy danh sách các sân con để điền vào bộ lọc dropdown
         $courts = \App\Models\Courts::where('facility_id', $facilityId)->get(['court_id', 'court_name']);
 
         return view('owner.reports', compact('facilityId', 'courts'));

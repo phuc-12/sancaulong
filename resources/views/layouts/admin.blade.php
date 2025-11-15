@@ -57,12 +57,12 @@
                     Yêu cầu & Hỗ trợ
                 </a>
             </li> -->
-            <li>
+            <!-- <li>
                 <a href="#" class="nav-link">
                     <i class="bi bi-receipt-cutoff"></i>
                     Tài chính & Hóa đơn
                 </a>
-            </li>
+            </li> -->
         </ul>
         <hr>
         <ul class="nav header-navbar-rht">
