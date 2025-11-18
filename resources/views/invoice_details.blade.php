@@ -118,7 +118,7 @@
                                     </div>
 									<p style="text-align: center">Khi hủy, vui lòng liên hệ chủ sân qua số điện thoại hoặc email để được hoàn tiền.</p>
 								</form>
-								<form action="{{ route('export_invoice') }}" method="POST">
+								{{-- <form action="{{ route('export_invoice') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="slots" value="{{ json_encode($slots) }}">
                                     <input type="hidden" name="total" value="{{ $total }}">
@@ -128,7 +128,7 @@
 									<input type="hidden" name="user_id" value="{{ $customer->user_id }}">
                                     <input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}"> <!-- Giữ lại để lấy dữ liệu khác nếu cần -->
                                     <button type="submit" class="btn btn-primary btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">XUẤT HÓA ĐƠN</button>
-                                </form>
+                                </form> --}}
 							</aside>
 						</div>
 					</div>

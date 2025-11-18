@@ -66,7 +66,7 @@
 					<ul class="nav header-navbar-rht">
 						@auth
 							<li class="nav-item">
-								<form method="POST" action="{{ route('lich_dat_san') }}">
+								<form method="GET" action="{{ route('lich_dat_san') }}">
 									@csrf
 									<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
 									<button type="submit" class="nav-link btn btn-outline-light btn-sm">
@@ -76,7 +76,7 @@
 
 							</li>
 							<li class="nav-item">
-								<form method="POST" action="{{ route('lich_co_dinh') }}">
+								<form method="GET" action="{{ route('lich_co_dinh') }}">
 									@csrf
 									<input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
 									<button type="submit" class="nav-link btn btn-outline-light btn-sm">

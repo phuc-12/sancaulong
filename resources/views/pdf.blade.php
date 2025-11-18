@@ -53,7 +53,7 @@
         }
 
         .qr-code img {
-            width: 200px;
+            width: 160px;
         }
 
         .qr-code p { margin: 4px 0; }
@@ -108,15 +108,16 @@
         </thead>
         <tbody>
             @php
-                // Đếm số dòng cho từng ngày
+                // Tính số dòng cho mỗi ngày
                 $dateCounts = [];
                 foreach ($slots as $slot) {
-                    $dateCounts[$slot['booking_date']] = ($dateCounts[$slot['booking_date']] ?? 0) + 1;
+                    $dateCounts[$slot['date']] = ($dateCounts[$slot['date']] ?? 0) + 1;
                 }
 
-                // Danh sách ngày đã in rowspan
+                // Biến để theo dõi ngày đã render rowspan
                 $printedDates = [];
             @endphp
+
             @foreach ($slots as $slot)
                 @php
                     // Tính số phút cho từng slot
@@ -129,18 +130,18 @@
                 @endphp
 
                 <tr>
-                    <td>{{ $slot['court_id'] }}</td>
-                    @if (!in_array($slot['booking_date'], $printedDates))
-                        <td rowspan="{{ $dateCounts[$slot['booking_date']] }}" 
+                    <td>{{ $slot['court'] }}</td>
+                    @if (!in_array($slot['date'], $printedDates))
+                        <td rowspan="{{ $dateCounts[$slot['date']] }}" 
                             style="vertical-align: middle; text-align: center;">
-                            {{ $slot['booking_date'] }}
+                            {{ $slot['date'] }}
                         </td>
-                        @php $printedDates[] = $slot['booking_date']; @endphp
+                        @php $printedDates[] = $slot['date']; @endphp
                     @endif
                     <td>{{ $slot['start_time'] }}</td>
                     <td>{{ $slot['end_time'] }}</td>
                     <td>{{ $duration }}</td>
-                    <td>{{ number_format($slot['unit_price']) }} đ</td>
+                    <td>{{ number_format($slot['price']) }} đ</td>
                 </tr>
             @endforeach
         </tbody>
@@ -150,10 +151,10 @@
     <p class="total">Tổng tiền: {{ number_format($total) }} đ</p>
 
     <!-- ============ QR THANH TOÁN ============ -->
-    <div class="qr-code" style="text-align:center; margin-top: 12px;">
+    {{-- <div class="qr-code" style="text-align:center; margin-top: 12px;">
         <p><strong>Quét mã QR để thanh toán</strong></p>
         <img src="{{ $qrUrl }}">
-    </div>
+    </div> --}}
 
 </div>
 

@@ -132,7 +132,7 @@
 								<p><strong>Chủ tài khoản:</strong> {{ $userInfo['account_name'] }}</p>
 								<p><strong>Số tài khoản:</strong> {{ $userInfo['account_no'] }}</p>
 
-								<form id="paymentCompleteForm" action="{{ route('payments_contract_complete') }}" method="POST">
+								<form id="paymentCompleteForm" action="{{ route('payments_contract_complete') }}" method="POST" align="center">
 									@csrf
 									<input type="hidden" name="start_date" id="start_date" value="{{ $summary['start_date'] }} ">
 									<input type="hidden" name="end_date" id="end_date" value="{{ $summary['end_date'] }}">
@@ -151,8 +151,9 @@
 										data-bank="{{ $userInfo['account_bank'] }}"
 										data-account="{{ $userInfo['account_name'] }}"
 										data-name="{{ $userInfo['account_name'] }}"
+										style="width: 300px;"
 										>
-											Hiển thị mã QR
+											THANH TOÁN
 										</button>
 
 										<div class="mt-4" align="center">
@@ -229,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (value >= total) {
                 clearInterval(intervalId);
                 isPaid = true;
-                alert("Thanh toán thành công! "+value);
+                alert("Thanh toán thành công! ");
                 document.getElementById('paymentCompleteForm').submit();
             }
         } catch (err) {

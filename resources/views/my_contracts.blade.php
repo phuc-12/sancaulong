@@ -1,160 +1,105 @@
 @extends('layouts.main')
 
 @section('my_contracts_content')
+<section class="breadcrumb breadcrumb-list mb-0">
+    <span class="primary-right-round"></span>
+    <div class="container">
+        <h1 class="text-white">Lịch Sử Giao Dịch</h1>
+        <ul>
+            <li><a href="/">Trang Chủ</a></li>
+            <li>Lịch Sử Giao Dịch</li>
+        </ul>
+    </div>
+</section>
 
-		<!-- Breadcrumb -->
-		<section class="breadcrumb breadcrumb-list mb-0">
-			<span class="primary-right-round"></span>
-			<div class="container">
-				<h1 class="text-white">Lịch Sử Giao Dịch</h1>
-				<ul>
-					<li><a href="index.html">Trang Chủ</a></li>
-					<li >Lịch Sử Giao Dịch</li>
-				</ul>
-			</div>
-		</section>
+<div class="content court-bg py-4">
+    <div class="container">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-success text-white py-3">
+                <h4 class="mb-0">Giao dịch thuê cố định của bạn</h4>
+                <p class="mb-0 text-light">Theo dõi và quản lý các sân đã hoàn thành của bạn</p>
+            </div>
 
-		<div class="content court-bg">
-			<div class="container">
-                <!-- Sort By -->
-				{{-- <div class="row">
-					<div class="col-lg-12">
-						<div class="sortby-section court-sortby-section">
-							<div class="sorting-info">
-								<div class="row d-flex align-items-center">
-									<div class="col-xl-7 col-lg-7 col-sm-12 col-12">
-										<div class="coach-court-list">
-											<ul class="nav">
-												<li>
-                                                    <form method="POST" action="{{ route('lich_dat_san') }}">
-                                                    @csrf
-                                                        <input type="hidden" name="user_id" value="{{ $user_id }}">
-                                                        <button type="submit" class="active">Hóa đơn đặt</button>
-                                                    </form>
-                                                </li>
-												<li>
-                                                    <form method="POST" action="{{ route('lich_co_dinh') }}">
-                                                    @csrf
-                                                        <input type="hidden" name="user_id" value="{{ $user_id }}">
-                                                        <button type="submit">Hợp đồng dài hạn</button>
-                                                    </form>
-                                                </li>
-											</ul>
-										</div>
-									</div>
-									<div class="col-xl-5 col-lg-5 col-sm-12 col-12">
-										<div class="sortby-filter-group court-sortby">
-											<div class="sortbyset week-bg">
-												<div class="sorting-select">
-													<select class="form-control select">
-														<option>This Week</option>
-														<option>One Day</option>
-													</select>
-												</div>
-											</div>
-											<div class="sortbyset">
-												<span class="sortbytitle">Sort By</span>
-												<div class="sorting-select">
-													<select class="form-control select">
-														<option>Relevance</option>
-														<option>Price</option>
-													</select>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								
-							</div>
-						</div>
+            <div class="card-body p-4">
+                @if($success_message)
+                    <div class="alert alert-danger">
+                        {{ $success_message }}
+                    </div>
+                @endif
+
+                <div class="table-responsive rounded-3 mt-3">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead class="table-primary text-center">
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên sân</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Sử dụng</th>
+                                <th>Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+							@php $index = 0; @endphp
+							@forelse ($long_term_contracts as $ct)
+								@php
+									// Kiểm tra xem invoice_detail_id có tồn tại trong mảng chi tiết không
+									$details = isset($mycontract_details[$ct->invoice_detail_id]) ? $mycontract_details[$ct->invoice_detail_id] : null;
+									$firstBooking = ($details && count($details)) ? $details->first() : null;
+									$bookingDate = $firstBooking->booking_date ?? null;
+									$isExpired = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->lt(\Carbon\Carbon::today()) : false;
+								@endphp
+
+								<tr class="text-center">
+									<td>{{ ++$index }}</td>
+									<td class="fw-semibold">{{ $ct->facility_name ?? '---' }}</td>
+									<td>{{ $ct->fullname ?? '---' }}</td>
+									<td>{{ $ct->issue_date ? \Carbon\Carbon::parse($ct->issue_date)->format('d/m/Y H:i:s') : '---' }}</td>
+									<td class="fw-bold text-success">{{ $ct->final_amount ? number_format($ct->final_amount, 0, ',', '.') . '₫' : '---' }}</td>
+									<td>{{ $bookingDate ? \Carbon\Carbon::parse($bookingDate)->format('d/m/Y') : '---' }}</td>
+									<td>
+										@if($isExpired)
+											<span class="badge bg-warning text-dark">Đã quá hạn</span>
+										@else
+											<span class="badge bg-info text-dark">Chưa sử dụng</span>
+										@endif
+									</td>
+									<td>
+										@if ($ct->payment_status === 'Đã Hủy')
+											<span class="badge bg-danger">Đã hủy</span>
+										@elseif ($ct->payment_status === 'Đã sử dụng')
+											<span class="badge bg-primary">Đã sử dụng</span>
+										@else
+											<form action="{{ route('chi_tiet_ct') }}" method="POST">
+												@csrf
+												<input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
+												<input type="hidden" name="slots" value='@json($details ?? [])'>
+												<button type="submit" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">Chi tiết</button>
+											</form>
+										@endif
+									</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="8" class="text-center text-muted py-4">
+										<i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+										Chưa có lịch đặt nào
+									</td>
+								</tr>
+							@endforelse
+						</tbody>
+
+                    </table>
+					<!-- Phân trang -->
+					<div class="mt-3 d-flex justify-content-center">
+						{{ $long_term_contracts->links('vendor.pagination.bootstrap-5') }}
 					</div>
-				</div> --}}
-				<!-- Sort By -->
+                </div>
 
-				<div class="row">
-					<div class="col-sm-12">
-						<div class="court-tab-content">
-							<div class="card card-tableset">
-								<div class="card-body">
-									<div class="coache-head-blk">
-										<div class="row align-items-center">
-											<div class="col-md-5">
-												<div class="court-table-head">
-													<h4>Giao dịch thuê cố định của bạn</h4>
-													<p>Theo dõi và quản lý các sân đã hoàn thành của bạn</p>
-												</div>
-											</div>
-											<div class="col-md-7">
-											</div>
-										</div>
-									</div>
-									<div>
-										
-										<div>
-											@if($success_message)
-												<div class="alert alert-danger">
-													<p>{{ $success_message }}</p>
-												</div>
-											@else 
-											@endif
-											<table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>STT</th>
-                                                        <th>Tên sân</th>
-                                                        <th>Khách hàng</th>
-                                                        <th>Ngày đặt</th>
-                                                        <th>Tổng tiền</th>
-                                                        <th></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @php $index=0 @endphp
-                                                    @forelse ($long_term_contracts as $ct)
-                                                        <tr>
-                                                            <td>{{ $index+=1 }}</td>
-                                                            <td>{{ $ct->facility_name }}</td>
-                                                            <td>{{ $ct->fullname }}</td>
-                                                            <td>{{ $ct->issue_date }}</td>
-                                                            <td>{{ $ct->final_amount }}</td>
-                                                            <td>
-                                                                <form action="{{ route('chi_tiet_ct') }}" method="POST">
-																@csrf
-                                                                    <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
-																	<input type="hidden" name="slots" value='@json($mycontract_details[$ct->invoice_detail_id] ?? [])'>
-                                                                    @if ($ct->payment_status === 'Đã Hủy')
-																		<p class="text-danger">Đã hủy</p>
-																	@elseif ($ct->payment_status === 'Đã sử dụng')
-																		<p class="text-primary">Đã sử dụng</p>
-																	@else 
-																		<button type="submit" class="btn btn-success">
-																			Chi tiết
-																		</button>
-																	@endif
-                                                                </form>
-                                                            </td>
-                                                        </tr>
-                                                    @empty
-														<tr>
-															<td colspan="6" class="text-center text-muted">
-																Chưa có lịch đặt nào
-															</td>
-														</tr>
-													@endforelse
-                                                </tbody>
-                                            </table>
-										</div>
-										
-									</div>
-									
-								</div>
-							</div> 
-						</div>
-					</div>
-				</div>
-
-			</div>
-		</div>
-		<!-- /Page Content -->
-
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

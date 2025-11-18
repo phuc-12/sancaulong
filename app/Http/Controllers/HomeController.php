@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\InvoiceMail;
+use App\Mail\LongTermInvoiceMail;
 class HomeController extends Controller
 {
     const LIMIT_PER_LOAD = 10;
@@ -250,7 +254,7 @@ class HomeController extends Controller
             ]);
             $userId = $newUser->user_id;
         }
-
+        $user_id = Users::where('user_id',$userId)->get();
         $total = 0;
         foreach ($slots as $slot) {
             $total += $slot['price'];
@@ -296,10 +300,53 @@ class HomeController extends Controller
             ]);
         }
 
+        // 1. Chuẩn bị dữ liệu PDF
+    $slots = json_decode($request->input('slots'), true);
+    $total = array_sum(array_column($slots, 'price'));
+    $customer = Users::find($userId);
+    $facilities = Facilities::find($facility_id);
+
+    // Tính thời gian tổng
+    $countSlots = count($slots);
+    $result = ($countSlots % 2 === 0) ? ($countSlots / 2).' tiếng' : (($countSlots-1)/2).' tiếng rưỡi';
+
+    $invoice_detail_id = $request->invoice_details_id;
+    $invoice_details = DB::table('invoice_details')->where('invoice_detail_id',$invoice_detail_id)->first();
+
+    $bank = $facilities->account_bank ?? 'VCB';
+    $account = $facilities->account_no ?? '9704366899999';
+    $accountName = $facilities->account_name ?? 'SAN CAU LONG DEMO';
+    $qrUrl = "https://img.vietqr.io/image/{$bank}-{$account}-compact2.png?amount={$total}&addInfo=Thanh%20toan%20dat%20san&accountName=" . urlencode($accountName);
+    // dd($slots);
+    $pdf = PDF::setOptions(['isRemoteEnabled' => true])
+              ->loadView('pdf', [
+                  'slots' => $slots,
+                  'result' => $result,
+                  'customer' => $customer,
+                  'facilities' => $facilities,
+                  'invoice_detail_id' => $invoice_detail_id,
+                  'total' => $total,
+                  'user_id_nv' => null,
+                  'fullname_nv' => null,
+                  'invoice_time' => now()->format('d/m/Y H:i:s'),
+                  'invoice_id' => $invoice_details->invoice_id,
+                  'uniqueCourts' => collect($slots)->pluck('court_id')->unique()->implode(' , '),
+                  'uniqueDates' => collect($slots)->pluck('date')->unique()->implode(' / '),
+                  'uniqueTimes' => collect($slots)->map(fn($s) => $s['start_time'].' đến '.$s['end_time'])->unique()->implode(' / '),
+                  'qrUrl' => $qrUrl,
+              ])->output();
+                // dd($customer->email, $pdf, $customer->fullname);
+    // 2. Gửi email
+    $pdfContent = $pdf; // nội dung PDF từ loadView
+    $tempPath = storage_path('app/public/invoice_'.$invoice_detail_id.'.pdf');
+    file_put_contents($tempPath, $pdfContent);
+
+    Mail::to($customer->email)->send(new InvoiceMail($tempPath, $customer->fullname));
+
         return view('layouts.redirect_post', [
             'facility_id' => $facility_id,
             'user_id' => $userId,
-            'success_message' => 'Thanh toán và đặt sân thành công!'
+            'success_message' => 'Thanh toán và đặt sân thành công! Giao dịch đã được lưu trong lịch đặt của bạn!!!'
         ]);
 
     }
@@ -629,7 +676,7 @@ class HomeController extends Controller
         $total = $request->input('tongtien');
         $start_date = $request->start_date;
         $end_date = $request->end_date;
-
+        // dd($details,$slot_details);
         $fullname = $request->input('fullname');
         $phone = $request->input('phone');
 
@@ -700,7 +747,51 @@ class HomeController extends Controller
                 }
             }
         }
+        //======================================================
+        $contract = DB::table('long_term_contracts')
+            ->where('invoice_detail_id', $invoiceDetailId)
+            ->first();
 
+        $customer = Users::where('user_id', $userId)->first();
+        $facilities = DB::table('facilities')->where('facility_id', $facility_id)->first();
+
+        // Lấy các slot booking cho hợp đồng này
+        $slots = [];
+        foreach ($details as $detail) {
+            $date = $detail['date'];
+            foreach ($detail['courts'] as $courtId) {
+                foreach ($detail['time_slots'] as $timeSlotIndex => $timeSlotId) {
+                    // Lấy thông tin tương ứng từ $slot_details
+                    $slotInfo = $slot_details[$timeSlotIndex] ?? null;
+                    if($slotInfo){
+                        $slots[] = [
+                            'courts' => $courtId,
+                            'booking_date' => $date,
+                            'start_time' => $slotInfo['start'],
+                            'end_time' => $slotInfo['end'],
+                            'price' => $slotInfo['amount'],
+                        ];
+                    }
+                }
+            }
+        }
+        
+        // Lấy danh sách sân duy nhất
+        $courts = collect($slots)->pluck('courts')->unique()->toArray();
+        // Chuyển mảng thành chuỗi để hiển thị
+        $courtsString = implode(', ', $courts);
+        $pdf = PDF::loadView('long_term_contract_pdf', [
+            'facilities' => $facilities,
+            'customer' => $customer,
+            'contract' => $contract,
+            'slots' => $slots,
+            'courts' => $courtsString, // truyền chuỗi
+        ]);
+
+        if($customer->email){
+            Mail::to($customer->email)->send(new LongTermInvoiceMail($customer->fullname, $pdf));
+        }
+        //=========================================================
         $userMana = $request->input('user_id');
         $checkMana = Users::where('user_id', $userMana)
         ->select('role_id')
@@ -722,27 +813,32 @@ class HomeController extends Controller
 
     public function list_Invoices(Request $request)
     {
-        $user_id = $request->user_id;
+        // Lấy user_id từ query string GET hoặc từ POST
+        $user_id = $request->query('user_id', $request->user_id);
 
+        // Lấy invoices của user, paginate 10 bản ghi/trang
         $invoices = DB::table('invoices')
-        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
-        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
-        ->join('users', 'users.user_id', '=', 'invoices.customer_id')
-        ->where('invoices.customer_id', $user_id)
-        ->select(
-            'invoices.*',
-            'facilities.facility_name as facility_name',
-            'users.fullname as fullname',
-            'invoices.issue_date as issue_date',
-            'invoices.final_amount as final_amount',
-            'invoice_details.invoice_detail_id as invoice_detail_id',
-            'invoice_details.facility_id as facility_id'
-        )
-        ->orderBy('invoices.invoice_id', 'desc')
-        ->get();
-        $success_message = $request->success_message;
-        $mybooking_details = [];
+            ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+            ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+            ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+            ->where('invoices.customer_id', $user_id)
+            ->select(
+                'invoices.*',
+                'facilities.facility_name as facility_name',
+                'users.fullname as fullname',
+                'invoices.issue_date as issue_date',
+                'invoices.final_amount as final_amount',
+                'invoice_details.invoice_detail_id as invoice_detail_id',
+                'invoice_details.facility_id as facility_id'
+            )
+            ->orderBy('invoices.invoice_id', 'desc')
+            ->paginate(10)
+            ->appends(['user_id' => $user_id]); // giữ user_id khi bấm trang 2
 
+        $success_message = $request->query('success_message', null); // nếu có thông báo
+
+        // Build mybooking_details cho các invoice trên trang hiện tại
+        $mybooking_details = [];
         foreach ($invoices as $invoice) {
             $details = DB::table('bookings')
                 ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
@@ -752,18 +848,21 @@ class HomeController extends Controller
                     'bookings.*',
                     'time_slots.start_time',
                     'time_slots.end_time'
-                )->get();
+                )
+                ->get();
 
             $mybooking_details[$invoice->invoice_detail_id] = $details;
         }
 
+        // Trả về view
         return view('my_bookings', compact('user_id', 'invoices', 'mybooking_details', 'success_message'));
     }
-
     public function list_Contracts(Request $request)
     {
         $user_id = $request->user_id;
+        $success_message = $request->success_message;
 
+        // Lấy hợp đồng dài hạn của user, phân trang 10 bản ghi/trang
         $long_term_contracts = DB::table('long_term_contracts')
             ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
             ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
@@ -777,28 +876,26 @@ class HomeController extends Controller
                 'long_term_contracts.final_amount as final_amount'
             )
             ->orderBy('long_term_contracts.issue_date', 'desc')
-            ->get();
-            $success_message = $request->success_message;
-            $mycontract_details = [];
+            ->paginate(10);
 
-            foreach ($long_term_contracts as $ct) {
-                $details = DB::table('bookings')
-                    ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
-                    ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
-                    ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
-                    ->select(
-                        'bookings.*',
-                        'time_slots.start_time',
-                        'time_slots.end_time'
-                    )
-                    ->get();
+        // Lấy danh sách invoice_detail_id của trang hiện tại
+        $invoiceIds = $long_term_contracts->pluck('invoice_detail_id')->toArray();
 
-                $mycontract_details[$ct->invoice_detail_id] = $details;
-            }
+        // Lấy chi tiết booking cho tất cả invoice_detail_id trong trang
+        $mycontract_details = DB::table('bookings')
+            ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+            ->whereIn('bookings.invoice_detail_id', $invoiceIds)
+            ->select(
+                'bookings.*',
+                'time_slots.start_time',
+                'time_slots.end_time'
+            )
+            ->get()
+            ->groupBy('invoice_detail_id'); // nhóm theo invoice_detail_id để view dễ dùng
 
+        // Trả về view
         return view('my_contracts', compact('user_id', 'long_term_contracts', 'mycontract_details', 'success_message'));
     }
-
     public function search(Request $request)
     {
         // 1. Lấy từ khóa tìm kiếm từ URL (?keyword=...)
