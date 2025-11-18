@@ -113,7 +113,7 @@
                         <div class="text-center mt-4">
 							
 
-							<form id="paymentCompleteForm" action="{{ route('payments_complete') }}" method="POST">
+							<form id="paymentCompleteForm" action="{{ route('payments_complete') }}" method="POST" align="center">
 								@csrf
 								<input type="hidden" name="customer_name" value="{{ $customer_name ?? $customer->fullname }}">
 								<input type="hidden" name="customer_phone" value="{{ $customer_phone ?? $customer->phone }}">
@@ -129,8 +129,9 @@
 									data-bank="{{ $facilities->account_bank }}"
 									data-account="{{ $facilities->account_no }}"
 									data-name="{{ $facilities->account_name }}"
+                                    style="width:300px;"
 									>
-										Hiển thị mã QR
+										THANH TOÁN
 									</button>
 
 									<div class="mt-4" align="center">
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (value >= total) {
                 clearInterval(intervalId);
                 isPaid = true;
-                alert("Thanh toán thành công! "+value);
+                alert("Thanh toán thành công! ");
                 document.getElementById('paymentCompleteForm').submit();
             }
         } catch (err) {

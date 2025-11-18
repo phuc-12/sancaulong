@@ -35,15 +35,15 @@ Route::prefix('/')->controller(HomeController::class)
         Route::post('/contracts_preview', 'contracts_preview')->name('contracts.preview');
         Route::match(['get', 'post'], '/payment_contract', 'payment_contract')->name('payment_contract');
         Route::post('/thanh-toan/thanh-toan-contract-complete', 'payments_contract_complete')->name('payments_contract_complete');
-        Route::post('/list_Invoices', 'list_Invoices')->name('lich_dat_san');
-        Route::post('/list_Contracts', 'list_Contracts')->name('lich_co_dinh');
+        Route::get('/list_Invoices', 'list_Invoices')->name('lich_dat_san');
+        Route::get('/list_Contracts', 'list_Contracts')->name('lich_co_dinh');
         Route::post('/invoice_details', 'invoice_details')->name('chi_tiet_hd');
         Route::post('/cancel_invoice', 'cancel_invoice')->name('cancel_invoice');
         Route::post('/contract_details', 'contract_details')->name('chi_tiet_ct');
         Route::post('/cancel_contract', 'cancel_contract')->name('cancel_contract');
     });
 
-Route::post('/export-invoice', [InvoiceController::class, 'exportInvoice'])->name('export_invoice');
+Route::post('/export-invoice', [InvoiceController::class, 'exportInvoice_cus'])->name('export_invoice');
 
 Route::prefix('users')->controller(UserController::class)
     ->name('users.')->group(function () {
