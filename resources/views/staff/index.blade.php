@@ -60,12 +60,13 @@
 
                                         <td>
                                             @if ($invoice->payment_status !== 'Đã Hủy')
-                                                <form action="{{ route('chi_tiet_hd') }}" method="POST">
+                                                <form action="{{ route('staff.chi_tiet_hd_nv') }}" method="POST">
                                                     @csrf
                                                     <input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
                                                     <input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
                                                     <input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
                                                     <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
+                                                    <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
                                                     <button class="btn btn-sm btn-primary">Chi tiết</button>
                                                 </form>
                                             @endif

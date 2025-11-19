@@ -119,7 +119,7 @@
             </li>
             <li class="nav-item">
                 <a href="{{ route('staff.payment') }}"
-                    class="nav-link {{ request()->routeIs('staff.payment','staff.chi_tiet_hd_nv') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('staff.payment','staff.chi_tiet_hd_nv','staff.invoice.search') ? 'active' : '' }}">
                     <i class="bi bi-cash-coin"></i>
                     Thanh Toán & Hóa Đơn
                 </a>

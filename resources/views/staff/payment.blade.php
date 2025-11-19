@@ -19,7 +19,13 @@
 <div class="row">
     <div class="col-lg-12">
         <div class="card shadow-sm border-0">
-
+            <div class="p-3">
+                <form method="POST" action="{{ route('staff.invoice.search') }}" class="d-flex gap-2">
+                    @csrf
+                    <input type="text" name="search" class="form-control" placeholder="Tìm SĐT hoặc tên khách hàng..." style="max-width: 300px">
+                    <button type="submit" class="btn btn-success px-4">Tìm</button>
+                </form>
+            </div>
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0 fw-semibold">Danh sách hóa đơn</h5>
             </div>
