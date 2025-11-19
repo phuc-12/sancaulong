@@ -8,6 +8,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <style>
@@ -159,7 +161,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
                                 <i class="fas fa-user me-2"></i> Hồ sơ
-                            </a>    
+                            </a>
                         </li>
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"

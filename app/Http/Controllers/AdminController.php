@@ -20,72 +20,87 @@ class AdminController extends Controller
 {
     // === Hiển thị thông tin ===
     public function index()
-{
-    // 1. Tổng số chủ sân (Facilities)
-    $totalOwners = Facilities::count();
+    {
 
-    // 2. Tổng số sân con
-    $totalCourts = Courts::count();
+        // 1. Tổng số chủ sân (Facilities)
+        $totalOwners = Facilities::count();
 
-    // 3. Tổng số người dùng
-    $totalUsers = Users::count();
+        // 2. Tổng số sân con
+        $totalCourts = Courts::count();
 
-    // 4. Tổng doanh thu toàn hệ thống
-    $totalSystemRevenue = Bookings::sum('unit_price');
+        // 3. Tổng số người dùng
+        $totalUsers = Users::count();
 
-    // 5. Tăng trưởng chủ sân theo tháng
-    $ownersThisMonth = Facilities::whereMonth('created_at', now()->month)->count();
-    $ownersLastMonth = Facilities::whereMonth('created_at', now()->subMonth()->month)->count();
+        // 4. Tổng doanh thu toàn hệ thống
+        $totalSystemRevenue = Bookings::sum('unit_price');
 
-    $ownerGrowth = $ownersLastMonth == 0 ? 100 :
-                   (($ownersThisMonth - $ownersLastMonth) / $ownersLastMonth) * 100;
+        // 5. Tăng trưởng chủ sân theo tháng
+        $ownersThisMonth = Facilities::whereMonth('created_at', now()->month)->count();
+        $ownersLastMonth = Facilities::whereMonth('created_at', now()->subMonth()->month)->count();
 
-    $ownerGrowthStatus = $ownersThisMonth > $ownersLastMonth ? 'up' :
-                         ($ownersThisMonth < $ownersLastMonth ? 'down' : 'neutral');
+        $ownerGrowth = $ownersLastMonth == 0 ? 100 :
+            (($ownersThisMonth - $ownersLastMonth) / $ownersLastMonth) * 100;
 
-    // 6. Tăng trưởng người dùng theo tháng
-    $usersThisMonth = Users::whereMonth('created_at', now()->month)->count();
-    $usersLastMonth = Users::whereMonth('created_at', now()->subMonth()->month)->count();
+        $ownerGrowthStatus = $ownersThisMonth > $ownersLastMonth ? 'up' :
+            ($ownersThisMonth < $ownersLastMonth ? 'down' : 'neutral');
 
-    $userGrowth = $usersLastMonth == 0 ? 100 :
-                  (($usersThisMonth - $usersLastMonth) / $usersLastMonth) * 100;
+        // 6. Tăng trưởng người dùng theo tháng
+        $usersThisMonth = Users::whereMonth('created_at', now()->month)->count();
+        $usersLastMonth = Users::whereMonth('created_at', now()->subMonth()->month)->count();
 
-    $userGrowthStatus = $usersThisMonth > $usersLastMonth ? 'up' :
-                        ($usersThisMonth < $usersLastMonth ? 'down' : 'neutral');
+        $userGrowth = $usersLastMonth == 0 ? 100 :
+            (($usersThisMonth - $usersLastMonth) / $usersLastMonth) * 100;
 
-    
+        $userGrowthStatus = $usersThisMonth > $usersLastMonth ? 'up' :
+            ($usersThisMonth < $usersLastMonth ? 'down' : 'neutral');
 
-    // DỮ LIỆU BIỂU ĐỒ TĂNG TRƯỞNG 12 THÁNG (Line Chart)
-    $ownersMonthly = Facilities::select(
+        // 7. Số yêu cầu đang cần phê duyệt (cho alert)
+        $pendingRequestsCount = Facilities::withoutGlobalScopes()
+            ->where('need_reapprove', 1)
+            ->count();
+
+
+        //8. DỮ LIỆU BIỂU ĐỒ TĂNG TRƯỞNG 12 THÁNG (Line Chart)
+        $ownersMonthly = Facilities::select(
             DB::raw('MONTH(created_at) as month'),
             DB::raw('COUNT(*) as total')
         )
-        ->whereYear('created_at', now()->year)
-        ->groupBy('month')
-        ->pluck('total', 'month');
+            ->whereYear('created_at', now()->year)
+            ->groupBy('month')
+            ->pluck('total', 'month');
 
-    $usersMonthly = Users::select(
+        $usersMonthly = Users::select(
             DB::raw('MONTH(created_at) as month'),
             DB::raw('COUNT(*) as total')
         )
-        ->whereYear('created_at', now()->year)
-        ->groupBy('month')
-        ->pluck('total', 'month');
+            ->whereYear('created_at', now()->year)
+            ->groupBy('month')
+            ->pluck('total', 'month');
 
 
-    return view('admin.index', compact(
-        'totalOwners',
-        'totalCourts',
-        'totalUsers',
-        'totalSystemRevenue',
-        'ownerGrowth',
-        'ownerGrowthStatus',
-        'userGrowth',
-        'userGrowthStatus',
-        'ownersMonthly',
-        'usersMonthly'
-    ));
-}
+        return view('admin.index', compact(
+            'totalOwners',
+            'totalCourts',
+            'totalUsers',
+            'totalSystemRevenue',
+            'ownerGrowth',
+            'ownerGrowthStatus',
+            'userGrowth',
+            'userGrowthStatus',
+            'ownersMonthly',
+            'usersMonthly',
+            'pendingRequestsCount'
+        ));
+    }
+
+    public function pendingFacilities()
+    {
+        $pendingFacilities = Facilities::withoutGlobalScopes()
+            ->where('need_reapprove', 1)
+            ->get();
+
+        return view('admin.facilities.pending', compact('pendingFacilities'));
+    }
     //=============================================================================================================
 //BIỂU ĐỒ
 
@@ -143,7 +158,6 @@ class AdminController extends Controller
 
     //=============================================================================================================
 //DOANH NGHIỆP
-    // === XỬ LÝ PHÊ DUYỆT 1 CƠ SỞ ===
     /**
      * Duyệt facility
      */
@@ -161,27 +175,52 @@ class AdminController extends Controller
 
             // 1. Cập nhật trạng thái facility
             $facility->status = 'đã duyệt';
+            $facility->is_active = 1;
+            $facility->need_reapprove = 0;
+
+            $requestType = $facility->pending_request_type;
+            $facility->pending_request_type = null;
+
             $facility->save();
 
-            // 2. Tự động tạo bảng giá (court_prices)
-            $this->createCourtPrices($facility);
+            $successMessage = '';
 
-            // 3. Tự động tạo/cập nhật sân con (courts)
-            $quantityCourt = $facility->quantity_court ?? 0;
-            $successMessage = "Đã duyệt cơ sở '{$facility->facility_name}' thành công!";
+            // 2. Xử lý theo loại yêu cầu
+            if ($requestType === 'activate') {
+                // Yêu cầu kích hoạt lần đầu
 
-            if ($quantityCourt > 0) {
-                $courtResult = $this->autoCreateCourts($facility->facility_id, $quantityCourt);
+                // Tự động tạo bảng giá
+                $this->createCourtPrices($facility);
 
-                Log::info('Courts processed successfully', [
+                // Tự động tạo sân con
+                $quantityCourt = $facility->quantity_court ?? 0;
+                $successMessage = "Đã duyệt và kích hoạt cơ sở '{$facility->facility_name}' thành công!";
+
+                if ($quantityCourt > 0) {
+                    $courtResult = $this->autoCreateCourts($facility->facility_id, $quantityCourt);
+
+                    Log::info('Courts created for new facility', [
+                        'facility_id' => $facility->facility_id,
+                        'facility_name' => $facility->facility_name,
+                        'requested_quantity' => $quantityCourt,
+                        'action' => $courtResult['action'],
+                        'courts_affected' => $courtResult['courts_affected']
+                    ]);
+
+                    $successMessage .= ' ' . $courtResult['message'];
+                }
+            } elseif ($requestType === 'sensitive_update') {
+                // Yêu cầu cập nhật thông tin nhạy cảm
+                // ❌ KHÔNG tạo/xóa sân ở đây nữa - owner tự quản lý
+
+                $successMessage = "Đã duyệt cập nhật thông tin nhạy cảm cho cơ sở '{$facility->facility_name}'!";
+
+                Log::info('Sensitive update approved', [
                     'facility_id' => $facility->facility_id,
                     'facility_name' => $facility->facility_name,
-                    'requested_quantity' => $quantityCourt,
-                    'action' => $courtResult['action'],
-                    'courts_affected' => $courtResult['courts_affected']
                 ]);
-
-                $successMessage .= ' ' . $courtResult['message'];
+            } else {
+                $successMessage = "Đã duyệt cơ sở '{$facility->facility_name}' thành công!";
             }
 
             DB::commit();
@@ -203,13 +242,13 @@ class AdminController extends Controller
     }
 
     /**
-     * Tự động tạo hoặc xóa sân con dựa trên số lượng yêu cầu
+     * Tự động tạo sân con khi duyệt cơ sở lần đầu
      */
     private function autoCreateCourts($facilityId, $quantity)
     {
         $existingCount = Courts::where('facility_id', $facilityId)->count();
 
-        // Trường hợp 1: Tạo thêm sân
+        // Chỉ tạo sân nếu chưa có hoặc thiếu
         if ($existingCount < $quantity) {
             $courts = [];
             $courtsToAdd = $quantity - $existingCount;
@@ -227,7 +266,7 @@ class AdminController extends Controller
 
             Courts::insert($courts);
 
-            Log::info('Additional courts created', [
+            Log::info('Courts created on facility activation', [
                 'facility_id' => $facilityId,
                 'existing_count' => $existingCount,
                 'courts_added' => count($courts),
@@ -237,76 +276,12 @@ class AdminController extends Controller
             return [
                 'action' => 'added',
                 'courts_affected' => count($courts),
-                'message' => "Đã tạo thêm {$courtsToAdd} sân mới (Sân " . ($existingCount + 1) . " đến Sân {$quantity})."
+                'message' => "Đã tạo {$courtsToAdd} sân (Sân " . ($existingCount + 1) . " đến Sân {$quantity})."
             ];
         }
 
-        // Trường hợp 2: Xóa bớt sân
-        if ($existingCount > $quantity) {
-            $courtsToRemove = Courts::where('facility_id', $facilityId)
-                ->where('court_id', '>', $quantity)
-                ->get();
-
-            $hasActiveBookings = false;
-            $bookingsInfo = [];
-
-            foreach ($courtsToRemove as $court) {
-                $bookingCount = DB::table('bookings')
-                    ->where('facility_id', $facilityId)
-                    ->where('court_id', $court->court_id)
-                    ->whereIn('status', ['confirmed', 'pending'])
-                    ->where('booking_date', '>=', now()->toDateString())
-                    ->count();
-
-                if ($bookingCount > 0) {
-                    $hasActiveBookings = true;
-                    $bookingsInfo[] = [
-                        'court_id' => $court->court_id,
-                        'court_name' => $court->court_name,
-                        'booking_count' => $bookingCount
-                    ];
-                }
-            }
-
-            if ($hasActiveBookings) {
-                $courtNames = implode(', ', array_column($bookingsInfo, 'court_name'));
-
-                Log::warning('Cannot remove courts with active bookings', [
-                    'facility_id' => $facilityId,
-                    'current_count' => $existingCount,
-                    'requested_quantity' => $quantity,
-                    'courts_with_bookings' => $bookingsInfo
-                ]);
-
-                throw new \Exception(
-                    "Không thể giảm số lượng sân từ {$existingCount} xuống {$quantity} vì một số sân đang có lịch đặt hoạt động. " .
-                    "Các sân có lịch đặt: {$courtNames}. " .
-                    "Vui lòng hủy các lịch đặt này trước khi giảm số lượng sân."
-                );
-            }
-
-            $courtsRemoved = $existingCount - $quantity;
-
-            Courts::where('facility_id', $facilityId)
-                ->where('court_id', '>', $quantity)
-                ->delete();
-
-            Log::info('Excess courts removed', [
-                'facility_id' => $facilityId,
-                'courts_removed' => $courtsRemoved,
-                'old_total' => $existingCount,
-                'new_total' => $quantity
-            ]);
-
-            return [
-                'action' => 'removed',
-                'courts_affected' => $courtsRemoved,
-                'message' => "Đã xóa {$courtsRemoved} sân dư thừa (từ Sân " . ($quantity + 1) . " đến Sân {$existingCount})."
-            ];
-        }
-
-        // Trường hợp 3: Không thay đổi
-        Log::info('Courts quantity unchanged', [
+        // Trường hợp đã có đủ sân (không làm gì)
+        Log::info('Courts already exist', [
             'facility_id' => $facilityId,
             'quantity' => $quantity
         ]);
@@ -314,24 +289,26 @@ class AdminController extends Controller
         return [
             'action' => 'unchanged',
             'courts_affected' => 0,
-            'message' => "Số lượng sân không thay đổi ({$quantity} sân)."
+            'message' => "Cơ sở đã có {$quantity} sân."
         ];
     }
+
     /**
      * Tạo các bản ghi court_prices từ thông tin giá của facility
      */
     private function createCourtPrices(Facilities $facility)
     {
         $today = now()->toDateString();
-        // Tạo 1 bản ghi duy nhất với cả 2 giá
-        Court_prices::create([
-            'facility_id' => $facility->facility_id,
-            'default_price' => $facility->default_price,   // Giờ mặc định (05:00-16:00)
-            'special_price' => $facility->special_price,   // Giờ cao điểm (16:00-23:00)
-            'effective_date' => $today,
-        ]);
-    }
 
+        Court_prices::updateOrCreate(
+            ['facility_id' => $facility->facility_id],
+            [
+                'default_price' => $facility->courtPrice->default_price ?? 0,
+                'special_price' => $facility->courtPrice->special_price ?? 0,
+                'effective_date' => $today,
+            ]
+        );
+    }
 
     /**
      * Từ chối facility
@@ -346,6 +323,9 @@ class AdminController extends Controller
 
         $facility->status = 'từ chối';
         $facility->rejection_reason = $request->rejection_reason;
+        $facility->is_active = 0;
+        $facility->need_reapprove = 1;
+        // Giữ nguyên pending_request_type để owner biết yêu cầu nào bị từ chối
         $facility->save();
 
         return redirect()->route('admin.facilities.approval')
@@ -361,11 +341,15 @@ class AdminController extends Controller
             ->paginate(15);
         return view('admin.facilities.index', compact('facilities'));
     }
+
     //TẠM KHÓA CƠ SỞ
     public function suspendFacility(Facilities $facility)
     {
-        // (Kiểm tra quyền Admin)
-        $facility->update(['status' => 'tạm khóa']); // Đặt trạng thái là 'tạm khóa'
+        $facility->update([
+            'status' => 'tạm khóa',
+            'is_active' => 0
+        ]);
+
         return redirect()->route('admin.facilities.index')
             ->with('success', "Đã tạm khóa hoạt động của cơ sở '{$facility->facility_name}'.");
     }
@@ -373,13 +357,16 @@ class AdminController extends Controller
     //KÍCH HOẠT LẠI CƠ SỞ
     public function activateFacility(Facilities $facility)
     {
-        // (Kiểm tra quyền Admin)
-        // Kích hoạt lại đồng nghĩa với việc duyệt lại
-        $facility->update(['status' => 'đã duyệt']); // Đặt trạng thái là 'đã duyệt'
+        $facility->update([
+            'status' => 'đã duyệt',
+            'is_active' => 1,
+            'need_reapprove' => 0,
+            'pending_request_type' => null
+        ]);
+
         return redirect()->route('admin.facilities.index')
             ->with('success', "Đã kích hoạt lại hoạt động cho cơ sở '{$facility->facility_name}'.");
     }
-
     //=============================================================================================================
 //KHÁCH HÀNG
 

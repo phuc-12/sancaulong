@@ -12,26 +12,37 @@ class Facilities extends Model
 
     protected $table = 'facilities';
     protected $primaryKey = 'facility_id';
-    public $timestamps = true; 
+    public $timestamps = true;
     protected $fillable = [
         'owner_id',
         'facility_name',
         'address',
-        'account_no',        
-        'account_bank', 
-        'account_name',
         'phone',
         'open_time',
         'close_time',
         'description',
-        'default_price',
-        'special_price',
+        'status',
+        'quantity_court',
+        //IMG
         'image',
         'business_license',
-        'status',
-        'quantity_court'
+        //Giá
+        'default_price',
+        'special_price',
+        //STK - Ngân hàng
+        'account_no',
+        'account_bank',
+        'account_name',
+        // trạng thái hoạt động
+        'is_active',
+        'need_reapprove',
+        'pending_request_type',
     ];
-
+    protected $casts = [
+        'is_active' => 'boolean',
+        'need_reapprove' => 'boolean',
+    ];
+    
     public function courtPrice()
     {
         return $this->hasOne(Court_prices::class, 'facility_id', 'facility_id');

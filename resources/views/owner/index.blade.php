@@ -260,7 +260,60 @@
             <h1 class="page-title">Dashboard Báo Cáo</h1>
             <p class="page-subtitle">Tổng quan hoạt động kinh doanh sân cầu lông</p>
         </div>
+        {{-- ==== SESSION SUCCESS ==== --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
+        {{-- ==== VALIDATION ERRORS ==== --}}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- ==== TRẠNG THÁI CƠ SỞ ==== --}}
+        @if(isset($facility))
+            {{-- Nếu cần re-approve --}}
+            @if($facility->need_reapprove)
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @if($facility->pending_request_type === 'activate')
+                        <strong>Chờ phê duyệt:</strong> Cơ sở của bạn đang chờ admin phê duyệt để kích hoạt hoạt động.
+                    @elseif($facility->pending_request_type === 'sensitive_update')
+                        <strong>Chờ phê duyệt:</strong> Yêu cầu cập nhật thông tin nhạy cảm đang chờ admin xét duyệt.
+                    @endif
+                    Bạn không thể cập nhật thông tin trong thời gian này.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {{-- Nếu bị từ chối --}}
+            @elseif($facility->status === 'từ chối' && $facility->rejection_reason)
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-x-circle-fill me-2"></i>
+                    <strong>Yêu cầu bị từ chối:</strong> {{ $facility->rejection_reason }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {{-- Các trạng thái khác --}}
+            @else
+                <div class="alert alert-{{ $facilityStatusType }} alert-dismissible fade show" role="alert">
+                    {{ $facilityStatusMessage }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+        @else
+            {{-- Chưa có cơ sở --}}
+            <div class="alert alert-{{ $facilityStatusType }} alert-dismissible fade show" role="alert">
+                {{ $facilityStatusMessage }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <div class="filter-section">
             <div class="row align-items: center">
                 <div class="col-auto d-flex align-items-center">
@@ -721,11 +774,11 @@
 
                 data.forEach((c, i) => {
                     tbody.innerHTML += `
-                                        <tr>
-                                            <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
-                                            <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
-                                            <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
-                                        </tr>`;
+                                                <tr>
+                                                    <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
+                                                    <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
+                                                    <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
+                                                </tr>`;
                 });
             } catch (err) { console.error("Lỗi tải Top Khách hàng:", err); tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Lỗi khi tải dữ liệu.</td></tr>'; }
         }
@@ -768,5 +821,25 @@
             console.log('Auto refresh courts');
             loadCourts();
         }, 30000);
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Chọn tất cả alert có class alert-dismissible
+            const alerts = document.querySelectorAll('.alert-dismissible');
+
+            alerts.forEach(alert => {
+                // Sau 5 giây
+                setTimeout(() => {
+                    // Thêm class fade để Bootstrap xử lý hiệu ứng ẩn
+                    alert.classList.remove('show');
+                    alert.classList.add('fade');
+
+                    // Sau khi fade xong (khoảng 0.5s), remove khỏi DOM
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 500);
+                }, 5000); // 5000ms = 5 giây
+            });
+        });
     </script>
 @endpush

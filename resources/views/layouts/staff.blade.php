@@ -148,7 +148,7 @@
 
                         <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
                             alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="32">
-                        
+
                         <span class="d-none d-md-inline">{{ auth()->user()->fullname }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
@@ -157,7 +157,7 @@
 
                                 <img src="{{ asset(auth()->user()->avatar ?? 'img/profiles/avatar-05.jpg') }}"
                                     alt="{{ auth()->user()->fullname ?? 'Avatar' }}" class="rounded-circle me-2" width="40">
-                                
+
                                 <div>
                                     <div class="fw-semibold">{{ auth()->user()->fullname }}</div>
                                 </div>
@@ -169,7 +169,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
                                 <i class="fas fa-user me-2"></i> Hồ sơ
-                            </a>    
+                            </a>
                         </li>
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"

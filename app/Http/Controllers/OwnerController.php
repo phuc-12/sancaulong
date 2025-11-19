@@ -52,8 +52,8 @@ class OwnerController extends Controller
 
         return view('owner.index', compact('facilityStatusMessage', 'facilityStatusType', 'facility'));
     }
-
-
+    //=============================================================================================================
+//Cở sở của tôi
     public function facility()
     {
         $facility = Facilities::withoutGlobalScopes()
@@ -62,7 +62,184 @@ class OwnerController extends Controller
         return view('owner.facility', compact('facility'));
     }
 
-    public function storeFacility(Request $request)
+    /**
+     * CẬP NHẬT THÔNG TIN CƠ SỞ (không thay đổi trạng thái duyệt)
+     */
+    public function updateInfo(Request $request)
+    {
+        $facility = Facilities::withoutGlobalScopes()
+            ->where('owner_id', Auth::id())
+            ->first();
+
+        // Kiểm tra điều kiện cho phép update
+        if (!$facility) {
+            return back()->withErrors(['general' => 'Không tìm thấy cơ sở của bạn.']);
+        }
+
+        if (!$facility->is_active || $facility->need_reapprove) {
+            return back()->withErrors(['general' => 'Bạn không thể cập nhật thông tin lúc này. Vui lòng đợi admin phê duyệt.']);
+        }
+
+        // --- VALIDATION ---
+        $validatedData = $request->validate([
+            'facility_name' => 'required|string|max:100',
+            'address' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'open_time' => 'required',
+            'close_time' => 'required|after:open_time',
+            'description' => 'nullable|string|max:65535',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
+            'default_price' => 'nullable|numeric|min:0',
+            'special_price' => 'nullable|numeric|min:0',
+            'quantity_court' => 'required|integer|min:1',
+            'owner_phone' => 'nullable|string|max:20',
+            'owner_address' => 'nullable|string|max:255',
+
+            // Các trường nhạy cảm
+            'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
+            'account_no' => 'nullable|string|max:50',
+            'account_bank' => 'nullable|string|max:20',
+            'account_name' => 'nullable|string|max:100',
+            'business_license' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Kiểm tra các trường nhạy cảm có thay đổi không
+            $sensitiveFields = [
+                'owner_cccd' => Auth::user()->CCCD,
+                'account_no' => $facility->account_no,
+                'account_bank' => $facility->account_bank,
+                'business_license' => $request->hasFile('business_license'),
+            ];
+
+            $hasSensitiveChange = false;
+            foreach ($sensitiveFields as $field => $oldValue) {
+                if ($field === 'business_license') {
+                    if ($oldValue) {
+                        $hasSensitiveChange = true;
+                        break;
+                    }
+                } elseif (isset($validatedData[$field]) && $validatedData[$field] !== $oldValue) {
+                    $hasSensitiveChange = true;
+                    break;
+                }
+            }
+
+            // Nếu có thay đổi nhạy cảm, chặn update và yêu cầu gửi duyệt
+            if ($hasSensitiveChange) {
+                DB::rollBack();
+                return back()->withInput()->withErrors([
+                    'general' => 'Bạn đang thay đổi thông tin nhạy cảm (CCCD, Tài khoản ngân hàng, Giấy phép). Vui lòng sử dụng nút "Gửi Yêu Cầu Duyệt" để admin xét duyệt.'
+                ]);
+            }
+
+            // --- CẬP NHẬT USER (chỉ phone và address) ---
+            $user = Auth::user();
+            DB::table('users')->where('user_id', $user->user_id)->update([
+                'phone' => $validatedData['owner_phone'],
+                'address' => $validatedData['owner_address'],
+            ]);
+
+            // --- LƯU SỐ LƯỢNG SÂN CŨ TRƯỚC KHI UPDATE ---
+            $oldQuantity = (int) $facility->quantity_court; // Cast sang int
+
+            Log::info('Số sân trước khi update', ['oldQuantity' => $oldQuantity]);
+
+            // --- CHUẨN BỊ DỮ LIỆU FACILITY ---
+            $facilityData = [
+                'facility_name' => $validatedData['facility_name'],
+                'address' => $validatedData['address'],
+                'phone' => $validatedData['phone'],
+                'open_time' => $validatedData['open_time'],
+                'close_time' => $validatedData['close_time'],
+                'description' => $validatedData['description'],
+                'quantity_court' => $validatedData['quantity_court'],
+            ];
+
+            // --- UPLOAD ẢNH SÂN (không nhạy cảm) ---
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $newFileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $destinationPath = public_path('img/venues');
+
+                if (!file_exists($destinationPath))
+                    mkdir($destinationPath, 0755, true);
+                $file->move($destinationPath, $newFileName);
+                $facilityData['image'] = 'img/venues/' . $newFileName;
+
+                // Xóa ảnh cũ
+                if ($facility->image && file_exists(public_path($facility->image))) {
+                    unlink(public_path($facility->image));
+                }
+            }
+
+            // --- CẬP NHẬT FACILITY ---
+            $facility->update($facilityData);
+
+            // --- XỬ LÝ TẠO/XÓA SÂN KHI SỐ LƯỢNG THAY ĐỔI ---
+            $newQuantity = (int) $validatedData['quantity_court']; // Cast sang int
+
+            Log::info('So sánh số lượng sân', [
+                'oldQuantity' => $oldQuantity,
+                'newQuantity' => $newQuantity,
+                'isDifferent' => ($oldQuantity !== $newQuantity)
+            ]);
+
+            $courtMessage = '';
+            if ($oldQuantity !== $newQuantity) {
+                Log::info('Số sân thay đổi, gọi autoManageCourts');
+
+                try {
+                    $courtResult = $this->autoManageCourts($facility->facility_id, $newQuantity);
+
+                    Log::info('Courts auto-managed by owner', [
+                        'facility_id' => $facility->facility_id,
+                        'old_quantity' => $oldQuantity,
+                        'new_quantity' => $newQuantity,
+                        'action' => $courtResult['action'],
+                        'courts_affected' => $courtResult['courts_affected']
+                    ]);
+
+                    if ($courtResult['message']) {
+                        $courtMessage = ' ' . $courtResult['message'];
+                    }
+                } catch (\Exception $e) {
+                    // Rollback nếu không thể xóa sân (có booking)
+                    DB::rollBack();
+                    Log::error('Lỗi quản lý sân: ' . $e->getMessage());
+                    return back()->withInput()->withErrors(['general' => $e->getMessage()]);
+                }
+            } else {
+                Log::info('Số sân không thay đổi, bỏ qua autoManageCourts');
+            }
+
+            // --- CẬP NHẬT GIÁ ---
+            $facility->courtPrice()->updateOrCreate(
+                ['facility_id' => $facility->facility_id],
+                [
+                    'default_price' => $validatedData['default_price'],
+                    'special_price' => $validatedData['special_price'],
+                ]
+            );
+
+            DB::commit();
+
+            return redirect()->route('owner.index')->with('success', 'Cập nhật thông tin cơ sở thành công!' . $courtMessage);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi cập nhật thông tin cơ sở: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString()); // để debug
+            return back()->withInput()->withErrors(['general' => 'Lỗi cập nhật thông tin cơ sở. Chi tiết: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * GỬI YÊU CẦU PHÊ DUYỆT (tạo mới hoặc cập nhật thông tin nhạy cảm)
+     */
+    public function requestApproval(Request $request)
     {
         // --- VALIDATION ---
         $validatedData = $request->validate([
@@ -72,20 +249,13 @@ class OwnerController extends Controller
             'open_time' => 'required',
             'close_time' => 'required|after:open_time',
             'description' => 'nullable|string|max:65535',
-
-            // Giấy phép kinh doanh & ảnh sân
             'business_license' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'image' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
-
-            // Giá
             'default_price' => 'nullable|numeric|min:0',
             'special_price' => 'nullable|numeric|min:0',
-
-            // Thông tin chủ sở hữu
             'owner_phone' => 'nullable|string|max:20',
             'owner_address' => 'nullable|string|max:255',
             'owner_cccd' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore(Auth::id(), 'user_id')],
-
             'quantity_court' => 'required|integer|min:1',
             'account_no' => 'nullable|string|max:50',
             'account_bank' => 'nullable|string|max:20',
@@ -103,6 +273,13 @@ class OwnerController extends Controller
                 'CCCD' => $validatedData['owner_cccd'],
             ]);
 
+            // --- LẤY FACILITY CŨ (nếu có) ---
+            $existingFacility = Facilities::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
+
+            // Xác định loại yêu cầu
+            $isNewFacility = !$existingFacility;
+            $pendingRequestType = $isNewFacility ? 'activate' : 'sensitive_update';
+
             // --- CHUẨN BỊ DỮ LIỆU FACILITY ---
             $facilityData = [
                 'facility_name' => $validatedData['facility_name'],
@@ -112,15 +289,14 @@ class OwnerController extends Controller
                 'close_time' => $validatedData['close_time'],
                 'description' => $validatedData['description'],
                 'status' => 'chờ duyệt',
-
+                'is_active' => 0,
+                'need_reapprove' => 1,
+                'pending_request_type' => $pendingRequestType,
                 'quantity_court' => $validatedData['quantity_court'],
                 'account_no' => $validatedData['account_no'],
                 'account_bank' => $validatedData['account_bank'],
                 'account_name' => $validatedData['account_name'],
             ];
-
-            // --- LẤY FACILITY CŨ (nếu có) ---
-            $existingFacility = Facilities::withoutGlobalScopes()->where('owner_id', Auth::id())->first();
 
             // --- UPLOAD FILE GIẤY PHÉP KINH DOANH ---
             if ($request->hasFile('business_license')) {
@@ -183,15 +359,133 @@ class OwnerController extends Controller
 
             DB::commit();
 
+            $message = $isNewFacility
+                ? 'Yêu cầu đăng ký cơ sở đã được gửi đi chờ duyệt!'
+                : 'Yêu cầu cập nhật thông tin nhạy cảm đã được gửi đi chờ duyệt!';
+
+            return redirect()->route('owner.index')->with('success', $message);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Lỗi lưu thông tin cơ sở: ' . $e->getMessage());
-            return back()->withInput()->withErrors(['general' => 'Lỗi lưu thông tin cơ sở. Vui lòng thử lại.']);
+            Log::error('Lỗi gửi yêu cầu duyệt cơ sở: ' . $e->getMessage());
+            return back()->withInput()->withErrors(['general' => 'Lỗi gửi yêu cầu. Vui lòng thử lại.']);
         }
-
-        return redirect()->route('owner.index')->with('success', 'Thông tin cơ sở đã được gửi đi chờ duyệt!');
     }
 
+    /**
+     * TỰ ĐỘNG TẠO/XÓA SÂN KHI OWNER THAY ĐỔI SỐ LƯỢNG
+     */
+    private function autoManageCourts($facilityId, $quantity)
+    {
+        Log::info('=== BẮT ĐẦU autoManageCourts (Logic Composite Key) ===', [
+            'facility_id' => $facilityId,
+            'quantity_requested' => $quantity
+        ]);
+
+        // Đếm số sân hiện có
+        $existingCount = Courts::where('facility_id', $facilityId)->count();
+        Log::info('Số sân hiện có trong DB: ' . $existingCount);
+
+        // TRƯỜNG HỢP 1: TẠO THÊM SÂN
+        if ($existingCount < $quantity) {
+            $courtsToAdd = $quantity - $existingCount;
+
+            // 1. Lấy ID lớn nhất hiện tại TRONG PHẠM VI CƠ SỞ ĐÓ
+            // Nếu chưa có sân nào thì trả về 0
+            $currentMaxId = Courts::where('facility_id', $facilityId)->max('court_id') ?? 0;
+            
+            $nextId = $currentMaxId; 
+
+            for ($i = 1; $i <= $courtsToAdd; $i++) {
+                $nextId++; // Tăng ID lên 
+
+                // Tính tên sân hiển thị (Dựa trên tổng số lượng)
+                $courtNameNumber = $existingCount + $i;
+
+                try {
+                    Courts::create([
+                        'court_id'    => $nextId, // Lưu số thứ tự (1, 2, 3...)
+                        'facility_id' => $facilityId,
+                        'court_name'  => "Sân {$courtNameNumber}",
+                        'status'      => 'Trống',
+                    ]);
+
+                    Log::info("✓ Đã tạo Sân {$courtNameNumber} (court_id: {$nextId}) cho facility {$facilityId}");
+                } catch (\Exception $e) {
+                    Log::error('✗ Lỗi tạo sân: ' . $e->getMessage());
+                    throw $e;
+                }
+            }
+
+            return [
+                'action' => 'added',
+                'courts_affected' => $courtsToAdd,
+                'message' => "Đã tạo thêm {$courtsToAdd} sân mới."
+            ];
+        }
+
+        // TRƯỜNG HỢP 2: XÓA BỚT SÂN
+        if ($existingCount > $quantity) {
+            // Lấy các sân có court_id lớn nhất CỦA CƠ SỞ NÀY để xóa
+            $courtsToRemove = Courts::where('facility_id', $facilityId)
+                ->orderBy('court_id', 'desc')
+                ->take($existingCount - $quantity)
+                ->get();
+
+            $hasActiveBookings = false;
+            $bookingsInfo = [];
+
+            // Kiểm tra booking (Phải check cả facility_id và court_id)
+            foreach ($courtsToRemove as $court) {
+                $bookingCount = DB::table('bookings')
+                    ->where('facility_id', $facilityId) 
+                    ->where('court_id', $court->court_id)
+                    ->whereIn('status', ['confirmed', 'pending'])
+                    ->where('booking_date', '>=', now()->toDateString())
+                    ->count();
+
+                if ($bookingCount > 0) {
+                    $hasActiveBookings = true;
+                    $bookingsInfo[] = $court->court_name;
+                }
+            }
+
+            if ($hasActiveBookings) {
+                $courtNames = implode(', ', $bookingsInfo);
+                throw new \Exception(
+                    "Không thể giảm số lượng sân vì các sân sau đang có lịch đặt: {$courtNames}. " .
+                    "Vui lòng hủy lịch hoặc chờ khách đá xong."
+                );
+            }
+
+            $courtsRemovedCount = $existingCount - $quantity;
+
+            // Thực hiện xóa
+            foreach ($courtsToRemove as $court) {
+                // xóa chính xác theo cặp (facility_id + court_id) để tránh xóa nhầm sân của cơ sở khác
+                Courts::where('facility_id', $facilityId)
+                      ->where('court_id', $court->court_id)
+                      ->delete();
+            }
+
+            Log::info("Đã xóa {$courtsRemovedCount} sân của facility {$facilityId}");
+
+            return [
+                'action' => 'removed',
+                'courts_affected' => $courtsRemovedCount,
+                'message' => "Đã xóa {$courtsRemovedCount} sân."
+            ];
+        }
+
+        // Trường hợp 3: Không thay đổi
+        return [
+            'action' => 'unchanged',
+            'courts_affected' => 0,
+            'message' => ''
+        ];
+    }
+    //=============================================================================================================
+//Nhân viên
     public function staff()
     {
         $owner = Auth::user();

@@ -10,6 +10,7 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -121,7 +122,14 @@
     <main id="main-content">
         <h1 class="h3 mb-4" style="color: black;">Tổng Quan Dashboard</h1>
         <div class="row">
-
+            @if($pendingRequestsCount > 0)
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Có {{ $pendingRequestsCount }} yêu cầu đang cần phê duyệt.
+                    <a href="{{ route('admin.facilities.index') }}" class="alert-link">Xem chi tiết</a>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             <!-- Tổng doanh thu toàn hệ thống -->
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card kpi-card border-start border-4 border-success h-100">
