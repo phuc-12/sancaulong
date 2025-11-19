@@ -16,71 +16,95 @@ use App\Models\Facilities;
 
 class ManagerController extends Controller
 {
-
     // Trang Tổng quan của Quản lý sân
     public function index(Request $request)
     {
         $manager = Auth::user();
         $facilityId = $manager->facility_id;
-
-        // == Lọc thời gian ==
-        $query = Bookings::where('facility_id', $facilityId);
-
-        if ($request->date) {
-            $query->whereDate('booking_date', $request->date);
-        }
-
-        if ($request->from && $request->to) {
-            $query->whereBetween('booking_date', [$request->from, $request->to]);
-        }
-
-        if ($request->month) {
-            [$y, $m] = explode('-', $request->month);
-            $query->whereYear('booking_date', $y)->whereMonth('booking_date', $m);
-        }
-
         $today = now()->toDateString();
 
-        // --- KPI ---
-        $bookingsToday = $query->clone()->whereDate('booking_date', $today)->count();
-        $cancelToday = $query->clone()->where('status', 'cancel')->whereDate('booking_date', $today)->count();
+        // ====================================================
+        // 1. QUERY INVOICES (Lấy KPI từ Hóa đơn qua bảng invoice_details)
+        // ====================================================
+
+        // Tạo query cơ bản: Nối invoices với invoice_details để lọc theo facility_id
+        $queryInvoices = DB::table('invoices')
+            ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+            ->where('invoice_details.facility_id', $facilityId)
+            ->select('invoices.*'); // Chỉ lấy thông tin hóa đơn
+
+        // --- KPI A: Lượt đặt hôm nay (Tính theo số hóa đơn được tạo hôm nay) ---
+        // Sử dụng distinct để tránh đếm trùng nếu 1 hóa đơn có nhiều chi tiết
+        $bookingsToday = $queryInvoices->clone()
+            ->whereDate('invoices.issue_date', $today)
+            ->distinct('invoices.invoice_id')
+            ->count('invoices.invoice_id');
+
+        // --- KPI B: Hủy hôm nay (Vẫn lấy từ bảng bookings vì invoice thường không xóa mà chỉ đổi status) ---
+        $cancelToday = Bookings::where('facility_id', $facilityId)
+            ->where('status', 'cancel')
+            ->whereDate('booking_date', $today)
+            ->count();
+
+        // --- KPI C: Doanh thu hôm nay (Lấy final_amount từ invoices) ---
+        // Lưu ý: payment_status phải khớp chính xác với dữ liệu trong DB  (VD: "Đã thanh toán")
+        $revenueToday = $queryInvoices->clone()
+            ->whereDate('invoices.issue_date', $today)
+            ->where('invoices.payment_status', 'Đã thanh toán')
+            ->sum('invoices.final_amount');
+        // Nếu hệ thống 1 hóa đơn = 1 lần đặt thì code này đúng.
+        // Nếu muốn chính xác tuyệt đối theo từng hạng mục, nên sum('invoice_details.sub_total').
+
+        // --- KPI D: Doanh thu tháng này ---
+        $revenueMonth = $queryInvoices->clone()
+            ->whereMonth('invoices.issue_date', now()->month)
+            ->whereYear('invoices.issue_date', now()->year)
+            ->where('invoices.payment_status', 'Đã thanh toán')
+            ->sum('invoices.final_amount');
+
+
+        // ====================================================
+        // 2. CÁC PHẦN KHÁC
+        // ====================================================
 
         $facility = Facilities::find($facilityId);
 
         // Busy courts
         $currentTime = now()->format('H:i');
         $slot = Time_slots::where('start_time', '<=', $currentTime)->where('end_time', '>=', $currentTime)->first();
-
         $busy = $slot
-            ? Bookings::where('time_slot_id', $slot->time_slot_id)->where('status', 'booked')->count()
+            ? Bookings::where('time_slot_id', $slot->time_slot_id)
+                ->where('facility_id', $facilityId)
+                ->where('status', 'booked')->count()
             : 0;
-
         $totalCourts = Courts::where('facility_id', $facilityId)->count();
 
-        // Revenue
-        $revenueToday = $query->clone()->whereDate('booking_date', $today)->sum('unit_price');
-        $revenueMonth = $query->clone()->whereMonth('booking_date', now()->month)->sum('unit_price');
-
-
-        // === BIỂU ĐỒ GIỜ ===
+        // Biểu đồ Giờ (Lấy từ Booking để hiển thị mật độ sân)
         $hours = range(6, 23);
         $hourData = [];
+        $queryBookings = Bookings::where('facility_id', $facilityId); // Query gốc cho booking
+
+        // Áp dụng bộ lọc ngày cho biểu đồ (nếu user chọn filter)
+        $filterDate = $request->date ? $request->date : $today;
+        // Nếu user không chọn ngày thì mặc định biểu đồ giờ hiển thị hôm nay, 
+        // hoặc có thể bỏ dòng trên nếu muốn biểu đồ luôn hiển thị theo filter chung.
 
         foreach ($hours as $h) {
-            $hourData[] = $query->clone()
+            $hourData[] = Bookings::where('facility_id', $facilityId)
+                ->whereDate('booking_date', $filterDate) // Lọc theo ngày đang xem
                 ->whereTime('created_at', '>=', $h . ':00:00')
                 ->whereTime('created_at', '<=', $h . ':59:59')
                 ->count();
         }
 
-        // === BIỂU ĐỒ TỪNG SÂN ===
+        // Biểu đồ Từng Sân
         $courts = Courts::where('facility_id', $facilityId)->get();
         $courtLabels = [];
         $courtData = [];
-
         foreach ($courts as $c) {
             $courtLabels[] = $c->court_name;
-            $courtData[] = $query->clone()->where('court_id', $c->court_id)->count();
+            // Đếm số booking của sân đó (có thể áp dụng thêm filter ngày nếu muốn biểu đồ thay đổi theo filter)
+            $courtData[] = Bookings::where('court_id', $c->court_id)->count();
         }
 
         return view('manager.index', [
@@ -364,7 +388,7 @@ class ManagerController extends Controller
 
         // --- ĐỊNH DẠNG EVENT OBJECTS (Giữ nguyên logic map) ---
         $events = $bookings->map(function ($booking) {
-            // Log từng booking đang xử lý (Giữ nguyên)
+            // Log từng booking đang xử lý 
             Log::info('Processing Booking:', $booking->toArray());
 
             $startTimeStr = $booking->booking_date . ' ' . $booking->start_time;
@@ -389,7 +413,7 @@ class ManagerController extends Controller
             ];
         })->filter()->values();
 
-        // Ghi log dữ liệu JSON cuối cùng (Giữ nguyên)
+        // Ghi log dữ liệu JSON cuối cùng 
         Log::info('Final Events JSON:', $events->toArray());
 
         return response()->json($events);
