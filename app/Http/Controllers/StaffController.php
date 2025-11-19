@@ -666,4 +666,59 @@ class StaffController extends Controller
                      ->with('success_message', 'Hủy lịch thành công!');
     }
 
+    public function searchInvoice(Request $request)
+{
+    $facilityId = $this->getStaffFacilityId();
+
+    // =============================
+    // 1) Query INVOICES
+    // =============================
+    $query = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'invoices.customer_id')
+        ->where('facilities.facility_id', $facilityId)
+        ->where('invoices.payment_status', 'Chưa thanh toán')
+        ->select(
+            'invoices.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'users.phone as phone',
+            'invoices.issue_date as issue_date',
+            'invoices.final_amount as final_amount',
+            'invoice_details.invoice_detail_id as invoice_detail_id',
+            'invoice_details.facility_id as facility_id'
+        )
+        ->orderBy('invoices.invoice_id', 'desc');
+
+    // 🔍 Thêm điều kiện search trước khi paginate
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('users.phone', 'like', "%$search%")
+              ->orWhere('users.fullname', 'like', "%$search%");
+        });
+    }
+
+    // 🚀 paginate cuối cùng
+    $invoices = $query->paginate(10)->appends($request->only('search'));
+
+    // =============================
+    // 2) Booking details
+    // =============================
+    $mybooking_details = [];
+    foreach ($invoices as $invoice) {
+        $mybooking_details[$invoice->invoice_detail_id] = DB::table('bookings')
+            ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+            ->where('bookings.invoice_detail_id', $invoice->invoice_detail_id)
+            ->select('bookings.*', 'time_slots.start_time', 'time_slots.end_time')
+            ->get();
+    }
+
+    return view('staff.payment', [
+        'invoices' => $invoices,
+        'mybooking_details' => $mybooking_details,
+    ]);
+}
+
 }

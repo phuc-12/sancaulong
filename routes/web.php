@@ -190,7 +190,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
         ->name('payment');
     Route::post('/cancel-invoice',[StaffController::class, 'cancel_invoice'])->name('cancel_invoice');
     // POST: Tìm kiếm booking để thanh toán
-    Route::post('/search', [StaffController::class, 'searchBooking'])
+    Route::post('/search/booking-today', [StaffController::class, 'searchBooking'])
         ->name('customer.search');
 
     Route::post('/invoice_details', [StaffController::class, 'invoice_details'])
@@ -207,6 +207,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
     Route::get('/invoice_history', [StaffController::class, 'invoice_history'])->name('invoiceHistory');
     Route::post('/search/history', [StaffController::class, 'searchHistory'])
         ->name('history.search');
+
+    Route::post('/search/invoice', [StaffController::class, 'searchInvoice'])
+        ->name('invoice.search');
 });
 
 //=============================================================================================================
