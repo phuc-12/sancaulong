@@ -993,6 +993,7 @@ class HomeController extends Controller
 
         DB::table('invoices')->where('invoice_id', $invoice_details->invoice_id)->update([
             'payment_status' => 'Đã Hủy',
+            'updated_at' => now(),
         ]);
 
         return view('layouts.redirect_mybookings', [
@@ -1083,6 +1084,7 @@ class HomeController extends Controller
 
         DB::table('long_term_contracts')->where('invoice_detail_id', $invoice_detail_id)->update([
             'payment_status' => 'Đã Hủy',
+            'updated_at' => now(),
         ]);
 
         return view('layouts.redirect_mycontracts', [
