@@ -115,6 +115,14 @@ Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () 
     // Trang Quản lý Cơ sở
     Route::get('/facility', [OwnerController::class, 'facility'])->name('facility');
     Route::post('/facility', [OwnerController::class, 'storeFacility'])->name('facility.store');
+    // Lưu thông tin cơ sở (không gửi duyệt)
+    Route::post('/owner/facility/update-info', [OwnerController::class, 'updateInfo'])->name('facility.updateInfo');
+    // Gửi duyệt cơ sở
+    Route::post('/owner/facility/request-approval', [OwnerController::class, 'requestApproval'])->name('facility.requestApproval');
+    Route::get('/facility/{id}/edit', [OwnerController::class, 'edit'])->name('facility.edit');
+    Route::post('/facility/{id}/update', [OwnerController::class, 'update'])->name('facility.update');
+    Route::post('/facility/{id}/send-activate-request', [OwnerController::class, 'sendActivateRequest'])
+        ->name('facility.sendActivateRequest');
 
     // Trang Quản lý Nhân viên
     Route::get('/staff', [OwnerController::class, 'staff'])->name('staff');
@@ -129,7 +137,7 @@ Route::prefix('owner')->name('owner.')->middleware(['auth'])->group(function () 
     // Trang dashboard báo cáo
     Route::get('/report', [ReportController::class, 'index'])->name('report');
     Route::get('/courts', [OwnerController::class, 'getCourts'])->name('getCourts');
-    
+
     // API trả dữ liệu KPI (dùng AJAX)
     Route::get('/report/kpi-data', [ReportController::class, 'kpiData'])->name('report.kpiData');
     // API biểu đồ doanh thu theo thời gian (Line Chart)

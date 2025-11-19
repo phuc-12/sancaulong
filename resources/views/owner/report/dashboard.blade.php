@@ -260,7 +260,33 @@
             <h1 class="page-title">Dashboard Báo Cáo</h1>
             <p class="page-subtitle">Tổng quan hoạt động kinh doanh sân cầu lông</p>
         </div>
+        {{-- ==== THÔNG BÁO SESSION ==== --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- ==== THÔNG BÁO TRẠNG THÁI CƠ SỞ ==== --}}
+        @if(!empty($facilityStatusMessage))
+            <div class="alert alert-{{ $facilityStatusType }} alert-dismissible fade show" role="alert">
+                {{ $facilityStatusMessage }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        {{-- ==== FILTER, KPI, CHARTS ==== --}}
         <div class="filter-section">
             <div class="row align-items: center">
                 <div class="col-auto d-flex align-items-center">
@@ -538,7 +564,7 @@
                 }
             } catch (error) {
                 console.error('Lỗi load courts:', error);
-                alert('Không thể tải danh sách sân. Vui lòng thử lại.');
+                // alert('Không thể tải danh sách sân. Vui lòng thử lại.');
             }
         }
 
@@ -721,11 +747,11 @@
 
                 data.forEach((c, i) => {
                     tbody.innerHTML += `
-                                                                        <tr>
-                                                                            <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
-                                                                            <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
-                                                                            <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
-                                                                        </tr>`;
+                                                                            <tr>
+                                                                                <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
+                                                                                <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
+                                                                                <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
+                                                                            </tr>`;
                 });
             } catch (err) { console.error("Lỗi tải Top Khách hàng:", err); tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Lỗi khi tải dữ liệu.</td></tr>'; }
         }
