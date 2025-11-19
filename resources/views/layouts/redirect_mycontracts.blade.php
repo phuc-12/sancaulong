@@ -9,7 +9,7 @@
 <body style="display:flex; align-items:center; justify-content:center; height:100vh; flex-direction:column; font-family:sans-serif;">
     <p>Vui lòng chờ trong giây lát...</p>
 
-    <form id="redirectMycontracts" method="POST" action="{{ route('lich_co_dinh') }}">
+    <form id="redirectMycontracts" method="GET" action="{{ route('lich_co_dinh') }}">
         @csrf
         <input type="hidden" name="user_id" value="{{ $user_id }}">
         <input type="hidden" name="success_message" value="{{ $success_message }}">

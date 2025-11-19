@@ -25,7 +25,7 @@ Route::prefix('/')->controller(HomeController::class)
     ->group(function () {
         Route::get('/', 'index')->name('trang_chu');
         Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
-        Route::get('/api/load-more-san', 'load_more_san')->name('api.load_san');
+        Route::get('/load-more-san',  'loadMoreSan')->name('load.more.san');
         Route::post('/venue', 'show')->name('chi_tiet_san');
         Route::post('/thanh-toan', 'payments')->name('thanh.toan');
         Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
@@ -188,6 +188,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
     // GET: Hiển thị trang & kết quả tìm kiếm
     Route::get('/payment', [StaffController::class, 'paymentPage'])
         ->name('payment');
+    Route::post('/cancel-invoice',[StaffController::class, 'cancel_invoice'])->name('cancel_invoice');
     // POST: Tìm kiếm booking để thanh toán
     Route::post('/search', [StaffController::class, 'searchBooking'])
         ->name('customer.search');

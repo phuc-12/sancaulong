@@ -30,54 +30,57 @@ class HomeController extends Controller
 
     }
 
-    public function listing_grid()
+    public function listing_grid(Request $request)
     {
-        // $limit = self::LIMIT_PER_LOAD;
-
-        // 1. Lấy tổng số sân đang hoạt động (cho mục đích hiển thị tổng số)
         $total_count = Facilities::where('status', 'đã duyệt')->count();
+        $offset = $request->get('offset', 0);
+        $limit = 9;
 
-        // 2. Lấy danh sách sân lần đầu tiên (Chỉ 10 sân)
-        $danhsachsan = Facilities::query()
+        $danhsachsan = Facilities::with('courtPrice')
             ->where('status', 'đã duyệt')
-            // ->take($limit)
-            ->get();
-        // 3. Kiểm tra trạng thái còn dữ liệu để tải nữa hay không
-        // Nếu số lượng sân lấy được bằng LIMIT, thì chắc chắn còn dữ liệu tiếp theo.
-        // $hasMoreData = $danhsachsan->count() === $limit;
-
-        // 4. Truyền các biến cần thiết sang Blade
-        return view('listing-grid', compact(
-            'danhsachsan', 
-            // 'hasMoreData', 
-            'total_count', 
-            // 'limit'
-        ));
-    }
-
-    //  Xử lý request AJAX/Fetch (Trả về JSON)
-    public function load_more_san(Request $request)
-    {
-        $limit = self::LIMIT_PER_LOAD;
-        $offset = $request->input('offset', 0); // Lấy offset từ JavaScript
-
-        // Query cơ sở dữ liệu với skip và take
-        $sans = Facilities::query()
-            ->where('status', '1') // Dùng cùng trạng thái với hàm trên
             ->skip($offset)
             ->take($limit)
             ->get();
 
-        // Kiểm tra còn dữ liệu để tải nữa hay không
-        $hasMore = $sans->count() === $limit;
+        $hasMore = ($offset + $limit) < $total_count;
 
-        // Trả về dữ liệu dưới dạng JSON
+        return view('listing-grid', compact('danhsachsan', 'total_count', 'hasMore'));
+    }
+
+    public function loadMoreSan(Request $request)
+    {
+        $offset = $request->get('offset', 0);
+        $limit = 9;
+
+        $danhsachsan = Facilities::with('courtPrice')
+            ->where('status', 'đã duyệt')
+            ->skip($offset)
+            ->take($limit)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'facility_id' => $item->facility_id,
+                    'facility_name' => $item->facility_name,
+                    'description' => $item->description,
+                    'address' => $item->address,
+                    'open_time' => $item->open_time,
+                    'close_time' => $item->close_time,
+                    'image' => asset($item->image),
+                    'courtPrice' => [
+                        'default_price' => $item->courtPrice->default_price ?? 0
+                    ],
+                ];
+            });
+
+        $total_count = Facilities::where('status', 'đã duyệt')->count();
+        $hasMore = ($offset + $limit) < $total_count;
+
         return response()->json([
-            'data' => $sans,
-            'offset' => (int) $offset + $limit, // Cập nhật offset mới cho JS
-            'hasMore' => $hasMore,
+            'data' => $danhsachsan,
+            'hasMore' => $hasMore
         ]);
     }
+
     public function show(Request $request)
     {
         $idSan = $request->input('facility_id');
@@ -876,7 +879,8 @@ class HomeController extends Controller
                 'long_term_contracts.final_amount as final_amount'
             )
             ->orderBy('long_term_contracts.issue_date', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->appends(['user_id' => $user_id]); // giữ user_id khi bấm trang 2
 
         // Lấy danh sách invoice_detail_id của trang hiện tại
         $invoiceIds = $long_term_contracts->pluck('invoice_detail_id')->toArray();

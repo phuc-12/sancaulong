@@ -13,6 +13,7 @@ use App\Models\Courts;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -43,7 +44,7 @@ class ReportController extends Controller
                 ->orderBy('court_id', 'asc')
                 ->get(['court_id', 'court_name']);
 
-            \Log::info('Courts loaded:', ['facility_id' => $facility_id, 'count' => $courts->count()]);
+            Log::info('Courts loaded:', ['facility_id' => $facility_id, 'count' => $courts->count()]);
         }
 
         return view('owner.report.dashboard', compact('courts', 'facility_id'));
@@ -185,7 +186,7 @@ class ReportController extends Controller
             $ownerFacilityId = $this->getOwnerFacilityId($ownerId);
 
             if (!$ownerFacilityId) {
-                \Log::warning('No facility found for owner', ['owner_id' => $ownerId]);
+                Log::warning('No facility found for owner', ['owner_id' => $ownerId]);
                 return response()->json(['labels' => [], 'revenues' => []]);
             }
 
@@ -221,7 +222,7 @@ class ReportController extends Controller
                 ->orderByDesc('revenue')
                 ->get();
 
-            \Log::info('Revenue by court:', [
+            Log::info('Revenue by court:', [
                 'facility' => $ownerFacilityId,
                 'date_range' => $dateRange,
                 'count' => $data->count(),
@@ -234,7 +235,7 @@ class ReportController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error in revenueByCourt', [
+            Log::error('Error in revenueByCourt', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
