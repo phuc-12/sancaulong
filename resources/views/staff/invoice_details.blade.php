@@ -119,7 +119,7 @@
 								<p>Không có dữ liệu khung giờ nào!</p>
 							@endif
 
-								<form action="{{ route('cancel_invoice') }}" method="POST" class="mb-3">
+								<form action="{{ route('staff.cancel_invoice') }}" method="POST" class="mb-3">
 									@csrf
 									<input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}">
 									
@@ -152,7 +152,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-document.querySelector('form[action="{{ route('cancel_invoice') }}"]').addEventListener('submit', function(e) {
+document.querySelector('form[action="{{ route('staff.cancel_invoice') }}"]').addEventListener('submit', function(e) {
     e.preventDefault();
     Swal.fire({
         title: 'Xác nhận hủy lịch này?',

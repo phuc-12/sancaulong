@@ -1,99 +1,120 @@
 @extends('layouts.staff')
 
 @section('staff_content')
-    <h1 class="h3 mb-4">Thanh Toán Tại Quầy & In Hóa Đơn</h1>
+<h1 class="h3 mb-4 fw-bold">Thanh Toán Tại Quầy & In Hóa Đơn</h1>
 
-    {{-- Hiển thị thông báo (Thành công/Lỗi) --}}
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-     @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-     @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0"> @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach </ul>
-        </div>
-     @endif
+{{-- Thông báo --}}
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0"> @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach </ul>
+    </div>
+@endif
 
-    <div class="row">
-        {{-- Cột trái: Thông tin & Thanh toán --}}
-        <div class="col-lg-12">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">Thông tin Hóa đơn</h5>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0 fw-semibold">Danh sách hóa đơn</h5>
+            </div>
+            @if(session('success_message'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('success_message') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                <div class="card-body">
-                    {{-- Form Tìm Kiếm --}}
-                    {{-- <form method="POST" action="{{ route("staff.payment.search") }}">
-                    @csrf
-                        <div>
-                            <input type="text" name="search" placeholder="Tìm kiếm SĐT hoặc tên khách hàng..."
-                                value="" class="form-control" style="margin:10px 0; width:300px; float: left">
-                            <button type="submit" class="btn btn-success" style="float: left; margin: 10px;">Tìm kiếm</button>
-                        </div>
-                    </form> --}}
-                    <div>
-                        <table class="table table-striped">
-                            <thead>
+            @endif
+
+            {{-- @if(session('error_message'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error_message') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif --}}
+            <div class="card-body">
+
+                {{-- Bảng danh sách --}}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th>#</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Tình trạng</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="text-center">
+                            @php $index = 1; @endphp
+
+                            @isset($invoices)
+                                @forelse($invoices as $invoice)
                                 <tr>
-                                    <th></th>
-                                    <th>Khách hàng</th>
-                                    <th>Ngày đặt</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Tình trạng</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php $index=0 @endphp
-                                @isset($invoices)
-                                    @forelse ($invoices as $invoice)
-                                        <tr>
-                                            <td>{{ $index+=1 }}</td>
-                                            <td>{{ $invoice->fullname }}</td>
-                                            <td>{{ date('d/m/Y', strtotime($invoice->issue_date)) }}</td>
-                                            <td>{{ $invoice->final_amount }}</td>
-                                            <td>{{ $invoice->payment_status }}</td>
-                                            <td>
-                                                <form action="{{ route('staff.chi_tiet_hd_nv') }}" method="POST">
+                                    <td>{{ $index++ }}</td>
+                                    <td>{{ $invoice->fullname }}</td>
+                                    <td>{{ date('d/m/Y', strtotime($invoice->issue_date)) }}</td>
+                                    <td>{{ number_format($invoice->final_amount) }}₫</td>
+
+                                    <td>
+                                        @if ($invoice->payment_status === 'Đã Hủy')
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                        @elseif ($invoice->payment_status === 'Đã thanh toán')
+                                            <span class="badge bg-success">Đã thanh toán</span>
+                                        @else
+                                            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if ($invoice->payment_status === 'Đã Hủy')
+                                            <span class="text-danger fw-semibold">Đã hủy</span>
+                                        @elseif ($invoice->payment_status === 'Đã thanh toán')
+                                            <span class="text-success fw-semibold">Đã thanh toán</span>
+                                        @else
+                                            <form action="{{ route('staff.chi_tiet_hd_nv') }}" method="POST">
                                                 @csrf
-                                                    <input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
-                                                    <input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
-                                                    <input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
-                                                    <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
-                                                    <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
-                                                    @if ($invoice->payment_status === 'Đã Hủy')
-                                                        <p class="text-danger pt-3">Đã hủy</p>
-                                                    @elseif ($invoice->payment_status === 'Đã thanh toán')
-                                                        <p class="text-primary pt-3">Đã thanh toán</p>
-                                                    @else 
-                                                        <button type="submit" class="btn btn-success">
-                                                            Chi tiết
-                                                        </button>
-                                                    @endif
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">
-                                                Chưa có lịch đặt nào
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                @else
-                                    <tr><td colspan="6" class="text-center text-muted">Không có thông tin khách hàng này</td></tr>
-                                @endisset
-                            </tbody>
-                        </table>
+                                                <input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
+                                                <input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
+                                                <input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
+                                                <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
+                                                <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
+                                                <button class="btn btn-sm btn-primary px-3">
+                                                    Chi tiết
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-muted">Không có hóa đơn nào</td>
+                                    </tr>
+                                @endforelse
+                            @else
+                                <tr>
+                                    <td colspan="6" class="text-muted">Không có dữ liệu</td>
+                                </tr>
+                            @endisset
+                        </tbody>
+
+                    </table>
+                    <!-- Pagination -->
+                    <div class="mt-4 d-flex justify-content-center">
+                        {{ $invoices->links('vendor.pagination.bootstrap-5') }}
                     </div>
-                    
                 </div>
+
             </div>
         </div>
-
-        
-        
     </div>
+</div>
+
 @endsection

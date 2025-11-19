@@ -137,7 +137,7 @@ class StaffController extends Controller
             'invoice_details.facility_id as facility_id',
         )
         ->orderBy('invoices.invoice_id', 'desc')
-        ->get();
+        ->paginate(10);
 
         $mybooking_details = [];
 
@@ -256,7 +256,8 @@ class StaffController extends Controller
             'invoice_details.facility_id as facility_id'
         )
         ->orderBy('invoices.invoice_id', 'desc')
-        ->get();
+        ->paginate(10)
+        ->appends(['user_id' => 'users.user_id']);
 
         $mybooking_details = [];
 
@@ -287,7 +288,8 @@ class StaffController extends Controller
             'long_term_contracts.final_amount as final_amount'
         )
         ->orderBy('long_term_contracts.contract_id', 'desc')
-        ->get();
+        ->paginate(10)
+        ->appends(['user_id' => 'users.user_id']);
 
         $mycontract_details = [];
 
@@ -641,9 +643,29 @@ class StaffController extends Controller
         return view('staff.redirect_post', [
             'facility_id' => $facility_id,
             'user_id' => $userId,
-            'success_message' => 'Thanh toán và đặt sân thành công!'
+            'success_message' => 'Đã lưu lịch đặt của khách hàng!'
         ]);
 
+    }
+
+    public function cancel_invoice(Request $request)
+    {
+        $invoice_detail_id = $request->invoice_detail_id;
+        $user_id = $request->user_id;
+
+        Bookings::where('invoice_detail_id', $invoice_detail_id)->delete();
+
+        $invoice_details = DB::table('invoice_details')
+        ->where('invoice_detail_id', $invoice_detail_id)
+        ->select('invoice_id')
+        ->first();
+
+        DB::table('invoices')->where('invoice_id', $invoice_details->invoice_id)->update([
+            'payment_status' => 'Đã Hủy',
+        ]);
+
+        return redirect()->route('staff.payment') // hoặc route phù hợp
+                     ->with('success_message', 'Hủy lịch thành công!');
     }
 
 }

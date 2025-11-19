@@ -328,6 +328,14 @@
                                     Chọn Khung Giờ
                                 </button>
                             </h4>
+                            <div style="width: 100%; height: 39px;">
+                                <button type="button" class="btn btn-sm btn-light p-1" 
+                                        style="font-size: 1.2rem; float: right; width: 38.2px;" 
+                                        data-bs-toggle="modal" data-bs-target="#overviewModal"
+                                        title="Mở rộng">
+                                    ⤢
+                                </button>
+                            </div>
                             <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-overview">
                                 <div class="accordion-body">
                                     @php
@@ -414,6 +422,90 @@
                                 </div>
                             </div>
                         </div>
+<!-- Modal Tổng Quan -->
+<div class="modal fade" id="overviewModal" tabindex="-1" aria-labelledby="overviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="overviewModalLabel">Tổng quan khung giờ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        @php $soLuongSan = $thongtinsan->quantity_court; @endphp
+
+        <ul class="nav nav-tabs" id="modalSanTabs" role="tablist">
+            @for ($i = 1; $i <= $soLuongSan; $i++)
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ $i==1?'active':'' }}" id="modalSan{{ $i }}-tab" data-bs-toggle="tab"
+                        data-bs-target="#modalSan{{ $i }}" type="button" role="tab">
+                        Sân {{ $i }}
+                    </button>
+                </li>
+            @endfor
+        </ul>
+
+        <div class="tab-content mt-2" id="modalSanTabsContent">
+            @for ($i = 1; $i <= $soLuongSan; $i++)
+                <div class="tab-pane fade {{ $i==1?'show active':'' }}" id="modalSan{{ $i }}" role="tabpanel">
+                    <div style="max-height: 600px; overflow: auto;">
+                        <table class="fixed-table">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col">Khung giờ</th>
+                                    @foreach ($dates as $d)
+                                        <th>{{ $thuTiengViet[date('D', strtotime($d))] }} {{ date('d/m', strtotime($d)) }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($timeSlots as $slot)
+                                    <tr>
+                                        <td class="sticky-col">
+                                            {{ substr($slot->start_time,0,5) }} - {{ substr($slot->end_time,0,5) }}
+                                        </td>
+                                        @foreach ($dates as $d)
+                                            @php
+                                                $now = \Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                                                $slotDateTime = \Carbon\Carbon::parse($d . ' ' . $slot->start_time, 'Asia/Ho_Chi_Minh');
+                                                $isPast = $slotDateTime->lt($now);
+                                                $isBooked = isset($bookingsData[$d][$slot->time_slot_id][$i]);
+                                                $unitPrice = (strtotime($slot->start_time) >= strtotime('05:00:00') && strtotime($slot->start_time) < strtotime('16:00:00'))
+                                                    ? $thongtinsan->courtPrice->default_price
+                                                    : $thongtinsan->courtPrice->special_price;
+                                            @endphp
+                                            <td>
+                                                @if ($isPast)
+                                                    <span class="het-han">Quá hạn</span>
+                                                @elseif ($isBooked)
+                                                    <span class="da-chon">Đã đặt</span>
+                                                @elseif (auth()->check())
+                                                    <button type="button" class="slot-btn" 
+                                                        data-user="{{ auth()->id() }}"
+                                                        data-facility="{{ $thongtinsan->facility_id }}"
+                                                        data-court="{{ $i }}"
+                                                        data-date="{{ \Carbon\Carbon::parse($d)->format('d-m-Y') }}"
+                                                        data-slot="{{ $slot->time_slot_id }}"
+                                                        data-price="{{ $unitPrice/2 }}"
+                                                        data-start_time="{{ substr($slot->start_time,0,5) }}"
+                                                        data-end_time="{{ substr($slot->end_time,0,5) }}">
+                                                    </button>
+                                                @else
+                                                    <a href="{{ route('login') }}" onclick="alert('Vui lòng đăng nhập để đặt sân')">Đăng nhập</a>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endfor
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
                         <!-- Long-term Booking Form -->
                         <div class="accordion-item mb-4" id="includes">
@@ -834,12 +926,16 @@
 <script>
 let selectedSlots = []; // lưu các slot đã chọn
 
+function getSlotKey(slot){
+    return `${slot.court}_${slot.date}_${slot.time_slot_id}`;
+}
+
 function updateAsideTable() {
     const tbody = document.querySelector('.book-court + .white-bg tbody');
     tbody.innerHTML = '';
     let total = 0;
 
-    selectedSlots.forEach((slot, index) => {
+    selectedSlots.forEach((slot) => {
         total += slot.price;
 
         const tr = document.createElement('tr');
@@ -849,29 +945,31 @@ function updateAsideTable() {
             <td>${slot.start_time}</td>
             <td>${slot.end_time}</td>
             <td>${slot.date}</td>
-            
-            <td><button type="button" class="btn btn-sm btn-danger remove-slot" data-index="${index}">X</button></td>
+            <td><button type="button" class="btn btn-sm btn-danger remove-slot" data-key="${getSlotKey(slot)}">X</button></td>
         `;
         tbody.appendChild(tr);
     });
 
     document.getElementById('total-price').textContent = total.toLocaleString() + ' đ';
-
-    // Thêm sự kiện xóa slot
-    document.querySelectorAll('.remove-slot').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            // Bỏ class selected trên nút slot tương ứng
-            if (selectedSlots[idx] && selectedSlots[idx].btnElement) {
-                selectedSlots[idx].btnElement.classList.remove('selected');
-            }
-            // Xóa slot khỏi mảng
-            selectedSlots.splice(idx, 1);
-            // Render lại bảng
-            updateAsideTable();
-        });
-    });
 }
+
+// Event delegation cho remove slot
+document.body.addEventListener('click', function(e){
+    if(e.target.classList.contains('remove-slot')){
+        const key = e.target.dataset.key;
+        const idx = selectedSlots.findIndex(s => getSlotKey(s) === key);
+        if(idx !== -1){
+            const slot = selectedSlots[idx];
+            selectedSlots.splice(idx,1);
+
+            // Đồng bộ tất cả slot cùng key (modal + bảng ngoài)
+            document.querySelectorAll(`.slot-btn[data-court="${slot.court}"][data-date="${slot.date}"][data-slot="${slot.time_slot_id}"]`)
+                .forEach(el => el.classList.remove('selected'));
+
+            updateAsideTable();
+        }
+    }
+});
 
 
 document.querySelectorAll('.slot-btn').forEach(btn => {
@@ -883,9 +981,11 @@ document.querySelectorAll('.slot-btn').forEach(btn => {
             end_time: this.dataset.end_time,
             time_slot_id: this.dataset.slot,
             price: parseFloat(this.dataset.price),
-            btnElement: this // Lưu nút để xóa class later
         };
 
+        const key = `${slotData.court}_${slotData.date}_${slotData.start_time}`;
+
+        // Kiểm tra đã chọn chưa
         const existsIndex = selectedSlots.findIndex(s =>
             s.court == slotData.court &&
             s.date == slotData.date &&
@@ -894,12 +994,18 @@ document.querySelectorAll('.slot-btn').forEach(btn => {
 
         if (existsIndex === -1) {
             selectedSlots.push(slotData);
-            this.classList.add('selected');
         } else {
             selectedSlots.splice(existsIndex, 1);
-            this.classList.remove('selected');
         }
 
+        // Đồng bộ class selected cho **tất cả nút cùng slot**
+        document.querySelectorAll(`.slot-btn[data-court="${slotData.court}"][data-date="${slotData.date}"][data-start_time="${slotData.start_time}"]`)
+            .forEach(el => {
+                if (existsIndex === -1) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+
+        // Cập nhật aside
         updateAsideTable();
     });
 });

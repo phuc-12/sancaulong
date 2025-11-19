@@ -36,7 +36,7 @@
                             <tr>
                                 <th>STT</th>
                                 <th>Tên sân</th>
-                                <th>Khách hàng</th>
+                                {{-- <th>Khách hàng</th> --}}
                                 <th>Ngày đặt</th>
                                 <th>Tổng tiền</th>
                                 <th>Ngày áp dụng</th>
@@ -56,15 +56,19 @@
                                     $firstBooking = $mybooking_details[$invoice->invoice_detail_id]->first() ?? null;
                                     $bookingDate = $firstBooking->booking_date ?? null;
                                     $isExpired = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->lt(\Carbon\Carbon::today()) : false;
+
+                                    // Format ngày
+                                    $formattedIssueDate = $invoice->issue_date ? \Carbon\Carbon::parse($invoice->issue_date)->format('d/m/Y H:i:s') : '';
+                                    $formattedBookingDate = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->format('d/m/Y') : '';
                                 @endphp
 
                                 <tr class="text-center">
                                     <td>{{ ++$index }}</td>
                                     <td class="fw-semibold">{{ $invoice->facility_name }}</td>
-                                    <td>{{ $invoice->fullname }}</td>
-                                    <td>{{ $invoice->issue_date }}</td>
+                                    {{-- <td>{{ $invoice->fullname }}</td> --}}
+                                    <td>{{ $formattedIssueDate }}</td>
                                     <td class="fw-bold text-success">{{ number_format($invoice->final_amount, 0, ',', '.') }}₫</td>
-                                    <td>{{ $bookingDate }}</td>
+                                    <td>{{ $formattedBookingDate }}</td>
                                     <td>
                                         @if($isExpired)
                                             <span class="badge bg-warning text-dark">Đã quá hạn</span>
@@ -99,6 +103,7 @@
                                 </tr>
                             @endforelse
                         </tbody>
+
                     </table>
                 </div>
 

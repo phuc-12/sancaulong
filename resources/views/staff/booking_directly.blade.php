@@ -307,56 +307,7 @@
                             </div>
                         </div>
                     @endfor
-                    <div style="margin-top:30px;">
-                        <h3 style="text-align: center">Thuê sân cố định</h3>
-                    </div>
-                    <div id="panelsStayOpen-collapseTwo"
-                        class="accordion-collapse collapse show" 
-                        aria-labelledby="panelsStayOpen-includes">
-                        <div class="accordion-body">
-                            <form method="POST" action="{{ route('contract_bookings') }}">
-                                @csrf
-                                <div class="mb-10">
-                                    <label for="name" class="form-label">Họ tên</label>
-                                    <input type="text" class="form-control" id="name" name="name"
-                                        value="">
-                                </div>
-                                <div class="mb-10">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email"
-                                        value="">
-                                </div>
-                                <div class="mb-10">
-                                    <label for="phonenumber" class="form-label">Số điện thoại</label>
-                                    <input type="text" class="form-control" id="phonenumber" name="phonenumber"
-                                        value="">
-                                </div>
-                                <div class="mb-10">
-                                    <label for="date_start" class="form-label">Ngày bắt đầu</label>
-                                    <input type="date" class="form-control" id="date_start" name="date_start">
-                                </div>
-                                <div class="mb-10">
-                                    <label for="date_end" class="form-label">Ngày kết thúc</label>
-                                    <input type="date" class="form-control" id="date_end" name="date_end">
-                                </div>
-                                <div class="form-check d-flex justify-content-start align-items-center policy">
-                                    <input class="form-check-input" type="checkbox" value="1" id="policy" name="policy" checked>
-                                    <label class="form-check-label" for="policy">
-                                        Bằng cách nhấp vào 'Gửi yêu cầu', tôi đồng ý với Chính sách bảo mật và Điều khoản sử dụng của Dreamsport
-                                    </label>
-                                </div>
-                                <div class="d-grid btn-block">
-                                    <input type="hidden" name="facility_id" id="facility_id" value="{{ $thongtinsan->facility_id }}">
-                                    <input type="hidden" name="user_id" id="user_id" value="">
-                                    <button type="submit"
-                                        class="btn btn-secondary d-inline-flex justify-content-center align-items-center"
-                                        name="btnthemyeucau">
-                                        Gửi Yêu Cầu
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                    
                 </div>
             
         </div>
@@ -419,13 +370,13 @@
                         <div class="mb-3" style="padding: 0px 10px;">
                             <h6 class="form-label">Họ tên:</h6>
                             <input type="text" name="fullname" class="form-control"
-                                value="{{ old('fullname', auth()->user()->fullname ?? '') }}">
+                                value="" required>
                         </div>
 
                         <div class="mb-3" style="padding: 0px 10px;">
                             <h6 class="form-label">Số điện thoại:</h6>
                             <input type="text" name="phone" class="form-control"
-                                value="{{ old('phone', auth()->user()->phone ?? '') }}">
+                                value="" required>
                         </div>
 
                         <div class="d-grid">
