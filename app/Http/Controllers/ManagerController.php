@@ -36,15 +36,19 @@ class ManagerController extends Controller
         // --- KPI A: Lượt đặt hôm nay (Tính theo số hóa đơn được tạo hôm nay) ---
         // Sử dụng distinct để tránh đếm trùng nếu 1 hóa đơn có nhiều chi tiết
         $bookingsToday = $queryInvoices->clone()
-            ->whereDate('invoices.issue_date', $today)
-            ->distinct('invoices.invoice_id')
-            ->count('invoices.invoice_id');
+        ->whereDate('invoices.issue_date', $today)
+        ->where(function($q) {
+            $q->where('invoices.payment_status', 'Đã thanh toán')
+            ->orWhere('invoices.payment_status', 'Chưa thanh toán');
+        })
+        ->distinct('invoices.invoice_id')
+        ->count('invoices.invoice_id');
 
-        // --- KPI B: Hủy hôm nay (Vẫn lấy từ bảng bookings vì invoice thường không xóa mà chỉ đổi status) ---
-        $cancelToday = Bookings::where('facility_id', $facilityId)
-            ->where('status', 'cancel')
-            ->whereDate('booking_date', $today)
-            ->count();
+        $cancelToday = $queryInvoices->clone()
+        ->where('payment_status', 'Đã Hủy')
+        ->whereDate('invoices.issue_date', $today)
+        ->distinct('invoices.invoice_id')
+        ->count();
 
         // --- KPI C: Doanh thu hôm nay (Lấy final_amount từ invoices) ---
         // Lưu ý: payment_status phải khớp chính xác với dữ liệu trong DB  (VD: "Đã thanh toán")
@@ -57,10 +61,10 @@ class ManagerController extends Controller
 
         // --- KPI D: Doanh thu tháng này ---
         $revenueMonth = $queryInvoices->clone()
-            ->whereMonth('invoices.issue_date', now()->month)
-            ->whereYear('invoices.issue_date', now()->year)
-            ->where('invoices.payment_status', 'Đã thanh toán')
-            ->sum('invoices.final_amount');
+        ->whereMonth('invoices.issue_date', now()->month)
+        ->whereYear('invoices.issue_date', now()->year)
+        ->where('invoices.payment_status', 'Đã thanh toán')
+        ->sum('invoices.final_amount');
 
 
         // ====================================================
@@ -72,11 +76,9 @@ class ManagerController extends Controller
         // Busy courts
         $currentTime = now()->format('H:i');
         $slot = Time_slots::where('start_time', '<=', $currentTime)->where('end_time', '>=', $currentTime)->first();
-        $busy = $slot
-            ? Bookings::where('time_slot_id', $slot->time_slot_id)
-                ->where('facility_id', $facilityId)
-                ->where('status', 'booked')->count()
-            : 0;
+        $busy = DB::table('courts')->where('facility_id', $facilityId)
+                ->where('status', 'Đang sử dụng')->count();
+
         $totalCourts = Courts::where('facility_id', $facilityId)->count();
 
         // Biểu đồ Giờ (Lấy từ Booking để hiển thị mật độ sân)

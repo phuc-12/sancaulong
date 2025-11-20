@@ -26,7 +26,7 @@
                     <input type="date" name="to" class="form-control" value="{{ request('to') }}">
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-3">https://sancaulong.app/manager/contracts
                     <label class="form-label fw-semibold">Tháng</label>
                     <input type="month" name="month" class="form-control" value="{{ request('month') }}">
                 </div>
@@ -53,7 +53,7 @@
                 ['title' => 'Lượt đặt hôm nay', 'value' => $stats['bookings_today'], 'color' => 'primary'],
                 ['title' => 'Hủy hôm nay', 'value' => $stats['cancel_today'], 'color' => 'danger'],
                 ['title' => 'Giờ hoạt động', 'value' => $stats['open_time'] . ' - ' . $stats['close_time'], 'color' => 'warning'],
-                ['title' => 'Sân bận / Trống', 'value' => $stats['busy_courts'] . ' / ' . $stats['free_courts'], 'color' => 'info'],
+                ['title' => 'Sân bận / Sân trống', 'value' => $stats['busy_courts'] . ' / ' . $stats['free_courts'], 'color' => 'info'],
                 ['title' => 'Doanh thu hôm nay', 'value' => number_format($stats['revenue_today']) . ' đ', 'color' => 'success'],
                 ['title' => 'Doanh thu tháng', 'value' => number_format($stats['revenue_month']) . ' đ', 'color' => 'dark'],
             ];

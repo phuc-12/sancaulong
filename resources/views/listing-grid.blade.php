@@ -14,14 +14,28 @@
 
 <div class="content">
     <div class="container">
-
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
         {{-- Tìm kiếm --}}
         <div class="row mb-4 justify-content-center">
             <div class="col-md-8">
-                <form action="{{ route('search.results') }}" method="GET" class="d-flex">
-                    <input type="search" name="keyword" class="form-control me-2 rounded" 
-                           placeholder="Tìm theo tên sân, địa chỉ..." autocomplete="off">
-                    <button type="submit" class="btn btn-gradient">Tìm Kiếm</button>
+                <form action="{{ route('search.results') }}" method="GET" class="d-flex align-items-center gap-2"
+                    style="background: #fff; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    
+                    <div class="position-relative flex-grow-1">
+                        <input type="search" name="keyword" required autocomplete="off"
+                            placeholder="🔍 Tìm theo tên sân, địa chỉ..."
+                            class="form-control"
+                            style="border-radius: 10px; padding-left: 40px;">
+                        
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888;">
+                            <i class="bi bi-search"></i>
+                        </span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"
+                        style="border-radius: 10px; padding: 8px 18px; font-weight: 600;">
+                        Tìm kiếm
+                    </button>
                 </form>
             </div>
         </div>

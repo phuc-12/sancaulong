@@ -31,14 +31,28 @@
 							<p class="sub-info">Giải phóng tiềm năng thể thao của bạn với cơ sở vật chất hiện đại và dịch vụ
 								chuẩn thi đấu.</p>
 							<div class="search-box">
-								<form action="{{ route('search.results') }}" method="GET">
-									<input type="search" name="keyword" placeholder="Tìm theo tên sân, địa chỉ..."
-										autocomplete="off" required
-										style="width: 90%; border-radius: 10px; margin-right: 10px; border: solid 1px black;">
+								<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-									<input type="submit" class="btn btn-gradient pull-right write-review add-review"
-										name="btn" id="btn" value="Tìm Kiếm">
+								<form action="{{ route('search.results') }}" method="GET" class="d-flex align-items-center gap-2"
+									style="background: #fff; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+									
+									<div class="position-relative flex-grow-1">
+										<input type="search" name="keyword" required autocomplete="off"
+											placeholder="🔍 Tìm theo tên sân, địa chỉ..."
+											class="form-control"
+											style="border-radius: 10px; padding-left: 40px;">
+										
+										<span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888;">
+											<i class="bi bi-search"></i>
+										</span>
+									</div>
+
+									<button type="submit" class="btn btn-primary"
+										style="border-radius: 10px; padding: 8px 18px; font-weight: 600;">
+										Tìm kiếm
+									</button>
 								</form>
+
 							</div>
 						</div>
 					</div>
@@ -82,7 +96,7 @@
 							</h5>
 							<p>Đăng ký nhanh chóng và dễ dàng: Bắt đầu sử dụng nền tảng phần mềm của chúng tôi bằng quy
 								trình tạo tài khoản đơn giản.</p>
-							<a class="btn" href="register.php">
+							<a class="btn" href="{{ route('register') }}">
 								Đăng Ký Ngay <i class="feather-arrow-right"></i>
 							</a>
 						</div>

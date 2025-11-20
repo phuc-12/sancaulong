@@ -323,11 +323,18 @@ class ReportController extends Controller
         }
 
         $topCustomers = $query
-            ->select('users.user_id', 'users.fullname', 'users.phone', 'users.email', DB::raw('COUNT(*) as total_bookings'), DB::raw('SUM(bookings.unit_price) as total_spent'))
-            ->groupBy('users.user_id', 'users.fullname', 'users.phone', 'users.email')
-            ->orderBy('total_spent', 'desc')
-            ->limit(10)
-            ->get();
+        ->select(
+            'users.user_id',
+            'users.fullname',
+            'users.phone',
+            'users.email',
+            DB::raw('COUNT(DISTINCT bookings.invoice_detail_id) as total_bookings'),
+            DB::raw('SUM(bookings.unit_price) as total_spent')
+        )
+        ->groupBy('users.user_id', 'users.fullname', 'users.phone', 'users.email')
+        ->orderBy('total_spent', 'desc')
+        ->limit(10)
+        ->get();
 
         return response()->json($topCustomers);
     }
@@ -375,7 +382,7 @@ class ReportController extends Controller
             ->where('facilities.owner_id', $ownerId)
             ->where('bookings.facility_id', $facilityId) // Lọc theo ID cố định
             ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
-
+        
         if ($courtId !== 'all') {
             $bookingsQuery->where('bookings.court_id', $courtId);
         }
@@ -384,7 +391,7 @@ class ReportController extends Controller
         $bookingsQueryClone2 = clone $bookingsQuery;
 
         $revenue = $bookingsQuery->sum('bookings.unit_price') ?? 0;
-        $bookings = $bookingsQueryClone->count();
+        $bookings = $bookingsQueryClone->distinct('bookings.invoice_detail_id')->count('bookings.invoice_detail_id');
         $customers = $bookingsQueryClone2->distinct('bookings.user_id')->count('bookings.user_id');
         $avgPrice = $bookings > 0 ? round($revenue / $bookings, 2) : 0;
         $utilization = $this->calculateUtilization($ownerId, $dateRange, $facilityId, $courtId);
