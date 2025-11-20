@@ -198,6 +198,23 @@
 			<!-- Container -->
 		</div>
 		<!-- /Page Content -->
+<!-- Success Modal -->
+<div id="successModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4" style="border-radius: 20px;">
+            <div class="text-success mb-3" style="font-size: 60px;">
+                ✓
+            </div>
+            <h4 class="fw-bold">Thanh Toán Thành Công!</h4>
+            <p class="mt-2 mb-3">Cảm ơn bạn đã hoàn tất giao dịch.</p>
+            <p class="mt-2 mb-3">Sẽ tự chuyển về trang chi tiết sau vài giây.</p>
+            <button class="btn btn-primary px-4" data-bs-dismiss="modal">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('showQRBtn');
@@ -230,8 +247,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (value >= total) {
                 clearInterval(intervalId);
                 isPaid = true;
-                alert("Thanh toán thành công! ");
-                document.getElementById('paymentCompleteForm').submit();
+
+                // Hiển thị modal thành công
+                const modal = new bootstrap.Modal(document.getElementById('successModal'));
+                modal.show();
+
+                // Tự submit sau 1.5s
+                setTimeout(() => {
+                    document.getElementById('paymentCompleteForm').submit();
+                }, 1500);
             }
         } catch (err) {
             console.error(err);

@@ -637,6 +637,7 @@ class HomeController extends Controller
                 'total_courts' => $totalCourts,
                 'total_amount' => $totalAmount
             ];
+
             // Thông tin user/facility
             $userInfo = [
                 'user_id' => $user_id ?? '---',

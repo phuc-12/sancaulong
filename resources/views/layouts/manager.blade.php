@@ -104,12 +104,12 @@
                     Tổng Quan
                 </a>
             </li>
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="bi bi-calendar-check-fill"></i>
                     Quản lý Đặt Sân
                 </a>
-            </li>
+            </li> --}}
             <li class="nav-item">
                 <a href="{{ route('manager.contracts') }}"
                     class="nav-link {{ request()->routeIs('manager.contracts') ? 'active' : '' }}">

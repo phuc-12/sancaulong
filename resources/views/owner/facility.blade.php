@@ -91,19 +91,20 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="open_time" class="form-label"><b>Giờ mở cửa</b> <span
-                                        class="text-danger">*</span></label>
-                                <input type="time" class="form-control" id="open_time" name="open_time"
-                                    value="{{ old('open_time', $facility->open_time ?? '05:00') }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="close_time" class="form-label"><b>Giờ đóng cửa</b> <span
-                                        class="text-danger">*</span></label>
-                                <input type="time" class="form-control" id="close_time" name="close_time"
-                                    value="{{ old('close_time', $facility->close_time ?? '22:00') }}" required>
-                            </div>
-                        </div>
+    <div class="col-md-6 mb-3">
+        <label for="open_time" class="form-label"><b>Giờ mở cửa</b> <span class="text-danger">*</span></label>
+        <input type="time" class="form-control" id="open_time" name="open_time"
+            value="{{ old('open_time', $facility->open_time ?? '05:00:00') }}" 
+            step="1" required>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="close_time" class="form-label"><b>Giờ đóng cửa</b> <span class="text-danger">*</span></label>
+        <input type="time" class="form-control" id="close_time" name="close_time"
+            value="{{ old('close_time', $facility->close_time ?? '22:00:00') }}" 
+            step="1" required>
+    </div>
+</div>
+
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="quantity_court" class="form-label"><b>Số lượng sân cầu lông</b></label>

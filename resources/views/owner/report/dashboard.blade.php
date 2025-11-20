@@ -747,11 +747,14 @@
 
                 data.forEach((c, i) => {
                     tbody.innerHTML += `
-                                                                            <tr>
-                                                                                <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
-                                                                                <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
-                                                                                <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
-                                                                            </tr>`;
+                        <tr>
+                            <td>${i + 1}</td> 
+                            <td><strong>${c.fullname}</strong></td> 
+                            <td>${c.phone}</td> 
+                            <td>${c.email}</td>
+                            <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
+                            <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
+                        </tr>`;
                 });
             } catch (err) { console.error("Lỗi tải Top Khách hàng:", err); tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Lỗi khi tải dữ liệu.</td></tr>'; }
         }

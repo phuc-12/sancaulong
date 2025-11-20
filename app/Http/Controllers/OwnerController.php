@@ -261,7 +261,7 @@ class OwnerController extends Controller
             'account_bank' => 'nullable|string|max:20',
             'account_name' => 'nullable|string|max:100',
         ]);
-
+        // dd($validatedData);
         try {
             DB::beginTransaction();
 
@@ -331,7 +331,7 @@ class OwnerController extends Controller
                     unlink(public_path($existingFacility->image));
                 }
             }
-
+            dd($facilityData);
             // --- LƯU HOẶC CẬP NHẬT FACILITY ---
             $facility = Facilities::updateOrCreate(
                 ['owner_id' => Auth::id()],
@@ -368,7 +368,11 @@ class OwnerController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Lỗi gửi yêu cầu duyệt cơ sở: ' . $e->getMessage());
-            return back()->withInput()->withErrors(['general' => 'Lỗi gửi yêu cầu. Vui lòng thử lại.']);
+
+            // Trả về thông báo lỗi chi tiết cho người dùng
+            return back()->withInput()->withErrors([
+                'general' => 'Lỗi gửi yêu cầu: ' . $e->getMessage()
+            ]);
         }
     }
 
