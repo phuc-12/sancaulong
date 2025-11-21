@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\OwnerController;
@@ -229,3 +230,13 @@ Route::middleware(['auth'])->group(function () {
     // PUT/PATCH: Xử lý cập nhật thông tin hồ sơ (gửi từ form)
     Route::put('/profile/{id}', [ProfileController::class, 'update'])->name('profile.update');
 });
+
+//=============================================================================================================
+//ChatBot
+Route::match(['get', 'post'], '/botman', [ChatbotController::class, 'handle']);
+Route::post('/api/chatbot', [ChatbotController::class, 'chat'])->name('chatbot.api');
+
+//Tra cứu dữ liệu
+Route::get('/chatbot/check-availability', [ChatbotController::class, 'checkAvailability']);
+Route::get('/chatbot/booking-info', [ChatbotController::class, 'bookingInfo']);
+Route::get('/chatbot/price', [ChatbotController::class, 'price']);

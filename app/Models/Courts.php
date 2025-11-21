@@ -59,4 +59,8 @@ class Courts extends Model
     {
         return $this->belongsTo(Facilities::class, 'facility_id', 'facility_id');
     }
+    public function bookings()
+    {
+        return $this->hasMany(Bookings::class, 'court_id', 'court_id');
+    }
 }

@@ -540,60 +540,50 @@
 
         async function loadCourts() {
             const select = document.getElementById('courtFilter');
-            if (!select) {
-                console.error('Không tìm thấy dropdown courtFilter');
-                return;
-            }
+            if (!select) return;
 
             const currentValue = select.value;
-            console.log('🔄 Loading courts... Current value:', currentValue);
 
             try {
                 const response = await fetch(getCourtsUrl);
-                console.log('📡 Response status:', response.status);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
-                console.log('📊 Courts data:', data);
 
                 if (data.success) {
                     // Xóa tất cả options hiện tại
                     select.innerHTML = '<option value="all">Tất cả sân con</option>';
 
                     if (data.courts && data.courts.length > 0) {
-                        // Thêm từng sân vào dropdown
                         data.courts.forEach(court => {
                             const option = document.createElement('option');
                             option.value = court.court_id;
                             option.textContent = court.court_name;
-
-                            // Giữ nguyên lựa chọn trước đó
-                            if (court.court_id == currentValue) {
-                                option.selected = true;
-                            }
-
+                            if (court.court_id == currentValue) option.selected = true;
                             select.appendChild(option);
                         });
-
-                        console.log(`Đã load ${data.courts.length} sân con`);
                     } else {
                         const option = document.createElement('option');
                         option.disabled = true;
                         option.textContent = 'Không có sân con nào';
                         select.appendChild(option);
-                        console.warn('Không có sân con nào');
                     }
                 } else {
                     console.error('API trả về success=false:', data);
                 }
             } catch (error) {
                 console.error('Lỗi load courts:', error);
-                alert('Không thể tải danh sách sân. Vui lòng thử lại.');
+
+                // Chỉ alert khi cơ sở đã được admin duyệt
+                const facilityStatus = "{{ $facility->status ?? '' }}";
+                const facilityNeedReapprove = "{{ $facility->need_reapprove ?? 0 }}";
+
+                if (facilityStatus === 'đã duyệt' && !facilityNeedReapprove) {
+                    alert('Không thể tải danh sách sân. Vui lòng thử lại.');
+                }
             }
         }
+
 
 
         //Các biểu đồ
@@ -774,11 +764,11 @@
 
                 data.forEach((c, i) => {
                     tbody.innerHTML += `
-                                                <tr>
-                                                    <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
-                                                    <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
-                                                    <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
-                                                </tr>`;
+                                                    <tr>
+                                                        <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
+                                                        <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
+                                                        <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
+                                                    </tr>`;
                 });
             } catch (err) { console.error("Lỗi tải Top Khách hàng:", err); tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Lỗi khi tải dữ liệu.</td></tr>'; }
         }

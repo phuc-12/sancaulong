@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // ...
             'role' => \App\Http\Middleware\RoleMiddleware::class, // Phải là tên class
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'botman',      // Route chính
+            'botman/*',    // Các route con
+            'api/chatbot', // API endpoint cho chatbot
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

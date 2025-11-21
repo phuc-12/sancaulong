@@ -16,8 +16,7 @@
 	<link rel="stylesheet" href="{{ asset('css/feather.css') }}">
 	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	{{--
-	<link rel="stylesheet" href="{{ asset('css/chatbox.css') }}"> --}}
+	<link rel="stylesheet" href="{{ asset('css/chatbot.css') }}">
 
 	<!-- Favicon -->
 	<link rel="shortcut icon" href="{{ asset('img/favicon.png') }}">
@@ -474,10 +473,24 @@
 
 	</footer>
 	<!-- /Footer -->
-	<!-- chatbox -->
+	<!-- Chatbot Widget -->
+	<button id="chatbot-button" style="padding bottom: 50px;">💬</button>
+
+	<div id="chatbot-box">
+		<div id="chat-header">Chatbot Sân Cầu Lông</div>
+		<div id="chat-body"></div>
+		<div id="quick-actions">
+			<button class="quick-action-btn" data-action="Đặt sân">📅 Đặt sân</button>
+			<button class="quick-action-btn" data-action="Kiểm tra giờ trống">🔍 Kiểm tra giờ trống</button>
+			<button class="quick-action-btn" data-action="Giá sân bao nhiêu">💰 Xem giá</button>
+		</div>
+		<div id="chat-input-area">
+			<input type="text" id="chat-input" placeholder="Nhập tin nhắn..." />
+			<button id="chat-send">Gửi</button>
+		</div>
+	</div>
 
 	<!-- /chatbox -->
-	</div>
 	<!-- /Main Wrapper -->
 
 	<!-- scrollToTop start -->
@@ -493,7 +506,6 @@
 
 
 	<!-- jQuery -->
-	<script data-cfasync="false" src="../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 	<script src="{{ asset('js/jquery-3.7.1.min.js') }}" type=""></script>
 
 	<!-- Bootstrap Core JS -->
@@ -518,20 +530,122 @@
 	<!-- Custom JS -->
 	<script src="{{ asset('js/script.js') }}" type=""></script>
 
-	<script src="../cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js"
-		data-cf-settings="e4c26da156d9fccf88a221dd-|49" defer></script>
-	<script defer
-		src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
-		integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
-		data-cf-beacon='{"rayId":"92a5cc7dff1f1a5b","version":"2025.3.0","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"token":"3ca157e612a14eccbb30cf6db6691c29","b":1}'
-		crossorigin="anonymous"></script>
 
 	<!-- AOS JS -->
 	<script src="{{ asset('plugins/aos/aos.js') }}"></script>
 	<script>
 		AOS.init();
 	</script>
+	<script>
+		var botmanWidget = {
+			serverUrl: "{{ url('/botman') }}",
+			// ------------------------------------------------------------------
 
+			aboutText: 'Hệ thống Đặt Sân',
+			introMessage: "🏸 Xin chào! Gõ 'menu' để bắt đầu.",
+			title: 'Trợ Lý Đặt Sân',
+			mainColor: '#28a745',
+			bubbleBackground: '#28a745',
+			headerTextColor: '#ffffff',
+			desktopHeight: 500,
+			desktopWidth: 370,
+			displayMessageTime: true
+		};
+
+		const btn = document.getElementById('chatbot-button');
+		const box = document.getElementById('chatbot-box');
+		const body = document.getElementById('chat-body');
+		const input = document.getElementById('chat-input');
+		const send = document.getElementById('chat-send');
+		const quickActions = document.getElementById('quick-actions');
+		const quickActionBtns = document.querySelectorAll('.quick-action-btn');
+		
+		// Biến để kiểm tra đã hiển thị lời chào chưa
+		let hasShownGreeting = false;
+
+		btn.addEventListener('click', () => {
+			const isOpening = box.style.display !== 'flex';
+			box.style.display = isOpening ? 'flex' : 'none';
+			
+			// Nếu đang mở chatbot và chưa hiển thị lời chào
+			if (isOpening && !hasShownGreeting) {
+				// Hiển thị lời chào tự động
+				setTimeout(() => {
+					addMessage('Xin chào 👋! Tôi là AI hỗ trợ đặt sân. Bạn có thể chọn một trong các tùy chọn bên dưới hoặc nhập tin nhắn trực tiếp.', 'bot');
+					hasShownGreeting = true;
+				}, 300); // Delay nhỏ để UI mở mượt hơn
+			}
+		});
+
+		// Xử lý click vào nút quick action
+		quickActionBtns.forEach(btn => {
+			btn.addEventListener('click', () => {
+				const action = btn.getAttribute('data-action');
+				// Tự động gửi message tương ứng
+				input.value = action;
+				sendMessage();
+				// Ẩn các nút quick action sau khi chọn
+				quickActions.style.display = 'none';
+			});
+		});
+
+		function addMessage(text, from = 'bot') {
+			const div = document.createElement('div');
+			div.className = from === 'bot' ? 'msg-bot' : 'msg-user';
+			// Bot messages có thể chứa HTML (định dạng, emoji), user messages chỉ text
+			if (from === 'bot') {
+				div.innerHTML = text;
+			} else {
+				div.textContent = text; // An toàn hơn cho user input
+			}
+			body.appendChild(div);
+			body.scrollTop = body.scrollHeight;
+		}
+
+		async function sendMessage() {
+			const msg = input.value.trim();
+			if (!msg) return;
+
+			addMessage(msg, 'user');
+			input.value = '';
+			
+			// Ẩn quick actions khi người dùng gửi tin nhắn
+			quickActions.style.display = 'none';
+
+			try {
+				const res = await fetch('/api/chatbot', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+					body: JSON.stringify({ message: msg })
+				});
+
+				if (!res.ok) {
+					throw new Error(`Chatbot request failed with status ${res.status}`);
+				}
+
+				const data = await res.json();
+				addMessage(data.reply ?? 'Xin lỗi, tôi không nhận được phản hồi.', 'bot');
+				
+				// Hiển thị lại quick actions sau khi chatbot trả lời (nếu cần)
+				// Có thể bỏ comment dòng dưới nếu muốn hiển thị lại nút
+				// setTimeout(() => { quickActions.style.display = 'flex'; }, 500);
+			} catch (error) {
+				console.error(error);
+				addMessage('Xin lỗi, chatbot đang gặp sự cố. Vui lòng thử lại sau.', 'bot');
+			}
+		}
+
+		send.addEventListener('click', sendMessage);
+
+		input.addEventListener('keypress', (e) => {
+			if (e.key === 'Enter') sendMessage();
+		});
+
+		// Ẩn quick actions khi người dùng bắt đầu nhập
+		input.addEventListener('focus', () => {
+			quickActions.style.display = 'none';
+		});
+	</script>
 </body>
 
 <!-- Mirrored from dreamsports.dreamstechnologies.com/html/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 03 Apr 2025 04:28:07 GMT -->
