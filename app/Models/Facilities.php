@@ -64,5 +64,11 @@ class Facilities extends Model
     {
         return $this->hasMany(Courts::class, 'facility_id', 'facility_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Bookings::class, 'facility_id', 'facility_id');
+    }
+
 }
 

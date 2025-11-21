@@ -27,7 +27,7 @@ class Bookings extends Model
     public function court()
     {
         // Giả sử Model Court của bạn là 'Court'
-        return $this->belongsTo(Court::class, 'court_id', 'court_id');
+        return $this->belongsTo(Courts::class, 'court_id', 'court_id');
     }
     /**
      * Lấy khung giờ (TimeSlot) của lượt đặt này.
@@ -35,5 +35,10 @@ class Bookings extends Model
     public function timeSlot()
     {
         return $this->belongsTo(Time_slots::class, 'time_slot_id', 'time_slot_id');
+    }
+    
+    public function facility()
+    {
+        return $this->belongsTo(Facilities::class, 'facility_id', 'facility_id');
     }
 }

@@ -1,0 +1,117 @@
+ /* Floating Button */
+    #chatbot-button {
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        background: #4CAF50;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        z-index: 9999;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Chatbox */
+    #chatbot-box {
+        position: fixed;
+        bottom: 160px;
+        right: 20px;
+        width: 330px;
+        height: 450px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 9999;
+        font-family: Arial, sans-serif;
+    }
+
+    #chat-header {
+        background: #4CAF50;
+        color: white;
+        padding: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    #chat-body {
+        flex: 1;
+        padding: 12px;
+        overflow-y: auto;
+    }
+
+    .msg-user {
+        background: #DCF8C6;
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin: 6px 0;
+        max-width: 80%;
+        margin-left: auto;
+    }
+
+    .msg-bot {
+        background: #F1F0F0;
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin: 6px 0;
+        max-width: 80%;
+        margin-right: auto;
+    }
+
+    #quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid #ddd;
+        background: #f9f9f9;
+    }
+
+    .quick-action-btn {
+        padding: 10px 16px;
+        border: 1px solid #4CAF50;
+        background: white;
+        color: #4CAF50;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        text-align: left;
+    }
+
+    .quick-action-btn:hover {
+        background: #4CAF50;
+        color: white;
+        transform: translateX(5px);
+    }
+
+    .quick-action-btn:active {
+        transform: translateX(2px);
+    }
+
+    #chat-input-area {
+        display: flex;
+        border-top: 1px solid #ddd;
+    }
+
+    #chat-input {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        outline: none;
+    }
+
+    #chat-send {
+        width: 70px;
+        border: none;
+        background: #4CAF50;
+        color: white;
+        cursor: pointer;
+    } 
