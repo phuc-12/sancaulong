@@ -26,7 +26,7 @@
                     <input type="date" name="to" class="form-control" value="{{ request('to') }}">
                 </div>
 
-                <div class="col-md-3">https://sancaulong.app/manager/contracts
+                <div class="col-md-3">
                     <label class="form-label fw-semibold">Tháng</label>
                     <input type="month" name="month" class="form-control" value="{{ request('month') }}">
                 </div>
@@ -136,5 +136,12 @@
             }]
         }
     });
+
+    // ===============================
+    // 🔄 Auto Refresh mỗi 10 giây
+    // ===============================
+    setInterval(() => {
+        location.reload();
+    }, 5000);
 </script>
 @endsection
