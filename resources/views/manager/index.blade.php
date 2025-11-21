@@ -82,7 +82,7 @@
             <div class="card shadow-sm">
                 <div class="card-header fw-bold">Biểu đồ đặt sân theo giờ</div>
                 <div class="card-body">
-                    <canvas id="hourChart"></canvas>
+                    <canvas id="hourChart" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -91,7 +91,7 @@
             <div class="card shadow-sm">
                 <div class="card-header fw-bold">Hiệu suất từng sân</div>
                 <div class="card-body">
-                    <canvas id="courtChart"></canvas>
+                    <canvas id="courtChart" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -99,43 +99,73 @@
     </div>
 
 @endsection
-
-
-
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+    // ===== Biểu đồ lượt đặt theo giờ =====
     const hourLabels = @json($hourlyBookings['labels']);
     const hourData   = @json($hourlyBookings['data']);
 
-    const courtLabels = @json($courtPerformance['labels']);
-    const courtData   = @json($courtPerformance['data']);
-
-    new Chart(document.getElementById('hourChart'), {
+    const ctxHour = document.getElementById('hourChart').getContext('2d');
+    new Chart(ctxHour, {
         type: 'line',
         data: {
             labels: hourLabels,
             datasets: [{
                 label: "Lượt đặt",
                 data: hourData,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
                 borderWidth: 2,
-                tension: 0.4
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4
             }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Giờ trong ngày' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Số lượt đặt' } }
+            }
         }
     });
 
-    new Chart(document.getElementById('courtChart'), {
+    // ===== Biểu đồ hiệu suất từng sân =====
+    const courtLabels = @json($courtPerformance['labels']);
+    const courtData   = @json($courtPerformance['data']);
+
+    const ctxCourt = document.getElementById('courtChart').getContext('2d');
+    new Chart(ctxCourt, {
         type: 'bar',
         data: {
             labels: courtLabels,
             datasets: [{
                 label: "Lượt đặt",
                 data: courtData,
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1
             }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Sân' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Số lượt đặt' } }
+            }
         }
     });
-
+});
 </script>
 @endsection
