@@ -35,14 +35,11 @@ class ManagerController extends Controller
 
         // --- KPI A: Lượt đặt hôm nay (Tính theo số hóa đơn được tạo hôm nay) ---
         // Sử dụng distinct để tránh đếm trùng nếu 1 hóa đơn có nhiều chi tiết
-        $bookingsToday = $queryInvoices->clone()
-        ->whereDate('invoices.issue_date', $today)
-        ->where(function($q) {
-            $q->where('invoices.payment_status', 'Đã thanh toán')
-            ->orWhere('invoices.payment_status', 'Chưa thanh toán');
-        })
-        ->distinct('invoices.invoice_id')
-        ->count('invoices.invoice_id');
+        $bookingsToday = DB::table('bookings')
+        ->whereDate('bookings.booking_date', $today)
+        ->where('bookings.facility_id', $facilityId)
+        ->distinct('bookings.invoice_detail_id')
+        ->count('bookings.invoice_detail_id');
 
         $cancelToday = $queryInvoices->clone()
         ->where('payment_status', 'Đã Hủy')
@@ -52,20 +49,19 @@ class ManagerController extends Controller
 
         // --- KPI C: Doanh thu hôm nay (Lấy final_amount từ invoices) ---
         // Lưu ý: payment_status phải khớp chính xác với dữ liệu trong DB  (VD: "Đã thanh toán")
-        $revenueToday = $queryInvoices->clone()
-            ->whereDate('invoices.issue_date', $today)
-            ->where('invoices.payment_status', 'Đã thanh toán')
-            ->sum('invoices.final_amount');
+        $revenueToday = DB::table('bookings')
+        ->whereDate('bookings.booking_date', $today)
+        ->where('bookings.facility_id', $facilityId)
+        ->sum('bookings.unit_price');
         // Nếu hệ thống 1 hóa đơn = 1 lần đặt thì code này đúng.
         // Nếu muốn chính xác tuyệt đối theo từng hạng mục, nên sum('invoice_details.sub_total').
 
         // --- KPI D: Doanh thu tháng này ---
-        $revenueMonth = $queryInvoices->clone()
-        ->whereMonth('invoices.issue_date', now()->month)
-        ->whereYear('invoices.issue_date', now()->year)
-        ->where('invoices.payment_status', 'Đã thanh toán')
-        ->sum('invoices.final_amount');
-
+        $revenueMonth = DB::table('bookings')
+        ->whereMonth('bookings.booking_date', now()->month)
+        ->whereYear('bookings.booking_date', now()->year)
+        ->where('bookings.facility_id', $facilityId)
+        ->sum('bookings.unit_price');
 
         // ====================================================
         // 2. CÁC PHẦN KHÁC
