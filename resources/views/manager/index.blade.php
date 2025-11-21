@@ -137,11 +137,5 @@
         }
     });
 
-    // ===============================
-    // 🔄 Auto Refresh mỗi 10 giây
-    // ===============================
-    setInterval(() => {
-        location.reload();
-    }, 5000);
 </script>
 @endsection

@@ -21,90 +21,174 @@ class ManagerController extends Controller
     {
         $manager = Auth::user();
         $facilityId = $manager->facility_id;
-        $today = now()->toDateString();
+
+        // ==============================
+        // XÁC ĐỊNH KIỂU LỌC
+        // ==============================
+        $filterType = null;
+        $filterDate = null;
+        $filterFrom = null;
+        $filterTo   = null;
+        $filterMonth = null;
+
+        if ($request->filled('date')) {
+            $filterType = 'date';
+            $filterDate = $request->date;
+
+        } elseif ($request->filled('from') && $request->filled('to')) {
+            $filterType = 'range';
+            $filterFrom = $request->from;
+            $filterTo   = $request->to;
+
+        } elseif ($request->filled('month')) {
+            $filterType = 'month';
+            $filterMonth = $request->month; // YYYY-MM
+        } else {
+            // mặc định hôm nay
+            $filterType = 'date';
+            $filterDate = now()->toDateString();
+        }
 
         // ====================================================
-        // 1. QUERY INVOICES (Lấy KPI từ Hóa đơn qua bảng invoice_details)
+        // 1. KPI LƯỢT ĐẶT
         // ====================================================
 
-        // Tạo query cơ bản: Nối invoices với invoice_details để lọc theo facility_id
+        $queryBookings = DB::table('bookings')
+            ->where('facility_id', $facilityId);
+
+        if ($filterType === 'date') {
+            $queryBookings->whereDate('booking_date', $filterDate);
+
+        } elseif ($filterType === 'range') {
+            $queryBookings->whereBetween('booking_date', [$filterFrom, $filterTo]);
+
+        } elseif ($filterType === 'month') {
+            $month = substr($filterMonth, 5, 2);
+            $year  = substr($filterMonth, 0, 4);
+            $queryBookings->whereMonth('booking_date', $month)
+                        ->whereYear('booking_date', $year);
+        }
+
+        $bookingsToday = $queryBookings
+            ->distinct('invoice_detail_id')
+            ->count('invoice_detail_id');
+
+        // ====================================================
+        // 2. KPI HỦY
+        // ====================================================
         $queryInvoices = DB::table('invoices')
             ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
             ->where('invoice_details.facility_id', $facilityId)
-            ->select('invoices.*'); // Chỉ lấy thông tin hóa đơn
+            ->select('invoices.*');
 
-        // --- KPI A: Lượt đặt hôm nay (Tính theo số hóa đơn được tạo hôm nay) ---
-        // Sử dụng distinct để tránh đếm trùng nếu 1 hóa đơn có nhiều chi tiết
-        $bookingsToday = DB::table('bookings')
-        ->whereDate('bookings.booking_date', $today)
-        ->where('bookings.facility_id', $facilityId)
-        ->distinct('bookings.invoice_detail_id')
-        ->count('bookings.invoice_detail_id');
+        if ($filterType === 'date') {
+            $queryInvoices->whereDate('invoices.updated_at', $filterDate);
 
-        $cancelToday = $queryInvoices->clone()
-        ->where('payment_status', 'Đã Hủy')
-        ->whereDate('invoices.issue_date', $today)
-        ->distinct('invoices.invoice_id')
-        ->count();
+        } elseif ($filterType === 'range') {
+            $queryInvoices->whereBetween('invoices.updated_at', [$filterFrom, $filterTo]);
 
-        // --- KPI C: Doanh thu hôm nay (Lấy final_amount từ invoices) ---
-        // Lưu ý: payment_status phải khớp chính xác với dữ liệu trong DB  (VD: "Đã thanh toán")
-        $revenueToday = DB::table('bookings')
-        ->whereDate('bookings.booking_date', $today)
-        ->where('bookings.facility_id', $facilityId)
-        ->sum('bookings.unit_price');
-        // Nếu hệ thống 1 hóa đơn = 1 lần đặt thì code này đúng.
-        // Nếu muốn chính xác tuyệt đối theo từng hạng mục, nên sum('invoice_details.sub_total').
+        } elseif ($filterType === 'month') {
+            $queryInvoices->whereMonth('invoices.updated_at', $month)
+                        ->whereYear('invoices.updated_at', $year);
+        }
 
-        // --- KPI D: Doanh thu tháng này ---
+        $cancelToday = $queryInvoices
+            ->where('payment_status', 'Đã Hủy')
+            ->distinct('invoices.invoice_id')
+            ->count();
+
+        // ====================================================
+        // 3. KPI DOANH THU
+        // ====================================================
+        $revenueTodayQuery = DB::table('bookings')
+        ->where('facility_id', $facilityId);
+
+        if ($filterType === 'date') {
+            $revenueTodayQuery->whereDate('booking_date', $filterDate);
+
+        } elseif ($filterType === 'range') {
+            $revenueTodayQuery->whereBetween('booking_date', [$filterFrom, $filterTo]);
+
+        } elseif ($filterType === 'month') {
+            $revenueTodayQuery->whereMonth('booking_date', $month)
+                            ->whereYear('booking_date', $year);
+        }
+
+        $revenueToday = $revenueTodayQuery->sum('unit_price');
+
+        // Doanh thu tháng hiện tại (không theo filter)
         $revenueMonth = DB::table('bookings')
-        ->whereMonth('bookings.booking_date', now()->month)
-        ->whereYear('bookings.booking_date', now()->year)
-        ->where('bookings.facility_id', $facilityId)
-        ->sum('bookings.unit_price');
+            ->where('facility_id', $facilityId)
+            ->whereMonth('booking_date', now()->month)
+            ->whereYear('booking_date', now()->year)
+            ->sum('unit_price');
 
         // ====================================================
-        // 2. CÁC PHẦN KHÁC
+        // 4. BUSY / FREE COURTS
         // ====================================================
-
         $facility = Facilities::find($facilityId);
 
-        // Busy courts
-        $currentTime = now()->format('H:i');
-        $slot = Time_slots::where('start_time', '<=', $currentTime)->where('end_time', '>=', $currentTime)->first();
-        $busy = DB::table('courts')->where('facility_id', $facilityId)
-                ->where('status', 'Đang sử dụng')->count();
+        $busy = DB::table('courts')
+            ->where('facility_id', $facilityId)
+            ->where('status', 'Đang sử dụng')
+            ->count();
 
         $totalCourts = Courts::where('facility_id', $facilityId)->count();
 
-        // Biểu đồ Giờ (Lấy từ Booking để hiển thị mật độ sân)
+        // ====================================================
+        // 5. BIỂU ĐỒ THEO GIỜ
+        // ====================================================
         $hours = range(6, 23);
         $hourData = [];
-        $queryBookings = Bookings::where('facility_id', $facilityId); // Query gốc cho booking
-
-        // Áp dụng bộ lọc ngày cho biểu đồ (nếu user chọn filter)
-        $filterDate = $request->date ? $request->date : $today;
-        // Nếu user không chọn ngày thì mặc định biểu đồ giờ hiển thị hôm nay, 
-        // hoặc có thể bỏ dòng trên nếu muốn biểu đồ luôn hiển thị theo filter chung.
 
         foreach ($hours as $h) {
-            $hourData[] = Bookings::where('facility_id', $facilityId)
-                ->whereDate('booking_date', $filterDate) // Lọc theo ngày đang xem
-                ->whereTime('created_at', '>=', $h . ':00:00')
-                ->whereTime('created_at', '<=', $h . ':59:59')
-                ->count();
+            $queryHour = DB::table('bookings')
+                ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
+                ->where('bookings.facility_id', $facilityId)
+                ->whereRaw('HOUR(time_slots.start_time) = ?', [$h]);
+
+            if ($filterType === 'date') {
+                $queryHour->whereDate('bookings.booking_date', $filterDate);
+
+            } elseif ($filterType === 'range') {
+                $queryHour->whereBetween('bookings.booking_date', [$filterFrom, $filterTo]);
+
+            } elseif ($filterType === 'month') {
+                $queryHour->whereMonth('bookings.booking_date', $month)
+                        ->whereYear('bookings.booking_date', $year);
+            }
+
+            $hourData[] = $queryHour->count();
         }
 
-        // Biểu đồ Từng Sân
+        // ====================================================
+        // 6. BIỂU ĐỒ TỪNG SÂN
+        // ====================================================
         $courts = Courts::where('facility_id', $facilityId)->get();
         $courtLabels = [];
         $courtData = [];
+
         foreach ($courts as $c) {
+            $queryCourt = Bookings::where('court_id', $c->court_id);
+
+            if ($filterType === 'date') {
+                $queryCourt->whereDate('booking_date', $filterDate);
+
+            } elseif ($filterType === 'range') {
+                $queryCourt->whereBetween('booking_date', [$filterFrom, $filterTo]);
+
+            } elseif ($filterType === 'month') {
+                $queryCourt->whereMonth('booking_date', $month)
+                        ->whereYear('booking_date', $year);
+            }
+
             $courtLabels[] = $c->court_name;
-            // Đếm số booking của sân đó (có thể áp dụng thêm filter ngày nếu muốn biểu đồ thay đổi theo filter)
-            $courtData[] = Bookings::where('court_id', $c->court_id)->count();
+            $courtData[] = $queryCourt->count();
         }
 
+        // ====================================================
+        // RETURN VIEW
+        // ====================================================
         return view('manager.index', [
             'stats' => [
                 'bookings_today' => $bookingsToday,
@@ -126,6 +210,7 @@ class ManagerController extends Controller
             ]
         ]);
     }
+
 
     // Trang Quản lý Hợp đồng dài hạn
     public function contracts()
