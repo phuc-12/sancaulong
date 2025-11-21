@@ -157,27 +157,26 @@ class ManagerController extends Controller
         // ====================================================
         // 5. BIỂU ĐỒ THEO GIỜ
         // ====================================================
-        $hours = range(6, 23);
+        $hours = range(5, 23); // từ 5h đến 23h
         $hourData = [];
 
         foreach ($hours as $h) {
-            $queryHour = DB::table('bookings')
+            $query = DB::table('bookings')
                 ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
                 ->where('bookings.facility_id', $facilityId)
                 ->whereRaw('HOUR(time_slots.start_time) = ?', [$h]);
 
+            // Lọc theo loại
             if ($filterType === 'date') {
-                $queryHour->whereDate('bookings.booking_date', $filterDate);
-
+                $query->whereDate('bookings.booking_date', $filterDate);
             } elseif ($filterType === 'range') {
-                $queryHour->whereBetween('bookings.booking_date', [$filterFrom, $filterTo]);
-
+                $query->whereBetween('bookings.booking_date', [$filterFrom, $filterTo]);
             } elseif ($filterType === 'month') {
-                $queryHour->whereMonth('bookings.booking_date', $month)
-                        ->whereYear('bookings.booking_date', $year);
+                $query->whereMonth('bookings.booking_date', $month)
+                    ->whereYear('bookings.booking_date', $year);
             }
 
-            $hourData[] = $queryHour->count();
+            $hourData[] = $query->count();
         }
 
         // ====================================================
@@ -188,25 +187,23 @@ class ManagerController extends Controller
         $courtData = [];
 
         foreach ($courts as $c) {
-            $queryCourt = Bookings::where('court_id', $c->court_id);
+            $query = Bookings::where('court_id', $c->court_id);
 
             if ($filterType === 'date') {
-                $queryCourt->whereDate('booking_date', $filterDate);
-
+                $query->whereDate('booking_date', $filterDate);
             } elseif ($filterType === 'range') {
-                $queryCourt->whereBetween('booking_date', [$filterFrom, $filterTo]);
-
+                $query->whereBetween('booking_date', [$filterFrom, $filterTo]);
             } elseif ($filterType === 'month') {
-                $queryCourt->whereMonth('booking_date', $month)
-                        ->whereYear('booking_date', $year);
+                $query->whereMonth('booking_date', $month)
+                    ->whereYear('booking_date', $year);
             }
 
             $courtLabels[] = $c->court_name;
-            $courtData[] = $queryCourt->count();
+            $courtData[] = $query->count();
         }
-
+        // dd($hourData,$courtLabels,$courtData);
         // ====================================================
-        // RETURN VIEW
+        // 7. RETURN VIEW
         // ====================================================
         return view('manager.index', [
             'stats' => [
@@ -228,6 +225,7 @@ class ManagerController extends Controller
                 'data' => $courtData
             ]
         ]);
+
     }
 
 
