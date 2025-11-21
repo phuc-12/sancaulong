@@ -116,12 +116,31 @@ class ManagerController extends Controller
 
         $revenueToday = $revenueTodayQuery->sum('unit_price');
 
-        // Doanh thu tháng hiện tại (không theo filter)
-        $revenueMonth = DB::table('bookings')
-            ->where('facility_id', $facilityId)
-            ->whereMonth('booking_date', now()->month)
-            ->whereYear('booking_date', now()->year)
-            ->sum('unit_price');
+        $revenueQuery = DB::table('bookings')
+            ->where('facility_id', $facilityId);
+
+        if ($filterType === 'date') {
+            // Nếu user chọn 1 ngày, doanh thu tháng = doanh thu của tháng của ngày đó
+            $revenueQuery->whereMonth('booking_date', date('m', strtotime($filterDate)))
+                        ->whereYear('booking_date', date('Y', strtotime($filterDate)));
+
+        } elseif ($filterType === 'range') {
+            // Nếu user chọn từ → đến, lấy tổng doanh thu trong khoảng đó
+            $revenueQuery->whereBetween('booking_date', [$filterFrom, $filterTo]);
+
+        } elseif ($filterType === 'month') {
+            // Nếu user chọn tháng
+            $month = substr($filterMonth, 5, 2);
+            $year  = substr($filterMonth, 0, 4);
+            $revenueQuery->whereMonth('booking_date', $month)
+                        ->whereYear('booking_date', $year);
+        } else {
+            // Mặc định tháng hiện tại
+            $revenueQuery->whereMonth('booking_date', now()->month)
+                        ->whereYear('booking_date', now()->year);
+        }
+
+        $revenueMonth = $revenueQuery->sum('unit_price') ?? 0;
 
         // ====================================================
         // 4. BUSY / FREE COURTS
