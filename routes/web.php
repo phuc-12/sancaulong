@@ -181,6 +181,15 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
     // {booking} là route model binding
     Route::put('/bookings/update/{booking}', [ManagerController::class, 'updateBookingTime'])
         ->name('bookings.updateTime');
+
+    Route::get('/promotions', [ManagerController::class, 'promotions'])
+        ->name('promotions');
+    Route::post('/promotions/create', [ManagerController::class, 'promotions_create'])
+    ->name('promotions.create');
+    Route::post('/promotions/update/{id}', [ManagerController::class, 'promotions_update'])
+    ->name('promotions.update');
+    Route::delete('/promotions/delete/{id}', [ManagerController::class, 'promotions_delete'])
+    ->name('promotions.delete');
 });
 
 //=============================================================================================================

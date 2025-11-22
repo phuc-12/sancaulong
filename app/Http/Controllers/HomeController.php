@@ -207,6 +207,24 @@ class HomeController extends Controller
         } else {
             $result = (($countSlots - 1) / 2) . ' tiếng rưỡi';
         }
+
+        // ===== Lọc promotions theo ngày đặt sân =====
+        $bookingDates = $slotCollection->pluck('date')->map(function($d) {
+            return Carbon::createFromFormat('d-m-Y', $d)->format('Y-m-d');
+        })->unique();
+
+        $promotions = DB::table('promotions')->where('status', 1)
+            ->where(function($query) use ($bookingDates) {
+                foreach($bookingDates as $date) {
+                    $query->orWhere(function($q) use ($date) {
+                        $q->where('start_date', '<=', $date)
+                        ->where('end_date', '>=', $date);
+                    });
+                }
+            })
+            ->get();
+
+        // dd($bookingDates, $promotions);
         // Truyền sang view thanh toán
         return view('payment', [
             'slots' => $slots,
@@ -218,6 +236,7 @@ class HomeController extends Controller
             'uniqueCourts' => $uniqueCourts,
             'uniqueDates' => $uniqueDates,
             'uniqueTimes' => $uniqueTimes,
+            'promotions' => $promotions, // thêm để hiển thị dropdown
         ]);
     }
 
@@ -262,7 +281,6 @@ class HomeController extends Controller
         foreach ($slots as $slot) {
             $total += $slot['price'];
         }
-        $promotion_id = null;
         $payment_method = 1;
         $payment_status = 'Đã thanh toán';
         DB::table(table: 'invoice_details')->insert([
@@ -274,14 +292,15 @@ class HomeController extends Controller
             ->select('invoice_id')
             ->where('invoice_detail_id', $invoiceDetailId)
             ->first();
-
+        $total_final = $request->total_final;
+        $promotion_id = $request->promotion_id ?? null;
         DB::table(table: 'invoices')->insert([
             'invoice_id' => $invoice_details->invoice_id,
             'customer_id' => $userId,
             'issue_date' => now(),
             'total_amount' => $total,
             'promotion_id' => $promotion_id,
-            'final_amount' => $total,
+            'final_amount' => $total_final,
             'payment_status' => $payment_status,
             'payment_method' => $payment_method,
         ]);
@@ -948,8 +967,20 @@ class HomeController extends Controller
         $slots = json_decode($request->slots, true);
         $slotCollection = collect($slots);
         $invoice_detail_id = $request->invoice_detail_id;
-        $invoices = $request->invoices;
+        $invoices = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->join('promotions','promotions.promotion_id','=','invoices.promotion_id')
+        ->where('invoice_details.invoice_detail_id', $invoice_detail_id)
+        ->select(
+            'invoices.*',
+            'invoices.final_amount as final_amount',
+            'promotions.*',
+            'promotions.description as description',
 
+            )
+        ->first();
+
+        // dd($invoices);
         $uniqueCourts = $slotCollection->pluck('court_id')->unique()->implode(' , ');
         $uniqueDates = $slotCollection->pluck('booking_date')->unique()->implode(' / ');
         $uniqueTimes = $slotCollection->map(function ($slot) {
