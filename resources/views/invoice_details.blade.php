@@ -97,15 +97,17 @@
 									</tbody>
 								</table>
 								<div class="text-right mt-3">
-									<h5 class="text-lg font-semibold">Thành tiền tiền: {{ number_format($total) }} đ</h5>
+									<h5 class="text-lg font-semibold">Thành tiền: {{ number_format($total) }} đ</h5>
 									<input type="hidden" id="tongtien" value="{{ $total }}">
 								</div>
-								<div class="text-right mt-3">
-									<h5 class="text-lg font-semibold">Khuyến mãi: {{ $invoices->description ?? '' }} </h5>
-								</div>
-								<div class="text-right mt-3">
-									<h3 class="text-lg font-semibold">Tổng tiền: {{ number_format($invoices->final_amount ?? 0) }} đ</h3>
-								</div>
+								@if (!empty($invoices) && !empty($invoices->description))
+									<div class="text-right mt-3">
+										<h5 class="text-lg font-semibold">Khuyến mãi: {{ $invoices->description }}</h5>
+									</div>
+									<div class="text-right mt-3">
+										<h3 class="text-lg font-semibold">Tổng tiền: {{ number_format($invoices->final_amount) }} đ</h3>
+									</div>
+								@endif
 
 								{{-- <button class="btn btn-success mt-4">Xác nhận thanh toán</button> --}}
 							@else
