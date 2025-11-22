@@ -59,7 +59,7 @@
                         <td>
                             @php
                                 $types = [
-                                    'hours'     => 'Theo số giờ chơi',
+                                    // 'hours'     => 'Theo số giờ chơi',
                                     'special'   => 'Ngày đặc biệt',
                                     'customer'  => 'Khách cố định',
                                     'first'     => 'Lần đầu',
@@ -166,7 +166,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold">Loại khuyến mãi</label>
                             <select name="discount_type" class="form-select" required>
-                                <option value="hours"      {{ $promo->discount_type=='hours' ? 'selected' : '' }}>Theo số giờ chơi</option>
+                                {{-- <option value="hours"      {{ $promo->discount_type=='hours' ? 'selected' : '' }}>Theo số giờ chơi</option> --}}
                                 <option value="special"    {{ $promo->discount_type=='special' ? 'selected' : '' }}>Ngày đặc biệt</option>
                                 <option value="customer"   {{ $promo->discount_type=='customer' ? 'selected' : '' }}>Khách cố định</option>
                                 <option value="first"      {{ $promo->discount_type=='first' ? 'selected' : '' }}>Lần đầu</option>
@@ -248,7 +248,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold">Loại khuyến mãi</label>
                             <select name="discount_type" class="form-select" required>
-                                <option value="hours">Theo số giờ chơi</option>
+                                {{-- <option value="hours">Theo số giờ chơi</option> --}}
                                 <option value="special">Ngày đặc biệt</option>
                                 <option value="customer">Khách cố định</option>
                                 <option value="first">Lần đầu</option>

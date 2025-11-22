@@ -214,15 +214,16 @@ class HomeController extends Controller
         })->unique();
 
         $promotions = DB::table('promotions')->where('status', 1)
-            ->where(function($query) use ($bookingDates) {
-                foreach($bookingDates as $date) {
-                    $query->orWhere(function($q) use ($date) {
-                        $q->where('start_date', '<=', $date)
-                        ->where('end_date', '>=', $date);
-                    });
-                }
-            })
-            ->get();
+        ->where('facility_id',$request->input('facility_id'))
+        ->where(function($query) use ($bookingDates) {
+            foreach($bookingDates as $date) {
+                $query->orWhere(function($q) use ($date) {
+                    $q->where('start_date', '<=', $date)
+                    ->where('end_date', '>=', $date);
+                });
+            }
+        })
+        ->get();
 
         // dd($bookingDates, $promotions);
         // Truyền sang view thanh toán

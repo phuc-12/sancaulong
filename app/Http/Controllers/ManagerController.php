@@ -59,11 +59,14 @@ class ManagerController extends Controller
             ->where('invoice_details.facility_id', $facilityId)
             ->whereBetween('invoices.issue_date', [$range['start'], $range['end']])
             ->where('invoices.payment_status', 'like', '%thanh toán%');
-
+        
         // --- QUERY KPI: BOOKING ---
         $bookingQuery = DB::table('bookings')
-            ->where('facility_id', $facilityId)
-            ->whereBetween('booking_date', [$range['start'], $range['end']]);
+        ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
+        ->distinct('bookings.invoice_detail_id')
+        ->where('bookings.facility_id', $facilityId)
+        ->whereBetween('bookings.booking_date', [$range['start'], $range['end']]);
 
         // Áp dụng lọc theo sân con
         if ($courtId && $courtId !== 'all') {
@@ -77,8 +80,12 @@ class ManagerController extends Controller
         }
 
         // Tính toán
-        $bookingsCount = $bookingQuery->clone()->where('status', '!=', 'Đã Hủy')->count();
-        $cancelCount = $bookingQuery->clone()->where('status', 'like', '%Hủy%')->count();
+        $bookingsCount = $bookingQuery->clone()->count();
+        $cancelCount = DB::table('invoices')
+        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+        ->where('invoice_details.facility_id', $facilityId)
+        ->whereBetween('invoices.issue_date', [$range['start'], $range['end']])
+        ->where('invoices.payment_status', 'like', 'Đã Hủy')->count();
 
         if ($courtId && $courtId !== 'all') {
             $revenue = $revenueQuery->sum('unit_price');
@@ -172,8 +179,8 @@ class ManagerController extends Controller
         $end = Carbon::today();
 
         if ($type == 'today') {
-            $start = Carbon::today();
-            $end = Carbon::today();
+            $start = Carbon::today()->startOfDay();     // 00:00:00
+            $end = Carbon::today()->endOfDay();         // 23:59:59
         } elseif ($type == 'week') {
             $start = Carbon::now()->startOfWeek();
             $end = Carbon::now()->endOfWeek();
@@ -181,10 +188,11 @@ class ManagerController extends Controller
             $start = Carbon::now()->startOfMonth();
             $end = Carbon::now()->endOfMonth();
         } elseif ($type == 'custom') {
-            $start = Carbon::parse($request->start_date);
-            $end = Carbon::parse($request->end_date);
+            $start = Carbon::parse($request->start_date)->startOfDay();
+            $end = Carbon::parse($request->end_date)->endOfDay();
         }
-        return ['start' => $start->format('Y-m-d'), 'end' => $end->format('Y-m-d')];
+
+        return ['start' => $start, 'end' => $end];
     }
 
     // Trang Quản lý Hợp đồng dài hạn
