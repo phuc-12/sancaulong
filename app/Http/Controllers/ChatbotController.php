@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookings;
+use App\Models\Facilities;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use BotMan\BotMan\BotMan;
@@ -67,8 +68,10 @@ class ChatbotController extends Controller
         }
 
         // Nếu đang trong flow tìm cơ sở khác
-        if ($isFindingOtherFacilities && $nluData['entities']['time'] &&
-            ($intent === 'check_availability' || $intent === 'unknown')) {
+        if (
+            $isFindingOtherFacilities && $nluData['entities']['time'] &&
+            ($intent === 'check_availability' || $intent === 'unknown')
+        ) {
             $intent = 'find_other_facilities';
             $nluData['intent'] = 'find_other_facilities';
         }
@@ -92,7 +95,7 @@ class ChatbotController extends Controller
                     $responses[] = 'Bạn muốn xem giá sân ở cơ sở nào? Vui lòng cho tôi biết tên cơ sở.<br>VD: Thủ Đức, Quận 1, CuChi...';
                 } else {
                     $priceInfo = $this->booking->getPriceInfo($facilityName);
-                    
+
                     if ($priceInfo === null) {
                         session(['chatbot_checking_price' => true]);
                         $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng kiểm tra lại tên cơ sở hoặc thử tên khác.<br>VD: Thủ Đức, Quận 1, CuChi...';
@@ -101,7 +104,7 @@ class ChatbotController extends Controller
                         session()->forget('chatbot_checking_price');
                     }
                 }
-                
+
                 if ($request) {
                     session()->forget('chatbot_finding_other_facilities');
                 }
@@ -124,7 +127,7 @@ class ChatbotController extends Controller
                     session()->forget('chatbot_finding_other_facilities');
                 }
                 $responses[] = $this->buildOtherFacilitiesResponse($nluData);
-                
+
                 if ($request) {
                     session()->forget('chatbot_checking_price');
                 }
@@ -137,13 +140,12 @@ class ChatbotController extends Controller
                     if ($request) {
                         session()->forget('chatbot_finding_other_facilities');
                     }
-                }
-                else if ($isCheckingPrice) {
+                } else if ($isCheckingPrice) {
                     $facilityName = $this->extractFacilityNameFromMessage($message);
-                    
+
                     if ($facilityName) {
                         $priceInfo = $this->booking->getPriceInfo($facilityName);
-                        
+
                         if ($priceInfo === null) {
                             $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng nhập tên cơ sở khác.<br>VD: Thủ Đức, Quận 1, CuChi...';
                         } else {
@@ -155,8 +157,7 @@ class ChatbotController extends Controller
                     } else {
                         $responses[] = '❓ Tôi không nhận diện được tên cơ sở trong tin nhắn của bạn.<br>Vui lòng nhập lại tên cơ sở rõ ràng hơn.<br>VD: Thủ Đức, Quận 1, CuChi...';
                     }
-                } 
-                else {
+                } else {
                     $responses[] = '😅 Xin lỗi, tôi chưa hiểu ý bạn.<br>Hãy thử:<br>• "Đặt sân"<br>• "Kiểm tra sân trống hôm nay 18h"<br>• "Giá sân bao nhiêu"<br>• "Tìm cơ sở khác"';
                 }
                 break;
@@ -166,7 +167,7 @@ class ChatbotController extends Controller
     }
 
     // ==================== BOOKING FLOW ====================
-    
+
     private function startBookingFlow(array $nluData, Request $request = null): string
     {
         if (!auth()->id()) {
@@ -183,10 +184,10 @@ class ChatbotController extends Controller
             session(['booking_flow' => $flow]);
         }
 
-        return "🎾 <b>Bạn muốn đặt sân như thế nào?</b><br><br>" .
-               "1️⃣ Tôi biết cơ sở muốn đặt<br>" .
-               "2️⃣ Giúp tôi tìm cơ sở phù hợp<br><br>" .
-               "Vui lòng nhập <b>1</b> hoặc <b>2</b>";
+        return "🎾 Bạn muốn đặt sân như thế nào?<br><br>" .
+            "1️⃣ Tôi biết cơ sở muốn đặt<br>" .
+            "2️⃣ Giúp tôi tìm cơ sở phù hợp<br><br>" .
+            "Vui lòng nhập 1 hoặc 2";
     }
 
     private function handleBookingFlow(string $message, array $nluData, Request $request = null): array
@@ -199,12 +200,17 @@ class ChatbotController extends Controller
             case 'ask_flow_choice':
                 return $this->handleFlowChoice($message, $request);
 
-            // LUỒNG 1: Biết cơ sở
+            // ================= LUỒNG 1: BIẾT CƠ SỞ =================
             case 'flow1_ask_facility':
                 return $this->handleFlow1AskFacility($message, $nluData, $request);
-            
+
             case 'flow1_select_time_date':
                 return $this->handleFlow1SelectTimeDate($message, $nluData, $request);
+
+            // --- BƯỚC HỎI THỜI LƯỢNG ---
+            case 'flow1_ask_duration':
+                return $this->handleFlow1AskDuration($message, $request);
+            // -------------------------------------------
 
             case 'flow1_select_court':
                 return $this->handleFlow1SelectCourt($message, $request);
@@ -212,7 +218,8 @@ class ChatbotController extends Controller
             case 'flow1_confirm_booking':
                 return $this->handleFlow1ConfirmBooking($message, $request);
 
-            // LUỒNG 2: Không biết cơ sở
+
+            // ================= LUỒNG 2: TÌM CƠ SỞ =================
             case 'flow2_ask_time':
                 return $this->handleFlow2AskTime($message, $nluData, $request);
 
@@ -229,11 +236,11 @@ class ChatbotController extends Controller
                 return $this->handleFlow2ConfirmBooking($message, $request);
 
             default:
+                // Nếu không khớp bước nào, xóa session để tránh kẹt và báo lỗi
                 session()->forget('booking_flow');
-                return ['❌ Có lỗi xảy ra. Vui lòng thử lại bằng cách gõ "Đặt sân"'];
+                return ['❌ Có lỗi xảy ra (Lỗi Flow). Vui lòng thử lại bằng cách gõ "Đặt sân"'];
         }
     }
-
     // LUỒNG 1: User biết cơ sở muốn đặt
     private function handleFlowChoice(string $message, Request $request = null): array
     {
@@ -244,20 +251,20 @@ class ChatbotController extends Controller
                 'step' => 'flow1_ask_facility',
                 'data' => ['flow_type' => 1]
             ];
-            if ($request) session(['booking_flow' => $flow]);
+            if ($request)
+                session(['booking_flow' => $flow]);
 
             return ['📍 Bạn muốn đặt sân tại cơ sở nào?<br>VD: Thủ Đức, Quận 1, CuChi...'];
-        } 
-        else if ($choice === '2') {
+        } else if ($choice === '2') {
             $flow = [
                 'step' => 'flow2_ask_time',
                 'data' => ['flow_type' => 2]
             ];
-            if ($request) session(['booking_flow' => $flow]);
+            if ($request)
+                session(['booking_flow' => $flow]);
 
             return ['⏰ Bạn muốn đặt sân vào khung giờ nào?<br>VD: 18h, 20h, 19:30...'];
-        } 
-        else {
+        } else {
             return ['❓ Vui lòng chọn <b>1</b> hoặc <b>2</b>'];
         }
     }
@@ -265,14 +272,14 @@ class ChatbotController extends Controller
     private function handleFlow1AskFacility(string $message, array $nluData, Request $request = null): array
     {
         $facilityName = $this->extractFacilityNameFromMessage($message);
-        
+
         if (!$facilityName) {
             return ['❓ Tôi không nhận diện được tên cơ sở. Vui lòng nhập lại.<br>VD: Thủ Đức, Quận 1, CuChi...'];
         }
 
         // Kiểm tra cơ sở có tồn tại không
         $facility = $this->booking->getFacilityByName($facilityName);
-        
+
         if (!$facility) {
             return ['❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng thử tên khác.'];
         }
@@ -281,8 +288,9 @@ class ChatbotController extends Controller
         $flow['step'] = 'flow1_select_time_date';
         $flow['data']['facility_id'] = $facility['facility_id'];
         $flow['data']['facility_name'] = $facility['facility_name'];
-        
-        if ($request) session(['booking_flow' => $flow]);
+
+        if ($request)
+            session(['booking_flow' => $flow]);
 
         return [
             "✅ Đã chọn cơ sở: <b>{$facility['facility_name']}</b><br><br>" .
@@ -294,131 +302,175 @@ class ChatbotController extends Controller
     private function handleFlow1SelectTimeDate(string $message, array $nluData, Request $request = null): array
     {
         $time = $nluData['entities']['time'] ?? null;
-        $date = $nluData['entities']['date'] ?? date('Y-m-d');
+        // Giữ lại ngày đã chọn hoặc lấy ngày hôm nay
+        $flow = session('booking_flow');
+        $date = $nluData['entities']['date'] ?? ($flow['data']['date'] ?? date('Y-m-d'));
 
         if (!$time) {
-            return ['⏰ Vui lòng cho biết giờ muốn đặt.<br>VD: 18h, 20h, 19:30...'];
+            return ['⏰ Bạn muốn bắt đầu đánh từ mấy giờ?<br>VD: 18h, 19:30...'];
         }
 
-        $flow = session('booking_flow');
-        $facilityId = $flow['data']['facility_id'];
-        
-        // Kiểm tra sân trống
-        $availability = $this->booking->checkAvailabilityByFacility($facilityId, $date, $time);
-        
-        if (isset($availability['error'])) {
-            return [$availability['error']];
-        }
-
-        if (empty($availability['available'])) {
-            return [
-                "❌ Rất tiếc, tại <b>{$flow['data']['facility_name']}</b> không còn sân trống vào " . 
-                date('H:i', strtotime($time)) . " ngày " . date('d/m/Y', strtotime($date)) . ".<br><br>" .
-                "💡 Vui lòng chọn giờ khác hoặc gõ <b>Hủy</b> để kết thúc đặt sân."
-            ];
-        }
-
-        $flow['step'] = 'flow1_select_court';
+        // Cập nhật flow
+        $flow['step'] = 'flow1_ask_duration'; // CHUYỂN SANG BƯỚC MỚI
         $flow['data']['date'] = $date;
-        $flow['data']['time'] = $time;
-        $flow['data']['available_courts'] = $availability['available'];
-        
-        if ($request) session(['booking_flow' => $flow]);
+        $flow['data']['time'] = $time; // Giờ bắt đầu
 
-        $courtsList = implode(', ', array_map(function($court) {
-            return "<b>$court</b>";
-        }, $availability['available']));
+        if ($request)
+            session(['booking_flow' => $flow]);
 
         return [
-            "✅ Còn trống các sân: $courtsList<br><br>" .
-            "🎾 Bạn muốn đặt sân nào?<br>" .
-            "VD: Sân 1, Sân 3..."
+            "🕒 Bạn muốn đặt sân trong bao lâu?<br>" .
+            "VD: <b>1 tiếng</b>, <b>1.5 giờ</b>, hoặc <b>2 tiếng</b>..."
         ];
     }
-
+    // Hàm xử lý chọn sân (Sau khi đã chọn thời lượng)
     private function handleFlow1SelectCourt(string $message, Request $request = null): array
     {
         $flow = session('booking_flow');
         $availableCourts = $flow['data']['available_courts'] ?? [];
-        
-        // Extract số sân
-        if (preg_match('/sân\s*(\d+)/iu', $message, $matches)) {
-            $courtNumber = $matches[1];
-            $courtName = "Sân " . $courtNumber;
-            
-            if (!in_array($courtName, $availableCourts)) {
-                return ["❌ Sân $courtNumber không khả dụng. Vui lòng chọn trong danh sách: " . implode(', ', $availableCourts)];
+
+        // 1. Xử lý input: User có thể nhập "Sân 1" hoặc chỉ nhập "1"
+        // Regex bắt số: "sân 1", "san 1", "1"
+        if (preg_match('/(sân\s*)?(\d+)/iu', $message, $matches)) {
+            $courtNumber = $matches[2]; // Lấy con số
+            $courtName = "Sân " . $courtNumber; // Format chuẩn tên sân trong DB
+
+            // 2. Kiểm tra xem sân này có trong danh sách sân trống không
+            // Lưu ý: Cần so sánh tương đối hoặc chính xác tùy dữ liệu DB
+            // Ở đây ta so sánh string đơn giản
+            $isValid = false;
+            foreach ($availableCourts as $avCourt) {
+                if (stripos($avCourt, $courtName) !== false) {
+                    $isValid = true;
+                    // Lấy đúng tên trong danh sách để lưu (tránh hoa thường)
+                    $courtName = $avCourt;
+                    break;
+                }
             }
-            
+
+            if (!$isValid) {
+                return [
+                    "❌ Sân <b>$courtNumber</b> không khả dụng hoặc đã có người đặt.<br>" .
+                    "Vui lòng chọn trong danh sách: <b>" . implode(', ', $availableCourts) . "</b>"
+                ];
+            }
+
+            // 3. Hợp lệ -> Chuyển sang bước xác nhận
             $flow['step'] = 'flow1_confirm_booking';
             $flow['data']['court_name'] = $courtName;
-            
-            if ($request) session(['booking_flow' => $flow]);
 
-            $formattedTime = date('H:i', strtotime($flow['data']['time']));
-            $formattedDate = date('d/m/Y', strtotime($flow['data']['date']));
+            if ($request)
+                session(['booking_flow' => $flow]);
+
+            // Format lại hiển thị
+            $time = $flow['data']['time'];
+            $date = date('d/m/Y', strtotime($flow['data']['date']));
+            $duration = $flow['data']['duration'] ?? 1; // Mặc định 1 tiếng nếu thiếu
 
             return [
-                "📋 <b>Xác nhận thông tin đặt sân:</b><br><br>" .
+                "📋 <b>XÁC NHẬN THÔNG TIN:</b><br><br>" .
                 "📍 Cơ sở: <b>{$flow['data']['facility_name']}</b><br>" .
                 "🎾 Sân: <b>$courtName</b><br>" .
-                "📅 Ngày: <b>$formattedDate</b><br>" .
-                "⏰ Giờ: <b>$formattedTime</b><br><br>" .
-                "Gõ <b>Xác nhận</b> để đặt sân hoặc <b>Hủy</b> để hủy bỏ."
+                "📅 Ngày: <b>$date</b><br>" .
+                "⏰ Bắt đầu: <b>$time</b><br>" .
+                "⏳ Thời lượng: <b>$duration tiếng</b><br><br>" .
+                "Gõ <b>Xác nhận</b> để đặt sân hoặc <b>Hủy</b> để chọn lại."
             ];
         }
 
         return ['❓ Vui lòng chọn số sân. VD: Sân 1, Sân 2...'];
     }
+    private function handleFlow1AskDuration(string $message, Request $request = null): array
+    {
+        $duration = $this->nlu->extractDuration($message);
+
+        // Nếu user nhập số không (VD: "2"), ta hiểu ngầm là giờ
+        if (!$duration && is_numeric(trim($message))) {
+            $duration = (float) trim($message);
+        }
+
+        if (!$duration || $duration < 0.5) {
+            return ['❓ Vui lòng nhập thời gian tối thiểu 0.5 tiếng (30 phút).<br>VD: 1 tiếng, 1.5 giờ...'];
+        }
+
+        $flow = session('booking_flow');
+        $flow['data']['duration'] = $duration;
+
+        // Kiểm tra sân trống dựa trên (Cơ sở + Ngày + Giờ Bắt Đầu + Thời Lượng)
+        $availability = $this->booking->checkAvailabilityForDuration(
+            $flow['data']['facility_id'],
+            $flow['data']['date'],
+            $flow['data']['time'],
+            $duration
+        );
+
+        if (isset($availability['error'])) {
+            return [$availability['error']];
+        }
+
+        if (empty($availability['available'])) {
+            return ["❌ Không có sân nào trống liên tục trong {$duration} tiếng bắt đầu từ {$flow['data']['time']}."];
+        }
+
+        $flow['step'] = 'flow1_select_court';
+        $flow['data']['available_courts'] = $availability['available'];
+        if ($request)
+            session(['booking_flow' => $flow]);
+
+        $courtsList = implode(', ', array_map(fn($c) => "<b>$c</b>", $availability['available']));
+
+        return [
+            "✅ Tìm thấy sân trống cho <b>{$duration} giờ</b>:<br>$courtsList<br><br>" .
+            "🎾 Bạn chọn sân nào? (VD: Sân 1)"
+        ];
+    }
 
     private function handleFlow1ConfirmBooking(string $message, Request $request = null): array
     {
         $message = mb_strtolower(trim($message));
-        
         if (str_contains($message, 'hủy')) {
             session()->forget('booking_flow');
-            return ['❌ Đã hủy đặt sân. Gõ "Đặt sân" để bắt đầu lại.'];
+            return ['❌ Đã hủy.'];
         }
 
-        if (str_contains($message, 'xác nhận') || str_contains($message, 'đồng ý') || str_contains($message, 'ok')) {
+        if (str_contains($message, 'xác nhận') || str_contains($message, 'ok')) {
             $flow = session('booking_flow');
             $userId = auth()->id();
-            
-            $result = $this->booking->createBooking(
-                $userId,
-                $flow['data']['facility_id'],
-                $flow['data']['court_name'],
-                $flow['data']['date'],
-                $flow['data']['time']
-            );
 
-            session()->forget('booking_flow');
+            try {
+                // GỌI SERVICE VỚI THAM SỐ MỚI (Duration)
+                $result = $this->booking->createBookingMultiSlots(
+                    $userId,
+                    $flow['data']['facility_id'],
+                    $flow['data']['court_name'],
+                    $flow['data']['date'],
+                    $flow['data']['time'],
+                    $flow['data']['duration'] ?? 1 // Mặc định 1 tiếng nếu thiếu
+                );
 
-            if (isset($result['success']) && $result['success']) {
-                // Lưu thông tin booking vào session để trang thanh toán lấy
-                session([
-                    'chatbot_payment_data' => [
-                        'facility_id' => $result['facility_id'],
-                        'slots' => $result['slots'],
-                        'booking_id' => $result['booking_id'],
-                    ]
-                ]);
+                if ($result['success']) {
+                    session()->forget('booking_flow');
+                    // ... (Code session payment cũ giữ nguyên) ...
+                    $paymentUrl = route('chatbot.payment', ['booking_id' => $result['booking_id']]);
+                    return [
+                        "✅ <b>Đặt sân thành công!</b> (Đã đặt {$result['slot_count']} khung giờ)<br>" .
+                        "💰 Tổng tiền: " . number_format($result['total'], 0, ',', '.') . "đ<br>" .
+                        "👉 <a href='$paymentUrl' target='_blank'>THANH TOÁN NGAY</a>"
+                    ];
+                } else {
+                    return ["❌ Lỗi: " . $result['message']];
+                }
 
-                $paymentUrl = route('chatbot.payment', ['booking_id' => $result['booking_id']]);
-                
+            } catch (\Exception $e) {
+                // --- QUAN TRỌNG: IN LỖI RA MÀN HÌNH CHAT ĐỂ BẠN THẤY ---
                 return [
-                    "✅ <b>Đặt sân thành công!</b><br><br>" .
-                    "🎫 Mã đặt sân: <b>{$result['booking_code']}</b><br>" .
-                    "💰 Tổng tiền: <b>" . number_format($result['total'], 0, ',', '.') . "đ</b><br><br>" .
-                    "💳 Vui lòng thanh toán để hoàn tất:<br>" .
-                    "👉 <a href='$paymentUrl' target='_blank' style='color: #667eea; font-weight: bold;'>NHẤN VÀO ĐÂY ĐỂ THANH TOÁN</a>"
+                    "❌ <b>Đã xảy ra lỗi hệ thống (Debug):</b><br>" .
+                    "<i>" . $e->getMessage() . "</i><br>" .
+                    "Tại dòng: " . $e->getLine()
                 ];
-            } else {
-                return ["❌ " . ($result['message'] ?? 'Có lỗi xảy ra khi đặt sân.')];
             }
         }
-
-        return ['❓ Vui lòng gõ <b>Xác nhận</b> để đặt sân hoặc <b>Hủy</b> để hủy bỏ.'];
+        return ['❓ Gõ "Xác nhận" để đặt hoặc "Hủy".'];
     }
 
     // LUỒNG 2: User chưa biết cơ sở
@@ -433,8 +485,9 @@ class ChatbotController extends Controller
         $flow = session('booking_flow');
         $flow['step'] = 'flow2_ask_date';
         $flow['data']['time'] = $time;
-        
-        if ($request) session(['booking_flow' => $flow]);
+
+        if ($request)
+            session(['booking_flow' => $flow]);
 
         return ['📅 Bạn muốn đặt vào ngày nào?<br>VD: <b>hôm nay</b>, <b>ngày mai</b>, <b>25/12</b>'];
     }
@@ -450,10 +503,10 @@ class ChatbotController extends Controller
 
         $flow = session('booking_flow');
         $time = $flow['data']['time'];
-        
+
         // Tìm các cơ sở còn sân trống
         $result = $this->booking->checkAvailabilityAllFacilities($date, $time);
-        
+
         if (isset($result['error'])) {
             return [$result['error']];
         }
@@ -462,7 +515,7 @@ class ChatbotController extends Controller
 
         if (empty($facilities)) {
             return [
-                "❌ Rất tiếc, không có cơ sở nào còn sân trống vào " . 
+                "❌ Rất tiếc, không có cơ sở nào còn sân trống vào " .
                 date('H:i', strtotime($time)) . " ngày " . date('d/m/Y', strtotime($date)) . ".<br><br>" .
                 "💡 Vui lòng chọn giờ khác hoặc gõ <b>Hủy</b> để kết thúc."
             ];
@@ -471,11 +524,12 @@ class ChatbotController extends Controller
         $flow['step'] = 'flow2_show_facilities';
         $flow['data']['date'] = $date;
         $flow['data']['facilities'] = $facilities;
-        
-        if ($request) session(['booking_flow' => $flow]);
+
+        if ($request)
+            session(['booking_flow' => $flow]);
 
         $msg = "🔍 Tìm thấy <b>" . count($facilities) . " cơ sở</b> còn sân trống:<br><br>";
-        
+
         foreach ($facilities as $index => $facility) {
             $msg .= ($index + 1) . ". <b>{$facility['facility_name']}</b><br>";
             if (!empty($facility['address'])) {
@@ -493,10 +547,10 @@ class ChatbotController extends Controller
     {
         $flow = session('booking_flow');
         $facilities = $flow['data']['facilities'] ?? [];
-        
+
         // Kiểm tra xem user nhập số hay tên
         if (is_numeric(trim($message))) {
-            $index = (int)trim($message) - 1;
+            $index = (int) trim($message) - 1;
             if (isset($facilities[$index])) {
                 $selectedFacility = $facilities[$index];
             } else {
@@ -505,14 +559,14 @@ class ChatbotController extends Controller
         } else {
             $facilityName = $this->extractFacilityNameFromMessage($message);
             $selectedFacility = null;
-            
+
             foreach ($facilities as $facility) {
                 if (stripos($facility['facility_name'], $facilityName) !== false) {
                     $selectedFacility = $facility;
                     break;
                 }
             }
-            
+
             if (!$selectedFacility) {
                 return ['❌ Không tìm thấy cơ sở trong danh sách. Vui lòng chọn lại.'];
             }
@@ -520,10 +574,11 @@ class ChatbotController extends Controller
 
         $flow['step'] = 'flow2_select_court';
         $flow['data']['selected_facility'] = $selectedFacility;
-        
-        if ($request) session(['booking_flow' => $flow]);
 
-        $courtsList = implode(', ', array_map(function($court) {
+        if ($request)
+            session(['booking_flow' => $flow]);
+
+        $courtsList = implode(', ', array_map(function ($court) {
             return "<b>$court</b>";
         }, $selectedFacility['available_courts']));
 
@@ -539,20 +594,21 @@ class ChatbotController extends Controller
         $flow = session('booking_flow');
         $selectedFacility = $flow['data']['selected_facility'];
         $availableCourts = $selectedFacility['available_courts'];
-        
+
         // Extract số sân
         if (preg_match('/sân\s*(\d+)/iu', $message, $matches)) {
             $courtNumber = $matches[1];
             $courtName = "Sân " . $courtNumber;
-            
+
             if (!in_array($courtName, $availableCourts)) {
                 return ["❌ Sân $courtNumber không khả dụng. Vui lòng chọn: " . implode(', ', $availableCourts)];
             }
-            
+
             $flow['step'] = 'flow2_confirm_booking';
             $flow['data']['court_name'] = $courtName;
-            
-            if ($request) session(['booking_flow' => $flow]);
+
+            if ($request)
+                session(['booking_flow' => $flow]);
 
             $formattedTime = date('H:i', strtotime($flow['data']['time']));
             $formattedDate = date('d/m/Y', strtotime($flow['data']['date']));
@@ -573,7 +629,7 @@ class ChatbotController extends Controller
     private function handleFlow2ConfirmBooking(string $message, Request $request = null): array
     {
         $message = mb_strtolower(trim($message));
-        
+
         if (str_contains($message, 'hủy')) {
             session()->forget('booking_flow');
             return ['❌ Đã hủy đặt sân. Gõ "Đặt sân" để bắt đầu lại.'];
@@ -583,7 +639,7 @@ class ChatbotController extends Controller
             $flow = session('booking_flow');
             $userId = auth()->id();
             $selectedFacility = $flow['data']['selected_facility'];
-            
+
             $result = $this->booking->createBooking(
                 $userId,
                 $selectedFacility['facility_id'],
@@ -605,7 +661,7 @@ class ChatbotController extends Controller
                 ]);
 
                 $paymentUrl = route('chatbot.payment', ['booking_id' => $result['booking_id']]);
-                
+
                 return [
                     "✅ <b>Đặt sân thành công!</b><br><br>" .
                     "🎫 Mã đặt sân: <b>{$result['booking_code']}</b><br>" .
@@ -754,50 +810,85 @@ class ChatbotController extends Controller
     // Method hiển thị trang thanh toán cho chatbot booking
     public function showPaymentPage($booking_id)
     {
-        $booking = Bookings::with(['facility', 'court', 'timeSlot'])
-            ->where('booking_id', $booking_id)
-            ->where('user_id', auth()->id())
+        // 1. Kiểm tra đăng nhập
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để thanh toán');
+        }
+
+        $userId = auth()->id();
+
+        // 2. Tìm Booking gốc dựa trên ID và User
+        $mainBooking = Bookings::where('booking_id', $booking_id)
+            ->where('user_id', $userId)
             ->first();
 
-        if (!$booking) {
-            abort(404, 'Không tìm thấy đơn đặt sân');
+        if (!$mainBooking) {
+            return redirect()->route('trang_chu')->with('error', 'Không tìm thấy đơn đặt sân hợp lệ.');
         }
 
-        // Lấy payment data từ session
-        $paymentData = session('chatbot_payment_data');
-        
-        if (!$paymentData) {
-            return redirect()->route('home')->with('error', 'Phiên đặt sân đã hết hạn');
-        }
+        // 3. Lấy tất cả các slot thuộc cùng một mã đặt (invoice_detail_id)
+        // Vì bạn đặt 2 tiếng -> có 4 dòng booking cùng mã BOT_xxx
+        $relatedBookings = Bookings::where('invoice_detail_id', $mainBooking->invoice_detail_id)
+            ->get();
 
-        // Chuẩn bị dữ liệu cho view
-        $facilities = $booking->facility;
-        $customer = auth()->user();
-        
-        // Format slots data
-        $slots = $paymentData['slots'];
+        // 4. Tái tạo lại mảng $slots để view hiển thị
+        $slots = [];
         $total = 0;
-        foreach ($slots as $slot) {
-            $total += $slot['price'];
+
+        foreach ($relatedBookings as $b) {
+            // Lấy thông tin giờ
+            $ts = \App\Models\Time_slots::where('time_slot_id', $b->time_slot_id)->first();
+            // Lấy thông tin sân
+            $ct = \App\Models\Courts::where('court_id', $b->court_id)
+                ->where('facility_id', $b->facility_id)
+                ->first();
+
+            $slots[] = [
+                'court' => $ct ? $ct->court_name : 'Sân ?',
+                'start_time' => $ts ? date('H:i', strtotime($ts->start_time)) : '--:--',
+                'end_time' => $ts ? date('H:i', strtotime($ts->end_time)) : '--:--',
+                'date' => date('d-m-Y', strtotime($b->booking_date)),
+                'price' => $b->unit_price,
+                'time_slot_id' => $b->time_slot_id,
+                'court_id' => $b->court_id,
+            ];
+
+            $total += $b->unit_price;
         }
 
-        // Tính thông tin hiển thị
+        // 5. Lấy thông tin cơ sở vật chất
+        $facilities = Facilities::find($mainBooking->facility_id);
+
+        // 6. Lấy thông tin khách hàng
+        $customer = \App\Models\Users::find($userId);
+
+        // 7. Tính toán các thông tin hiển thị phụ
         $uniqueCourts = implode(', ', array_unique(array_column($slots, 'court')));
-        $uniqueDates = implode(', ', array_unique(array_column($slots, 'date')));
-        $uniqueTimes = implode(', ', array_map(function($slot) {
-            return $slot['start_time'] . ' - ' . $slot['end_time'];
-        }, $slots));
-        
-        // Tính tổng thời gian (giả sử mỗi slot là 1 giờ)
-        $totalHours = count($slots);
-        $result = $totalHours . ' giờ';
+        $uniqueDates = implode(' / ', array_unique(array_column($slots, 'date')));
 
-        // Xóa session sau khi lấy xong
-        session()->forget('chatbot_payment_data');
+        // Format chuỗi giờ: 05:00 - 07:00 (Lấy min start và max end nếu liên tục, hoặc liệt kê)
+        // Để đơn giản hiển thị slot đầu đến slot cuối
+        $startTime = $slots[0]['start_time'];
+        $endTime = $slots[count($slots) - 1]['end_time'];
+        $uniqueTimes = "$startTime đến $endTime";
 
-        return view('payments_complete', compact(
+        // Tính tổng thời gian
+        $countSlots = count($slots);
+        $hours = $countSlots * 0.5; // Mỗi slot 30p
+        $result = $hours . ' tiếng';
+
+        // Customer info variables
+        $customer_name = $customer->fullname ?? '';
+        $customer_phone = $customer->phone ?? '';
+        $customer_email = $customer->email ?? '';
+
+        // 8. Trả về View (Chắc chắn sẽ hiện trang thanh toán)
+        return view('payment', compact(
             'facilities',
             'customer',
+            'customer_name',
+            'customer_phone',
+            'customer_email',
             'slots',
             'total',
             'uniqueCourts',

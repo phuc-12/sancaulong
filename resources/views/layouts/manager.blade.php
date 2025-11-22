@@ -197,6 +197,7 @@
 
 
     @stack('scripts')
+    @yield('scripts')
 </body>
 
 </html>
