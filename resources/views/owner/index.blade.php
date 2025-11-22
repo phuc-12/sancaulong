@@ -358,9 +358,9 @@
                 <input type="hidden" id="ownerFacilityId" value="{{ $facility_id ?? '' }}">
 
                 <div class="col-auto ms-auto d-flex gap-2">
-                    <button class="btn btn-success" id="exportExcel">
+                    <!-- <button class="btn btn-success" id="exportExcel">
                         <i class="fas fa-file-excel me-2"></i>Xuất Excel
-                    </button>
+                    </button> -->
                     <button class="btn btn-danger" id="exportPdf"><i class="fas fa-file-pdf me-2"></i>Xuất PDF</button>
                 </div>
             </div>
@@ -583,8 +583,6 @@
                 }
             }
         }
-
-
 
         //Các biểu đồ
         async function loadRevenueChart() {

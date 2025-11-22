@@ -15,9 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\InvoiceController;
 
 //Trang chu
-Route::get('/', function () {
-    return view('index');
-});
+Route::get('/', [HomeController::class, 'index'])->name('index');
 //Tim kiếm
 Route::get('/search', [HomeController::class, 'search'])->name('search.results');
 
@@ -26,9 +24,13 @@ Route::prefix('/')->controller(HomeController::class)
     ->group(function () {
         Route::get('/', 'index')->name('trang_chu');
         Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
-        Route::get('/load-more-san',  'loadMoreSan')->name('load.more.san');
+        Route::get('/load-more-san', 'loadMoreSan')->name('load.more.san');
         Route::post('/venue', 'show')->name('chi_tiet_san');
         Route::post('/thanh-toan', 'payments')->name('thanh.toan');
+        // Route::get('/thanh-toan', function () {
+        //     return redirect()->route('trang_chu'); // Hoặc tên route trang chủ của bạn
+        // });
+    
         Route::post('/booking/add-slot', 'addSlot')->name('booking.addSlot');
         Route::post('/booking/remove-slot', 'removeSlot')->name('booking.removeSlot');
         Route::post('/thanh-toan/thanh-toan-complete', 'payments_complete')->name('payments_complete');
@@ -182,6 +184,17 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
     Route::put('/bookings/update/{booking}', [ManagerController::class, 'updateBookingTime'])
         ->name('bookings.updateTime');
 
+    // 1. API Lấy danh sách sân
+    Route::get('/api/get-courts', [ManagerController::class, 'getCourts'])->name('api.courts');
+
+    // 2. API Lấy số liệu KPI (Doanh thu, Lượt đặt...)
+    Route::get('/api/kpi-data', [ManagerController::class, 'getKpiData'])->name('api.kpi');
+
+    // 3. API Lấy dữ liệu biểu đồ Giờ
+    Route::get('/api/bookings-by-hour', [ManagerController::class, 'getBookingsByHour'])->name('api.hourly');
+
+    // 4. API Lấy dữ liệu biểu đồ Sân (Doanh thu)
+    Route::get('/api/revenue-by-court', [ManagerController::class, 'getRevenueByCourt'])->name('api.revenue');
     Route::get('/promotions', [ManagerController::class, 'promotions'])
         ->name('promotions');
     Route::post('/promotions/create', [ManagerController::class, 'promotions_create'])
@@ -206,7 +219,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
     // GET: Hiển thị trang & kết quả tìm kiếm
     Route::get('/payment', [StaffController::class, 'paymentPage'])
         ->name('payment');
-    Route::post('/cancel-invoice',[StaffController::class, 'cancel_invoice'])->name('cancel_invoice');
+    Route::post('/cancel-invoice', [StaffController::class, 'cancel_invoice'])->name('cancel_invoice');
     // POST: Tìm kiếm booking để thanh toán
     Route::post('/search/booking-today', [StaffController::class, 'searchBooking'])
         ->name('customer.search');
@@ -249,3 +262,11 @@ Route::post('/api/chatbot', [ChatbotController::class, 'chat'])->name('chatbot.a
 Route::get('/chatbot/check-availability', [ChatbotController::class, 'checkAvailability']);
 Route::get('/chatbot/booking-info', [ChatbotController::class, 'bookingInfo']);
 Route::get('/chatbot/price', [ChatbotController::class, 'price']);
+
+//Đặt sân
+Route::middleware(['auth'])->group(function () {
+    // Route thanh toán từ chatbot - chuyển đến trang payment hiện có
+    Route::get('/chatbot/payment/{booking_id}', [ChatbotController::class, 'showPaymentPage'])
+        ->name('chatbot.payment');
+
+});

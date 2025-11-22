@@ -11,14 +11,23 @@ class Bookings extends Model
     protected $table = 'bookings';
 
     protected $primaryKey = 'booking_id';
-    protected $fillable = ['invoice_detail_id', 'user_id', 'facility_id', 'court_id', 'time_slot_id', 'booking_date', 'unit_price', 'status'];
+    protected $fillable = [
+        'invoice_detail_id',
+        'user_id',
+        'facility_id',
+        'court_id',
+        'time_slot_id',
+        'booking_date',
+        'unit_price',
+        'status'
+    ];
     /**
      * Lấy thông tin người dùng (user) đã đặt lịch này.
      */
     public function user()
     {
-        
-        return $this->belongsTo(Users::class, 'user_id', 'user_id'); 
+
+        return $this->belongsTo(Users::class, 'user_id', 'user_id');
     }
 
     /**
@@ -36,7 +45,7 @@ class Bookings extends Model
     {
         return $this->belongsTo(Time_slots::class, 'time_slot_id', 'time_slot_id');
     }
-    
+
     public function facility()
     {
         return $this->belongsTo(Facilities::class, 'facility_id', 'facility_id');

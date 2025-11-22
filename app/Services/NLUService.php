@@ -34,7 +34,7 @@ class NLUService
             ];
         }
 
-        // Kiểm tra giá - CẢI THIỆN
+        // Kiểm tra giá 
         if (preg_match('/(giá|price|bao nhiêu|chi phí|giá cả|giá tiền)/', $text)) {
             return [
                 'intent' => 'check_price',
@@ -136,7 +136,7 @@ class NLUService
         return null;
     }
 
-    // CẢI THIỆN: Extract tên cơ sở
+    // Extract tên cơ sở
     private function extractFacilityName($text)
     {
         // Loại bỏ các từ khóa phổ biến liên quan đến giá
@@ -152,5 +152,22 @@ class NLUService
         }
 
         return null;
+    }
+
+    public function extractDuration($text)
+    {
+        $text = mb_strtolower($text);
+        
+        // Trường hợp: 1.5 tiếng, 2 giờ, 1h
+        if (preg_match('/(\d+([\.,]\d+)?)\s*(tiếng|giờ|h)/', $text, $m)) {
+            return (float)str_replace(',', '.', $m[1]);
+        }
+        
+        // Trường hợp: 1h30p, 1 giờ 30 phút
+        if (preg_match('/(\d+)\s*(h|giờ|tiếng)\s*(\d+)/', $text, $m)) {
+            return (float)$m[1] + ($m[3] / 60);
+        }
+
+        return null; // Mặc định không tìm thấy
     }
 }
