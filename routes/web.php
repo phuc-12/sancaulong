@@ -195,6 +195,14 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
 
     // 4. API Lấy dữ liệu biểu đồ Sân (Doanh thu)
     Route::get('/api/revenue-by-court', [ManagerController::class, 'getRevenueByCourt'])->name('api.revenue');
+    Route::get('/promotions', [ManagerController::class, 'promotions'])
+        ->name('promotions');
+    Route::post('/promotions/create', [ManagerController::class, 'promotions_create'])
+    ->name('promotions.create');
+    Route::post('/promotions/update/{id}', [ManagerController::class, 'promotions_update'])
+    ->name('promotions.update');
+    Route::delete('/promotions/delete/{id}', [ManagerController::class, 'promotions_delete'])
+    ->name('promotions.delete');
 });
 
 //=============================================================================================================

@@ -24,13 +24,13 @@ class OwnerController extends Controller
     public function index()
     {
         $owner = Auth::user();
+        // dd($owner->user_id);
         if (!$owner) {
             abort(401, 'Unauthorized');
         }
         $facility = Facilities::withoutGlobalScopes()
             ->where('owner_id', $owner->user_id)
             ->first();
-
         $facilityStatusMessage = null;
         $facilityStatusType = 'info';
 

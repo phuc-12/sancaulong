@@ -161,6 +161,7 @@ class ManagerController extends Controller
             'labels' => $query->pluck('court_name'),
             'revenues' => $query->pluck('total')->map(fn($val) => (float) $val) // Cast sang float
         ]);
+
     }
 
     // Helper ngày tháng
@@ -545,4 +546,101 @@ class ManagerController extends Controller
         // --- 7. PHẢN HỒI THÀNH CÔNG ---
         return response()->json(['message' => 'Lịch đặt đã được cập nhật thành công.']);
     }
+
+    public function promotions(Request $request)
+    {
+        $manager = Auth::user();
+        $facilityId = $manager->facility_id;
+
+        $promotions = DB::table('promotions')->where('facility_id', $facilityId)
+            ->orderBy('promotion_id', 'desc')
+            ->get();
+
+        return view('manager.promotions', compact('promotions'));
+    }
+
+    public function promotions_create(Request $request)
+    {
+        $request->validate([
+        'description'   => 'required|string|max:500',
+        'discount_type' => 'required|string|max:50',
+        'value'         => 'required|numeric',
+        'start_date'    => 'required|date',
+        'end_date'      => 'required|date|after_or_equal:start_date',
+        'status'        => 'required|in:0,1',
+        ], [
+            'description.required' => 'Vui lòng nhập mô tả chương trình.',
+            'value.numeric'        => 'Giá trị phải là số (0.1 = 10%, 20000 = 20k).',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
+        ]);
+
+        // Lấy facility_id của chủ sân
+        $manager = Auth::user();
+        $facilityId = $manager->facility_id;
+        if (!$facilityId) {
+            return back()->withErrors(['facility' => 'Không tìm thấy cơ sở của bạn.']);
+        }
+
+        DB::table('promotions')->insert([
+            'facility_id'   => $facilityId,
+            'description'   => $request->description,
+            'discount_type' => $request->discount_type,
+            'value'         => $request->value,
+            'start_date'    => $request->start_date,
+            'end_date'      => $request->end_date,
+            'status'        => $request->status,
+        ]);
+
+        return redirect()->route('manager.promotions')
+                        ->with('success', 'Đã thêm chương trình khuyến mãi thành công!');
+    }
+
+    public function promotions_update(Request $request, $id)
+    {
+        $request->validate([
+            'description'   => 'required|string|max:500',
+            'discount_type' => 'required|string|max:50',
+            'value'         => 'required|numeric',
+            'start_date'    => 'required|date',
+            'end_date'      => 'required|date|after_or_equal:start_date',
+            'status'        => 'required|in:0,1',
+        ]);
+        $manager = Auth::user();
+        $facilityId = $manager->facility_id;
+        if (!$facilityId) {
+            return back()->withErrors(['facility' => 'Không tìm thấy cơ sở của bạn.']);
+        }
+
+        DB::table('promotions')
+        ->where('promotion_id', $id)
+        ->where('facility_id',$facilityId)
+        ->update([
+            'description'   => $request->description,
+            'discount_type' => $request->discount_type,
+            'value'         => $request->value,
+            'start_date'    => $request->start_date,
+            'end_date'      => $request->end_date,
+            'status'        => $request->status,
+        ]);
+
+        return redirect()->route('manager.promotions')
+                        ->with('success', 'Cập nhật chương trình khuyến mãi thành công!');
+    }
+
+    public function promotions_delete($id)
+    {
+        $manager = Auth::user();
+        $facilityId = $manager->facility_id;
+
+        if (!$facilityId) {
+            return back()->withErrors(['facility' => 'Không tìm thấy cơ sở của bạn.']);
+        }
+        
+        DB::table('promotions')->where('promotion_id', $id)
+        ->where('facility_id',$facilityId)->delete();
+
+        return redirect()->route('manager.promotions')
+                        ->with('success', 'Đã xoá khuyến mãi thành công!');
+    }
+
 }
