@@ -140,9 +140,10 @@
 <div class="body">
     <div class="login-card">
         <h3 class="login-title">Đăng Nhập DreamSports</h3>
-
-        @if(session('message'))
-            <div class="alert alert-success">{{ session('message') }}</div>
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                {{ $errors->first() }}
+            </div>
         @endif
 
         <form action="{{ route('postLogin') }}" method="POST">

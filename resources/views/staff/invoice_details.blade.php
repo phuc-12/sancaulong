@@ -109,10 +109,36 @@
 									</tbody>
 								</table>
 
-								<div class="text-right mt-3">
-									<h3 class="text-lg font-semibold">Tổng tiền: {{ number_format($total) }} đ</h3>
-									<input type="hidden" id="tongtien" value="{{ $total }}">
-								</div>
+								{{-- Thành tiền --}}
+                                <div class="mt-3">
+                                    <h5>Thành tiền: <span id="totalAmount">{{ number_format($total) }}</span> đ</h5>
+                                    <input type="hidden" id="thanhtien" value="{{ $total }}">
+                                </div>
+
+                                {{-- Dropdown promotions --}}
+                                @if(!empty($promotions) && $promotions->isNotEmpty())
+                                    <div class="mt-3">
+                                        <label class="fw-bold">Chọn Khuyến Mãi Áp Dụng:</label>
+                                        <select name="promotion_id" id="promotion_id" class="form-select">
+                                            <option value="" data-value="0" data-type="">-- Không áp dụng --</option>
+                                            @foreach($promotions as $promo)
+                                                <option value="{{ $promo->promotion_id }}" 
+                                                        data-value="{{ $promo->value }}" 
+                                                        data-type="{{ $promo->discount_type }}">
+                                                    {{ Str::limit($promo->description, 50) }} 
+                                                    ({{ $promo->discount_type }} - 
+                                                    @if($promo->value < 1) {{ $promo->value * 100 }}% @else {{ number_format($promo->value) }}đ @endif)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+
+                                {{-- Tổng hóa đơn --}}
+                                <div class="mt-3">
+                                    <h5>Tổng hóa đơn: <span id="finalTotal">{{ number_format($total) }}</span> đ</h5>
+                                    {{-- <input type="" id="tongtien" name="total_amount" value="{{ $total }}"> --}}
+                                </div>
 
 								{{-- <button class="btn btn-success mt-4">Xác nhận thanh toán</button> --}}
 							@else
@@ -138,7 +164,9 @@
 									<input type="hidden" name="user_id_nv" value="{{ auth()->user()->user_id }}">
 									<input type="hidden" name="fullname_nv" value="{{ auth()->user()->fullname }}">
 									<input type="hidden" name="user_id" value="{{ $customer->user_id }}">
-                                    <input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}"> <!-- Giữ lại để lấy dữ liệu khác nếu cần -->
+                                    <input type="hidden" name="invoice_detail_id" value="{{ $invoice_detail_id }}">
+									<input type="hidden" name="promotion_id" id="selectedPromotion" value="">
+                                	<input type="hidden" id="tongtien" name="total_final" value="{{ $total }}"> <!-- Giữ lại để lấy dữ liệu khác nếu cần -->
                                     <button type="submit" class="btn btn-primary btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">XUẤT HÓA ĐƠN</button>
                                 </form>
 							</aside>
@@ -152,6 +180,44 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const promotionSelect = document.getElementById('promotion_id');
+    const finalTotalEl = document.getElementById('finalTotal');
+    const totalInput = document.getElementById('tongtien');
+
+    let originalTotal = parseFloat(document.getElementById('thanhtien').value);
+
+    if (promotionSelect) {
+        promotionSelect.addEventListener('change', function() {
+            const selectedOption = promotionSelect.options[promotionSelect.selectedIndex];
+            const promoValue = parseFloat(selectedOption.dataset.value || 0);
+            const promoType = selectedOption.dataset.type;
+
+            let newTotal = originalTotal;
+
+            if (promoValue > 0) {
+                // Nếu là giảm % (value < 1)
+                if (promoValue < 1) {
+                    newTotal = originalTotal - (originalTotal * promoValue);
+                } else {
+                    // Nếu là giảm tiền cố định
+                    newTotal = originalTotal - promoValue;
+                }
+            }
+
+            if (newTotal < 0) newTotal = 0;
+
+            // Cập nhật hiển thị và input form
+            finalTotalEl.textContent = new Intl.NumberFormat('vi-VN').format(newTotal);
+            totalInput.value = newTotal;
+
+            // Gửi promotion_id cùng form
+            const selectedPromotionInput = document.getElementById('selectedPromotion');
+            selectedPromotionInput.value = selectedOption.value;
+        });
+    }
+});
+
 document.querySelector('form[action="{{ route('staff.cancel_invoice') }}"]').addEventListener('submit', function(e) {
     e.preventDefault();
     Swal.fire({

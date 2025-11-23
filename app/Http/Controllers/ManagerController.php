@@ -90,7 +90,16 @@ class ManagerController extends Controller
         if ($courtId && $courtId !== 'all') {
             $revenue = $revenueQuery->sum('unit_price');
         } else {
-            $revenue = $revenueQuery->sum('invoices.final_amount');
+            $revenue = DB::table(function ($query) use ($facilityId, $range) {
+                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount')
+                    ->distinct()
+                    ->from('invoices')
+                    ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+                    ->where('invoice_details.facility_id', $facilityId)
+                    ->whereBetween('invoices.issue_date', [$range['start'], $range['end']])
+                    ->where('invoices.payment_status', 'like', '%thanh toán%');
+            }, 'distinct_invoices')
+            ->sum('final_amount');
         }
 
         // KPI Realtime (Sân bận)
@@ -178,18 +187,34 @@ class ManagerController extends Controller
         $start = Carbon::today();
         $end = Carbon::today();
 
-        if ($type == 'today') {
-            $start = Carbon::today()->startOfDay();     // 00:00:00
-            $end = Carbon::today()->endOfDay();         // 23:59:59
-        } elseif ($type == 'week') {
-            $start = Carbon::now()->startOfWeek();
-            $end = Carbon::now()->endOfWeek();
-        } elseif ($type == 'month') {
-            $start = Carbon::now()->startOfMonth();
-            $end = Carbon::now()->endOfMonth();
-        } elseif ($type == 'custom') {
-            $start = Carbon::parse($request->start_date)->startOfDay();
-            $end = Carbon::parse($request->end_date)->endOfDay();
+        switch ($type) {
+            case 'today':
+                $start = Carbon::today()->startOfDay();
+                $end = Carbon::today()->endOfDay();
+                break;
+            case 'week':
+                $start = Carbon::now()->startOfWeek()->startOfDay();
+                $end = Carbon::now()->endOfWeek()->endOfDay();
+                break;
+            case 'month':
+                $start = Carbon::now()->startOfMonth()->startOfDay();
+                $end = Carbon::now()->endOfMonth()->endOfDay();
+                break;
+            case 'quarter':
+                $start = Carbon::now()->firstOfQuarter()->startOfDay();
+                $end = Carbon::now()->lastOfQuarter()->endOfDay();
+                break;
+            case 'year':
+                $start = Carbon::now()->startOfYear()->startOfDay();
+                $end = Carbon::now()->endOfYear()->endOfDay();
+                break;
+            case 'custom':
+                $start = Carbon::parse($request->start_date)->startOfDay();
+                $end = Carbon::parse($request->end_date)->endOfDay();
+                break;
+            default:
+                $start = Carbon::now()->startOfMonth()->startOfDay();
+                $end = Carbon::now()->endOfMonth()->endOfDay();
         }
 
         return ['start' => $start, 'end' => $end];
