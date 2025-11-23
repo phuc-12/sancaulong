@@ -455,6 +455,26 @@ class StaffController extends Controller
         $invoices = DB::table('invoices')->where('invoice_id',$invoice_id)->first();
         // dd($invoices);
         // Truyền sang view thanh toán
+
+        // ===== Lọc promotions theo ngày đặt sân =====
+        $bookingDates = $slotCollection->pluck('date')
+        ->filter()        // loại null, rỗng
+        ->unique()
+        ->values();       // reset index
+
+        $promotions = DB::table('promotions')
+        ->where('status', 1)
+        ->where('facility_id', $request->input('facility_id'))
+        ->where(function($query) use ($bookingDates) {
+            foreach ($bookingDates as $date) {
+                $query->orWhere(function($q) use ($date) {
+                    $q->where('start_date', '<=', $date)
+                    ->where('end_date', '>=', $date);
+                });
+            }
+        })
+        ->get();
+
         return view('staff.invoice_details', [
             'slots' => $slots,
             'result' => $result,
@@ -467,6 +487,7 @@ class StaffController extends Controller
             'uniqueCourts' => $uniqueCourts,
             'uniqueDates' => $uniqueDates,
             'uniqueTimes' => $uniqueTimes,
+            'promotions' => $promotions, // thêm để hiển thị dropdown
         ]);
     }
 

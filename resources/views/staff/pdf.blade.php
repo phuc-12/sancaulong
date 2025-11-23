@@ -53,7 +53,7 @@
         }
 
         .qr-code img {
-            width: 200px;
+            width: 250px;
         }
 
         .qr-code p { margin: 4px 0; }
@@ -146,9 +146,11 @@
         </tbody>
     </table>
 
-    <p class="total">Tổng thời gian: {{ $result }}</p>
-    <p class="total">Tổng tiền: {{ number_format($total) }} đ</p>
-
+    <p class="">Tổng thời gian: {{ $result }}</p>
+    <p class="">Thành tiền: {{ number_format($total) }} đ</p>
+    <p class="">Khuyến mãi: {{ $description->description }}</p>
+    <h3 class="total">Tổng tiền: {{ number_format($total_final) }} đ</h3>
+    
     <!-- ============ QR THANH TOÁN ============ -->
     <div class="qr-code" style="text-align:center; margin-top: 12px;">
         <p><strong>Quét mã QR để thanh toán</strong></p>

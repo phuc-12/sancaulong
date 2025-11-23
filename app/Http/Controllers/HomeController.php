@@ -83,6 +83,10 @@ class HomeController extends Controller
 
     public function show(Request $request)
     {
+        if (!session()->has('user_id')) {
+            return redirect()->route('login'); // hoặc return view('auth.login');
+        }
+
         $idSan = $request->input('facility_id');
         // Lấy thông tin sân
         $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
@@ -247,7 +251,11 @@ class HomeController extends Controller
         $invoiceDetailId = $request->input('invoice_details_id');
         $userId = $request->input('user_id');
         $facility_id = $request->input('facility_id');
-
+        $total_final = $request->input('total_final');
+        $promotion_id = $request->promotion_id ?? null;
+        $description = DB::table('promotions')->where('promotion_id',$promotion_id)
+        ->select('description')
+        ->first();
         $fullname = $request->input('customer_name');
         $phone = $request->input('customer_phone');
         $email = $request->input('customer_email');
@@ -294,7 +302,8 @@ class HomeController extends Controller
             ->where('invoice_detail_id', $invoiceDetailId)
             ->first();
         $total_final = $request->total_final;
-        $promotion_id = $request->promotion_id ?? null;
+        
+        
         DB::table(table: 'invoices')->insert([
             'invoice_id' => $invoice_details->invoice_id,
             'customer_id' => $userId,
@@ -349,6 +358,8 @@ class HomeController extends Controller
                   'facilities' => $facilities,
                   'invoice_detail_id' => $invoice_detail_id,
                   'total' => $total,
+                  'description' => $description,
+                  'total_final' => $total_final,
                   'user_id_nv' => null,
                   'fullname_nv' => null,
                   'invoice_time' => now()->format('d/m/Y H:i:s'),

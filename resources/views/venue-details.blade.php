@@ -1,6 +1,7 @@
 @if(session('user_id'))
     <p>User ID: {{ session('user_id') }}</p>
 @endif
+
 @extends('layouts.main')
 
 @section('venue-details_content')

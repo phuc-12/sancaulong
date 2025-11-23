@@ -378,19 +378,42 @@ class ReportController extends Controller
     private function calculateKPI($ownerId, $dateRange, $facilityId, $courtId)
     {
         $bookingsQuery = DB::table('bookings')
-            ->join('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
-            ->where('facilities.owner_id', $ownerId)
-            ->where('bookings.facility_id', $facilityId) // Lọc theo ID cố định
-            ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
+        ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
+        
+        ->select('bookings.invoice_detail_id', 'invoices.final_amount as final_amount', 'bookings.court_id as court_id') // ⬅️ SỬA CÁCH DÙNG DISTINCT
+        ->distinct()
+        ->where('bookings.facility_id', $facilityId) // Lọc theo ID cố định
+        ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
         
         if ($courtId !== 'all') {
-            $bookingsQuery->where('bookings.court_id', $courtId);
+            $bookingsQuery->where('court_id', $courtId);
+
+            $revenue = DB::table('bookings')
+            ->where('facility_id', $facilityId)
+            ->where('court_id', $courtId)
+            ->whereBetween('booking_date', [$dateRange['start'], $dateRange['end']])
+            ->sum('unit_price');
+        }
+        else 
+        {
+            $revenue = DB::table(function ($query) use ($facilityId, $dateRange) {
+                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount')
+                    ->distinct()
+                    ->from('invoices')
+                    ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+                    ->where('invoice_details.facility_id', $facilityId)
+                    ->whereBetween('invoices.issue_date', [$dateRange['start'], $dateRange['end']])
+                    ->where('invoices.payment_status', 'like', '%thanh toán%');
+            }, 'distinct_invoices')
+            ->sum('final_amount');
         }
 
         $bookingsQueryClone = clone $bookingsQuery;
         $bookingsQueryClone2 = clone $bookingsQuery;
 
-        $revenue = $bookingsQuery->sum('bookings.unit_price') ?? 0;
+        
+        
         $bookings = $bookingsQueryClone->distinct('bookings.invoice_detail_id')->count('bookings.invoice_detail_id');
         $customers = $bookingsQueryClone2->distinct('bookings.user_id')->count('bookings.user_id');
         $avgPrice = $bookings > 0 ? round($revenue / $bookings, 2) : 0;
@@ -444,20 +467,40 @@ class ReportController extends Controller
     private function getDateRange($range)
     {
         $now = Carbon::now();
+
         switch ($range) {
             case 'today':
-                return ['start' => $now->copy()->startOfDay()->toDateString(), 'end' => $now->copy()->endOfDay()->toDateString()];
+                $start = $now->copy()->startOfDay();
+                $end   = $now->copy()->endOfDay();
+                break;
+
             case 'week':
-                return ['start' => $now->copy()->startOfWeek()->toDateString(), 'end' => $now->copy()->endOfWeek()->toDateString()];
+                $start = $now->copy()->startOfWeek()->startOfDay();
+                $end   = $now->copy()->endOfWeek()->endOfDay();
+                break;
+
             case 'month':
-                return ['start' => $now->copy()->startOfMonth()->toDateString(), 'end' => $now->copy()->endOfMonth()->toDateString()];
+                $start = $now->copy()->startOfMonth()->startOfDay();
+                $end   = $now->copy()->endOfMonth()->endOfDay();
+                break;
+
             case 'quarter':
-                return ['start' => $now->copy()->firstOfQuarter()->toDateString(), 'end' => $now->copy()->lastOfQuarter()->toDateString()];
+                $start = $now->copy()->firstOfQuarter()->startOfDay();
+                $end   = $now->copy()->lastOfQuarter()->endOfDay();
+                break;
+
             case 'year':
-                return ['start' => $now->copy()->startOfYear()->toDateString(), 'end' => $now->copy()->endOfYear()->toDateString()];
+                $start = $now->copy()->startOfYear()->startOfDay();
+                $end   = $now->copy()->endOfYear()->endOfDay();
+                break;
+
             default:
-                return ['start' => $now->copy()->startOfMonth()->toDateString(), 'end' => $now->copy()->endOfMonth()->toDateString()];
+                // Nếu muốn, có thể mở rộng để hỗ trợ custom range
+                $start = $now->copy()->startOfMonth()->startOfDay();
+                $end   = $now->copy()->endOfMonth()->endOfDay();
         }
+
+        return ['start' => $start, 'end' => $end];
     }
 
     private function getPreviousDateRange($range)
