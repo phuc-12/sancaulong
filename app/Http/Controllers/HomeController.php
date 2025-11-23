@@ -83,9 +83,9 @@ class HomeController extends Controller
 
     public function show(Request $request)
     {
-        if (!session()->has('user_id')) {
-            return redirect()->route('login'); // hoặc return view('auth.login');
-        }
+        // if (!session()->has('user_id')) {
+        //     return redirect()->route('login'); // hoặc return view('auth.login');
+        // }
 
         $idSan = $request->input('facility_id');
         // Lấy thông tin sân
