@@ -29,30 +29,36 @@ class BookingService
         if (!$slotId)
             return ['error' => 'Khung giờ không hợp lệ (VD: 17h, 18h)'];
 
-        // 1. Lấy tất cả sân của cơ sở
         $allCourts = Courts::where('facility_id', $this->facilityId)->pluck('court_name', 'court_id')->toArray();
 
-        // 2. Lấy các sân đã đặt
         $bookedCourtIds = Bookings::where('facility_id', $this->facilityId)
             ->where('booking_date', $date)
             ->where('time_slot_id', $slotId)
-            ->where('status', '!=', 'Đã Hủy') // Quan trọng
+            ->where('status', '!=', 'Đã Hủy')
             ->pluck('court_id')
             ->toArray();
 
-        // 3. Tính hiệu số
         $available = array_diff_key($allCourts, array_flip($bookedCourtIds));
 
-        // 4. Lấy tên cơ sở
         $facility = Facilities::find($this->facilityId);
         $facilityName = $facility ? $facility->facility_name : 'Cơ sở #' . $this->facilityId;
 
+        // TẠO DATA ĐỂ POST (bao gồm cả thông tin user)
+        $bookingData = [
+            'facility_id' => $this->facilityId,
+            'facility_name' => $facilityName,
+            'date' => $date,
+            'time' => $timeString,
+            'slot_id' => $slotId,
+        ];
+
         return [
-            'available' => array_values($available), // Danh sách tên sân trống
+            'available' => array_values($available),
             'is_full' => empty($available),
             'slot_id' => $slotId,
             'facility_name' => $facilityName,
-            'facility_id' => $this->facilityId
+            'facility_id' => $this->facilityId,
+            'booking_data' => $bookingData // DATA ĐỂ POST
         ];
     }
 
@@ -304,9 +310,8 @@ class BookingService
         \Illuminate\Support\Facades\DB::beginTransaction();
 
         try {
-            // BƯỚC 1: TẠO INVOICE DETAIL TRƯỚC (FIX LỖI FOREIGN KEY)
-            // Lưu ý: 'invoice_id' để tạm là 0 hoặc 1 vì chưa thanh toán xong
-            // Cần dùng DB::table để insert nhanh tránh lỗi model
+            // BƯỚC 1: TẠO INVOICE DETAIL TRƯỚC
+            // 'invoice_id' để tạm là 0 hoặc 1 vì chưa thanh toán xong
             \Illuminate\Support\Facades\DB::table('invoice_details')->insert([
                 'invoice_detail_id' => $bookingCode,
                 'invoice_id' => 0, // Giá trị tạm (Pending)
@@ -387,26 +392,23 @@ class BookingService
     // FEATURE 4: Tra cứu giá
     public function getPriceInfo($facilityName = null)
     {
-        // Nếu không có tên cơ sở, trả về null để controller xử lý hỏi người dùng
         if (!$facilityName) {
             return null;
         }
 
-        // Tìm cơ sở theo tên
         $facility = Facilities::where('facility_name', 'like', "%$facilityName%")
             ->where('status', 'đã duyệt')
             ->where('is_active', true)
             ->first();
 
         if (!$facility) {
-            return null; // Trả về null để controller xử lý
+            return null;
         }
 
         $price = Court_prices::where('facility_id', $facility->facility_id)
             ->orderBy('effective_date', 'desc')
             ->first();
 
-        // Lấy giá (ưu tiên từ court_prices, nếu không có thì lấy từ facilities)
         $defaultPrice = $price ? $price->default_price : ($facility->default_price ?? 0);
         $specialPrice = $price ? $price->special_price : ($facility->special_price ?? 0);
 
@@ -414,26 +416,22 @@ class BookingService
             return "Chưa có thông tin giá cho cơ sở này.";
         }
 
+        // DATA ĐỂ POST
+        $bookingData = [
+            'facility_id' => $facility->facility_id,
+            'facility_name' => $facility->facility_name,
+        ];
+
         $msg = "💰 <b>Giá tại {$facility->facility_name}:</b><br>" .
             "Giá sân thường: " . number_format($defaultPrice, 0, ',', '.') . "đ<br>" .
-            "Giá giờ vàng/Lễ: " . number_format($specialPrice, 0, ',', '.') . "đ";
+            "Giá giờ vàng/Lễ: " . number_format($specialPrice, 0, ',', '.') . "đ<br><br>";
 
-        // Tìm các cơ sở có giá tương tự
-        $similarFacilities = $this->findSimilarPriceFacilities($facility->facility_id, $defaultPrice);
-
-        if (!empty($similarFacilities)) {
-            $msg .= "<br><br>💡 <b>Các cơ sở có giá tương tự:</b><br>";
-            foreach ($similarFacilities as $similar) {
-                $msg .= "📍 <b>{$similar['facility_name']}</b> - ";
-                $msg .= "Giá thường: " . number_format($similar['default_price'], 0, ',', '.') . "đ";
-                if (!empty($similar['address'])) {
-                    $msg .= " ({$similar['address']})";
-                }
-                $msg .= "<br>";
-            }
-        }
-
-        return $msg;
+        // Trả về array để controller xử lý
+        return [
+            'message' => $msg,
+            'booking_data' => $bookingData,
+            'similar_facilities' => $this->findSimilarPriceFacilities($facility->facility_id, $defaultPrice)
+        ];
     }
 
     // Tìm các cơ sở có giá tương tự
@@ -443,7 +441,6 @@ class BookingService
             return [];
         }
 
-        // Tính khoảng giá (±25% hoặc tối thiểu ±30,000đ)
         $percentageRange = $targetPrice * 0.25;
         $minimumRange = 30000;
         $priceRange = max($percentageRange, $minimumRange);
@@ -451,7 +448,6 @@ class BookingService
         $minPrice = $targetPrice - $priceRange;
         $maxPrice = $targetPrice + $priceRange;
 
-        // Lấy tất cả cơ sở đã duyệt và đang hoạt động
         $facilities = Facilities::where('status', 'đã duyệt')
             ->where('is_active', true)
             ->where('facility_id', '!=', $excludeFacilityId)
@@ -460,14 +456,12 @@ class BookingService
         $similarFacilities = [];
 
         foreach ($facilities as $facility) {
-            // Lấy giá từ court_prices hoặc facilities
             $price = Court_prices::where('facility_id', $facility->facility_id)
                 ->orderBy('effective_date', 'desc')
                 ->first();
 
             $facilityPrice = $price ? $price->default_price : ($facility->default_price ?? 0);
 
-            // Kiểm tra nếu giá trong khoảng tương tự
             if ($facilityPrice > 0 && $facilityPrice >= $minPrice && $facilityPrice <= $maxPrice) {
                 $similarFacilities[] = [
                     'facility_id' => $facility->facility_id,
@@ -475,17 +469,15 @@ class BookingService
                     'address' => $facility->address,
                     'default_price' => $facilityPrice,
                     'special_price' => $price ? $price->special_price : ($facility->special_price ?? 0),
-                    'price_diff' => abs($facilityPrice - $targetPrice) // Dùng để sắp xếp
+                    'price_diff' => abs($facilityPrice - $targetPrice)
                 ];
             }
         }
 
-        // Sắp xếp theo độ chênh lệch giá (gần nhất trước)
         usort($similarFacilities, function ($a, $b) {
             return $a['price_diff'] <=> $b['price_diff'];
         });
 
-        // Giới hạn số lượng kết quả
         return array_slice($similarFacilities, 0, $limit);
     }
 
@@ -505,7 +497,6 @@ class BookingService
         if (!$slotId)
             return ['error' => 'Khung giờ không hợp lệ (VD: 17h, 18h)'];
 
-        // Lấy tất cả cơ sở đã được duyệt và đang hoạt động
         $facilities = Facilities::where('status', 'đã duyệt')
             ->where('is_active', true)
             ->get();
@@ -513,12 +504,10 @@ class BookingService
         $results = [];
 
         foreach ($facilities as $facility) {
-            // Lấy tất cả sân của cơ sở này
             $allCourts = Courts::where('facility_id', $facility->facility_id)
                 ->pluck('court_name', 'court_id')
                 ->toArray();
 
-            // Lấy các sân đã đặt
             $bookedCourtIds = Bookings::where('facility_id', $facility->facility_id)
                 ->where('booking_date', $date)
                 ->where('time_slot_id', $slotId)
@@ -526,7 +515,6 @@ class BookingService
                 ->pluck('court_id')
                 ->toArray();
 
-            // Tính sân trống
             $available = array_diff_key($allCourts, array_flip($bookedCourtIds));
 
             if (!empty($available)) {
@@ -535,7 +523,14 @@ class BookingService
                     'facility_name' => $facility->facility_name,
                     'address' => $facility->address,
                     'available_courts' => array_values($available),
-                    'count' => count($available)
+                    'count' => count($available),
+                    'booking_data' => [
+                        'facility_id' => $facility->facility_id,
+                        'facility_name' => $facility->facility_name,
+                        'date' => $date,
+                        'time' => $timeString,
+                        'slot_id' => $slotId,
+                    ]
                 ];
             }
         }

@@ -67,7 +67,32 @@ class ChatbotController extends Controller
             return $this->handleBookingFlow($message, $nluData, $request);
         }
 
-        // Nếu đang trong flow tìm cơ sở khác
+        // XỬ LÝ "CÒN SÂN KHÁC KHÔNG"
+        // Kiểm tra nếu user hỏi "còn sân khác", "cơ sở khác"
+        if ($intent === 'find_other_facilities') {
+            // Nếu KHÔNG CÓ thời gian trong câu hỏi hiện tại
+            if (!$nluData['entities']['time'] || !$nluData['entities']['date']) {
+                // Lấy context từ session (từ lần hỏi trước)
+                $lastContext = session('chatbot_last_query_context');
+
+                if ($lastContext && isset($lastContext['time']) && isset($lastContext['date'])) {
+                    // Tự động dùng lại thời gian và ngày từ context
+                    $nluData['entities']['time'] = $lastContext['time'];
+                    $nluData['entities']['date'] = $lastContext['date'];
+
+                    // KHÔNG GỬI MESSAGE RIÊNG - Sẽ được xử lý trong buildOtherFacilitiesResponse
+                } else {
+                    // Không có context trước đó
+                    if ($request) {
+                        session(['chatbot_finding_other_facilities' => true]);
+                    }
+                    $responses[] = '⏰ Bạn muốn tìm sân vào khung giờ nào?<br>VD: "18h hôm nay", "20h ngày mai"';
+                    return $responses;
+                }
+            }
+        }
+
+        // Nếu đang trong flow tìm cơ sở khác (đã set flag trước đó)
         if (
             $isFindingOtherFacilities && $nluData['entities']['time'] &&
             ($intent === 'check_availability' || $intent === 'unknown')
@@ -83,7 +108,6 @@ class ChatbotController extends Controller
                 break;
 
             case 'booking_request':
-                // BẮT ĐẦU LUỒNG ĐẶT SÂN
                 $responses[] = $this->startBookingFlow($nluData, $request);
                 break;
 
@@ -92,15 +116,36 @@ class ChatbotController extends Controller
 
                 if (!$facilityName) {
                     session(['chatbot_checking_price' => true]);
-                    $responses[] = 'Bạn muốn xem giá sân ở cơ sở nào? Vui lòng cho tôi biết tên cơ sở.<br>VD: Thủ Đức, Quận 1, CuChi...';
+                    $responses[] = 'Bạn muốn xem giá sân ở cơ sở nào? Vui lòng cho tôi biết tên cơ sở.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
                 } else {
                     $priceInfo = $this->booking->getPriceInfo($facilityName);
 
                     if ($priceInfo === null) {
                         session(['chatbot_checking_price' => true]);
-                        $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng kiểm tra lại tên cơ sở hoặc thử tên khác.<br>VD: Thủ Đức, Quận 1, CuChi...';
+                        $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng kiểm tra lại tên cơ sở hoặc thử tên khác.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
                     } else {
-                        $responses[] = $priceInfo;
+                        if (is_array($priceInfo)) {
+                            $responses[] = $priceInfo['message'] . $this->generateBookingButton($priceInfo['booking_data']);
+
+                            if (!empty($priceInfo['similar_facilities'])) {
+                                $similarMsg = "<br>💡 <b>Các cơ sở có giá tương tự:</b><br>";
+                                foreach ($priceInfo['similar_facilities'] as $similar) {
+                                    $similarMsg .= "📍 <b>{$similar['facility_name']}</b> - ";
+                                    $similarMsg .= "Giá: " . number_format($similar['default_price'], 0, ',', '.') . "đ";
+                                    if (!empty($similar['address'])) {
+                                        $similarMsg .= " ({$similar['address']})";
+                                    }
+                                    $similarMsg .= $this->generateBookingButton([
+                                        'facility_id' => $similar['facility_id'],
+                                        'facility_name' => $similar['facility_name']
+                                    ]);
+                                    $similarMsg .= "<br>";
+                                }
+                                $responses[] = $similarMsg;
+                            }
+                        } else {
+                            $responses[] = $priceInfo;
+                        }
                         session()->forget('chatbot_checking_price');
                     }
                 }
@@ -116,8 +161,7 @@ class ChatbotController extends Controller
                 break;
 
             case 'check_availability':
-                $responses[] = $this->buildAvailabilityResponse($nluData);
-                $this->clearAllSessions($request);
+                $responses[] = $this->buildAvailabilityResponse($nluData, $request);
                 break;
 
             case 'find_other_facilities':
@@ -126,7 +170,7 @@ class ChatbotController extends Controller
                 } else if ($request) {
                     session()->forget('chatbot_finding_other_facilities');
                 }
-                $responses[] = $this->buildOtherFacilitiesResponse($nluData);
+                $responses[] = $this->buildOtherFacilitiesResponse($nluData, $request);
 
                 if ($request) {
                     session()->forget('chatbot_checking_price');
@@ -136,7 +180,7 @@ class ChatbotController extends Controller
             default:
                 if ($isFindingOtherFacilities && $nluData['entities']['time']) {
                     $nluData['intent'] = 'find_other_facilities';
-                    $responses[] = $this->buildOtherFacilitiesResponse($nluData);
+                    $responses[] = $this->buildOtherFacilitiesResponse($nluData, $request);
                     if ($request) {
                         session()->forget('chatbot_finding_other_facilities');
                     }
@@ -147,23 +191,87 @@ class ChatbotController extends Controller
                         $priceInfo = $this->booking->getPriceInfo($facilityName);
 
                         if ($priceInfo === null) {
-                            $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng nhập tên cơ sở khác.<br>VD: Thủ Đức, Quận 1, CuChi...';
+                            $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng nhập tên cơ sở khác.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
                         } else {
-                            $responses[] = $priceInfo;
+                            if (is_array($priceInfo)) {
+                                $responses[] = $priceInfo['message'] . $this->generateBookingButton($priceInfo['booking_data']);
+                            } else {
+                                $responses[] = $priceInfo;
+                            }
                             if ($request) {
                                 session()->forget('chatbot_checking_price');
                             }
                         }
                     } else {
-                        $responses[] = '❓ Tôi không nhận diện được tên cơ sở trong tin nhắn của bạn.<br>Vui lòng nhập lại tên cơ sở rõ ràng hơn.<br>VD: Thủ Đức, Quận 1, CuChi...';
+                        $responses[] = '❓ Tôi không nhận diện được tên cơ sở trong tin nhắn của bạn.<br>Vui lòng nhập lại tên cơ sở rõ ràng hơn.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
                     }
                 } else {
-                    $responses[] = '😅 Xin lỗi, tôi chưa hiểu ý bạn.<br>Hãy thử:<br>• "Đặt sân"<br>• "Kiểm tra sân trống hôm nay 18h"<br>• "Giá sân bao nhiêu"<br>• "Tìm cơ sở khác"';
+                    $responses[] = '😅 Xin lỗi, tôi chưa hiểu ý bạn.<br>Hãy thử:<br>• "Kiểm tra sân trống hôm nay 18h"<br>• "Giá sân bao nhiêu"';
                 }
                 break;
         }
 
         return $responses;
+    }
+
+
+    private function generateBookingButton(array $bookingData): string
+    {
+        $facilityId = $bookingData['facility_id'] ?? '';
+        $facilityName = $bookingData['facility_name'] ?? '';
+        $date = $bookingData['date'] ?? '';
+        $time = $bookingData['time'] ?? '';
+        $slotId = $bookingData['slot_id'] ?? '';
+
+        $user = auth()->user();
+        $userName = $user ? $user->fullname : '';
+        $userPhone = $user ? $user->phone : '';
+        $userEmail = $user ? $user->email : '';
+
+        $csrfToken = csrf_token();
+        $formId = 'booking-form-' . uniqid();
+
+        return <<<HTML
+        <br><br>
+        <form id="$formId" action="/venue" method="POST" style="display: inline;">
+            <input type="hidden" name="_token" value="$csrfToken">
+            <input type="hidden" name="facility_id" value="$facilityId">
+            <input type="hidden" name="facility_name" value="$facilityName">
+            <input type="hidden" name="date" value="$date">
+            <input type="hidden" name="time" value="$time">
+            <input type="hidden" name="slot_id" value="$slotId">
+            <input type="hidden" name="customer_name" value="$userName">
+            <input type="hidden" name="customer_phone" value="$userPhone">
+            <input type="hidden" name="customer_email" value="$userEmail">
+            <button type="submit" style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                transition: all 0.3s;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';" 
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+                🎾 ĐẶT SÂN NGAY
+            </button>
+        </form>
+HTML;
+    }
+
+    private function extractFacilityNameFromMessage(string $message): ?string
+    {
+        $message = preg_replace('/(giá|bao nhiêu|chi phí|xem|tôi muốn|cho tôi|muốn|hỏi|của|ở|tại|sân|cơ\s*sở)/iu', '', $message);
+        $message = preg_replace('/\s+/', ' ', $message);
+        $message = trim($message);
+
+        if (strlen($message) < 3 || !preg_match('/[a-zA-ZÀ-ỹ]/u', $message)) {
+            return null;
+        }
+
+        return $message;
     }
 
     // ==================== BOOKING FLOW ====================
@@ -174,7 +282,6 @@ class ChatbotController extends Controller
             return '🔒 Bạn cần đăng nhập để đặt sân.';
         }
 
-        // Khởi tạo booking flow
         $flow = [
             'step' => 'ask_flow_choice',
             'data' => []
@@ -254,7 +361,7 @@ class ChatbotController extends Controller
             if ($request)
                 session(['booking_flow' => $flow]);
 
-            return ['📍 Bạn muốn đặt sân tại cơ sở nào?<br>VD: Thủ Đức, Quận 1, CuChi...'];
+            return ['📍 Bạn muốn đặt sân tại cơ sở nào?<br>VD: Thủ Đức, Quận 1, Hóc môn...'];
         } else if ($choice === '2') {
             $flow = [
                 'step' => 'flow2_ask_time',
@@ -274,7 +381,7 @@ class ChatbotController extends Controller
         $facilityName = $this->extractFacilityNameFromMessage($message);
 
         if (!$facilityName) {
-            return ['❓ Tôi không nhận diện được tên cơ sở. Vui lòng nhập lại.<br>VD: Thủ Đức, Quận 1, CuChi...'];
+            return ['❓ Tôi không nhận diện được tên cơ sở. Vui lòng nhập lại.<br>VD: Thủ Đức, Quận 1, Hóc môn...'];
         }
 
         // Kiểm tra cơ sở có tồn tại không
@@ -679,7 +786,7 @@ class ChatbotController extends Controller
 
     // ==================== HELPER METHODS ====================
 
-    private function buildAvailabilityResponse(array $nluData): string
+    private function buildAvailabilityResponse(array $nluData, Request $request = null): string
     {
         $date = $nluData['entities']['date'] ?? null;
         $time = $nluData['entities']['time'] ?? null;
@@ -692,6 +799,18 @@ class ChatbotController extends Controller
             return '⏰ Bạn vui lòng cung cấp giờ cụ thể để tôi kiểm tra sân trống.<br>VD: "sân trống 18h hôm nay" hoặc "20h ngày mai"';
         }
 
+        //LƯU CONTEXT VÀO SESSION
+        if ($request) {
+            session([
+                'chatbot_last_query_context' => [
+                    'time' => $time,
+                    'date' => $date,
+                    'intent' => 'check_availability',
+                    'timestamp' => now()
+                ]
+            ]);
+        }
+
         $result = $this->booking->checkAvailability($date, $time);
 
         if (isset($result['error'])) {
@@ -699,6 +818,7 @@ class ChatbotController extends Controller
         }
 
         $facilityName = $result['facility_name'] ?? 'Cơ sở này';
+        $bookingData = $result['booking_data'] ?? [];
         $formattedTime = date('H:i', strtotime($time));
         $formattedDate = date('d/m/Y', strtotime($date));
 
@@ -711,16 +831,35 @@ class ChatbotController extends Controller
                 $msg .= "<br><br>💡 <b>Gợi ý giờ trống gần đó:</b> " . implode(', ', $suggestions);
             }
 
+            // THÊM GỢI Ý TÌM CƠ SỞ KHÁC
+            $msg .= "<br><br>💬 Bạn có thể hỏi: <i>\"Còn sân khác không?\"</i> để tôi tìm các cơ sở khác.";
+
+            if (!empty($bookingData)) {
+                $msg .= $this->generateBookingButton($bookingData);
+            }
+
             return $msg;
         }
 
         $available = $result['available'] ?? [];
         if (empty($available)) {
-            return "❌ Tại <b>$facilityName</b> hiện không có sân trống lúc $formattedTime ngày $formattedDate.";
+            $msg = "❌ Tại <b>$facilityName</b> hiện không có sân trống lúc $formattedTime ngày $formattedDate.";
+            $msg .= "<br><br>💬 Bạn có thể hỏi: <i>\"Còn sân khác không?\"</i> để tôi tìm các cơ sở khác.";
+            return $msg;
         }
 
-        return "✅ Tại <b>$facilityName</b> còn trống các sân: <b>" . implode(', ', $available) . "</b><br>Lúc $formattedTime ngày $formattedDate";
+        $msg = "✅ Tại <b>$facilityName</b> còn trống các sân: <b>" . implode(', ', $available) . "</b><br>Lúc $formattedTime ngày $formattedDate";
+
+        if (!empty($bookingData)) {
+            $msg .= $this->generateBookingButton($bookingData);
+        }
+
+        // THÊM GỢI Ý TÌM CƠ SỞ KHÁC
+        $msg .= "<br><br>💬 Hoặc hỏi: <i>\"Còn cơ sở khác không?\"</i>";
+
+        return $msg;
     }
+
 
     private function buildBookingHistoryResponse(): string
     {
@@ -743,7 +882,7 @@ class ChatbotController extends Controller
         return $msg;
     }
 
-    private function buildOtherFacilitiesResponse(array $nluData): string
+    private function buildOtherFacilitiesResponse(array $nluData, Request $request = null): string
     {
         $date = $nluData['entities']['date'] ?? null;
         $time = $nluData['entities']['time'] ?? null;
@@ -754,6 +893,18 @@ class ChatbotController extends Controller
 
         if (!$time) {
             return '⏰ Bạn vui lòng cung cấp giờ cụ thể để tôi tìm các cơ sở khác có sân trống.<br>VD: "18h" hoặc "20h hôm nay"';
+        }
+
+        // ============ LƯU CONTEXT VÀO SESSION ============
+        if ($request) {
+            session([
+                'chatbot_last_query_context' => [
+                    'time' => $time,
+                    'date' => $date,
+                    'intent' => 'find_other_facilities',
+                    'timestamp' => now()
+                ]
+            ]);
         }
 
         $result = $this->booking->checkAvailabilityAllFacilities($date, $time);
@@ -770,30 +921,26 @@ class ChatbotController extends Controller
             return "❌ Rất tiếc, không có cơ sở nào còn sân trống lúc $formattedTime ngày $formattedDate.";
         }
 
-        $msg = "🔍 Tìm thấy <b>" . count($facilities) . " cơ sở</b> còn sân trống lúc $formattedTime ngày $formattedDate:<br><br>";
+        // THÊM HEADER THÔNG BÁO (Gộp vào cùng message)
+        $msg = "🔍 <b>Đang tìm các cơ sở khác còn sân trống lúc $formattedTime ngày $formattedDate...</b><br><br>";
+
+        $msg .= "✅ Tìm thấy <b>" . count($facilities) . " cơ sở</b>:<br><br>";
 
         foreach ($facilities as $facility) {
             $msg .= "📍 <b>" . $facility['facility_name'] . "</b><br>";
             if (!empty($facility['address'])) {
                 $msg .= "   📌 Địa chỉ: " . $facility['address'] . "<br>";
             }
-            $msg .= "   ✅ Còn trống: <b>" . implode(', ', $facility['available_courts']) . "</b> (" . $facility['count'] . " sân)<br><br>";
+            $msg .= "   ✅ Còn trống: <b>" . implode(', ', $facility['available_courts']) . "</b> (" . $facility['count'] . " sân)<br>";
+
+            if (!empty($facility['booking_data'])) {
+                $msg .= "   " . $this->generateBookingButton($facility['booking_data']);
+            }
+
+            $msg .= "<br>";
         }
 
         return $msg;
-    }
-
-    private function extractFacilityNameFromMessage(string $message): ?string
-    {
-        $message = preg_replace('/(giá|bao nhiêu|chi phí|xem|tôi muốn|cho tôi|muốn|hỏi|của|ở|tại|sân|cơ\s*sở)/iu', '', $message);
-        $message = preg_replace('/\s+/', ' ', $message);
-        $message = trim($message);
-
-        if (strlen($message) < 3 || !preg_match('/[a-zA-ZÀ-ỹ]/u', $message)) {
-            return null;
-        }
-
-        return $message;
     }
 
     private function clearAllSessions(Request $request = null): void
@@ -802,7 +949,8 @@ class ChatbotController extends Controller
             session()->forget([
                 'booking_flow',
                 'chatbot_finding_other_facilities',
-                'chatbot_checking_price'
+                'chatbot_checking_price',
+                'chatbot_last_query_context' // XÓA CONTEXT KHI RESET
             ]);
         }
     }
