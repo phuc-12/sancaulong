@@ -83,16 +83,16 @@ class HomeController extends Controller
 
     public function show(Request $request)
     {
-        // if (!session()->has('user_id')) {
-        //     return redirect()->route('login'); // hoặc return view('auth.login');
-        // }
-
         $idSan = $request->input('facility_id');
         // Lấy thông tin sân
         $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
+        // Nếu chưa đăng nhập → chuyển về trang login
+        if (!Auth::check()) {
+            return redirect()->route('login'); // 'login' là tên route login
+        }
 
-        // Lấy thông tin khách hàng (nếu đã đăng nhập)
-        $customer = Auth::check() ? Users::where('user_id', Auth::id())->first() : null;
+        // Nếu đã đăng nhập → lấy thông tin customer
+        $customer = Users::where('user_id', Auth::id())->first();
 
         // Lấy danh sách khung giờ
         $timeSlots = Time_slots::all();
