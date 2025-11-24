@@ -53,7 +53,7 @@ class NLUService
         }
 
         // Tìm cơ sở khác / sân khác
-        if (preg_match('/(còn.*sân.*khác|cơ sở.*khác|sân.*khác|địa điểm.*khác|nơi.*khác|tìm.*cơ sở)/', $text)) {
+        if (preg_match('/(còn.*sân.*khác|cơ sở.*khác|sân.*khác|địa điểm.*khác|nơi.*khác|tìm.*cơ sở|còn.*chỗ.*khác|còn.*nơi.*nào|còn.*đâu|chỗ.*khác)/', $text)) {
             return [
                 'intent' => 'find_other_facilities',
                 'entities' => [
@@ -141,7 +141,7 @@ class NLUService
     {
         // Loại bỏ các từ khóa phổ biến liên quan đến giá
         $text = preg_replace('/(giá|bao nhiêu|chi phí|price|giá cả|giá tiền|của|ở|tại|sân|cơ\s*sở)/iu', '', $text);
-        
+
         // Chuẩn hóa khoảng trắng
         $text = preg_replace('/\s+/', ' ', $text);
         $text = trim($text);
@@ -157,15 +157,15 @@ class NLUService
     public function extractDuration($text)
     {
         $text = mb_strtolower($text);
-        
+
         // Trường hợp: 1.5 tiếng, 2 giờ, 1h
         if (preg_match('/(\d+([\.,]\d+)?)\s*(tiếng|giờ|h)/', $text, $m)) {
-            return (float)str_replace(',', '.', $m[1]);
+            return (float) str_replace(',', '.', $m[1]);
         }
-        
+
         // Trường hợp: 1h30p, 1 giờ 30 phút
         if (preg_match('/(\d+)\s*(h|giờ|tiếng)\s*(\d+)/', $text, $m)) {
-            return (float)$m[1] + ($m[3] / 60);
+            return (float) $m[1] + ($m[3] / 60);
         }
 
         return null; // Mặc định không tìm thấy
