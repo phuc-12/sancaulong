@@ -67,7 +67,16 @@
             flex-direction: column;
             justify-content: space-between;
             transition: all 0.3s ease;
-            height: 100%;
+            min-height: 140px;
+        }
+
+        .gap-4 {
+            gap: 1.5rem !important;
+        }
+
+        /* Tăng khoảng cách cho cột trái để cân bằng với cột phải */
+        .col-md-4:first-child .gap-4 {
+            gap: 1.75rem !important;
         }
 
         .kpi-card:hover {
@@ -103,6 +112,11 @@
         .kpi-card.pink {
             background: #ffe6f2;
             border-color: #ff99cc;
+        }
+
+        .kpi-card.cyan {
+            background: #e6f9ff;
+            border-color: #80d9ff;
         }
 
         .kpi-icon {
@@ -145,11 +159,51 @@
             color: #cc0066;
         }
 
+        .icon-cyan {
+            background: #ccefff;
+            color: #0099cc;
+        }
+
         .kpi-value {
             font-size: 2rem;
             font-weight: 700;
             color: #2c3e50;
             margin: 12px 0 8px 0;
+        }
+
+        /* Thu nhỏ các thẻ bên trái (cột 1) */
+        .col-md-4:first-child .kpi-card {
+            padding: 12px 16px;
+            min-height: 90px;
+        }
+
+        .col-md-4:first-child .kpi-value {
+            font-size: 1.25rem;
+            margin: 6px 0 4px 0;
+        }
+
+        .col-md-4:first-child .kpi-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+        }
+
+        .col-md-4:first-child .kpi-label {
+            font-size: 0.7rem;
+            margin-bottom: 4px;
+        }
+
+        .col-md-4:first-child .kpi-period {
+            font-size: 0.65rem;
+        }
+
+        .col-md-4:first-child .change-badge {
+            font-size: 0.7rem;
+            padding: 2px 5px;
+        }
+
+        .col-md-4:first-child .mb-3 {
+            margin-bottom: 0.5rem !important;
         }
 
         .kpi-label {
@@ -367,35 +421,135 @@
         </div>
 
         <div class="row g-4 mb-4">
-            @php
-                $kpis = [
-                    ['label' => 'TỔNG DOANH THU', 'id' => 'totalRevenue', 'badge' => 'revenueBadge', 'change' => 'revenueChange', 'icon' => 'fas fa-dollar-sign', 'color' => 'orange', 'period' => 'Trong kỳ'],
-                    ['label' => 'TỔNG ĐẶT SÂN', 'id' => 'totalBookings', 'badge' => 'bookingBadge', 'change' => 'bookingChange', 'icon' => 'fas fa-calendar-check', 'color' => 'blue', 'period' => 'Bookings'],
-                    ['label' => 'CÔNG SUẤT', 'id' => 'utilization', 'badge' => 'utilizationBadge', 'change' => 'utilizationChange', 'icon' => 'fas fa-chart-line', 'color' => 'yellow', 'period' => 'Trung bình'],
-                    ['label' => 'KHÁCH HÀNG', 'id' => 'totalCustomers', 'badge' => 'customerBadge', 'change' => 'customerChange', 'icon' => 'fas fa-users', 'color' => 'purple', 'period' => 'Khách duy nhất'],
-                    ['label' => 'GIÁ TRUNG BÌNH', 'id' => 'avgPrice', 'badge' => 'priceBadge', 'change' => 'priceChange', 'icon' => 'fas fa-money-bill-wave', 'color' => 'green', 'period' => 'Mỗi booking'],
-                    ['label' => 'TĂNG TRƯỞNG', 'id' => 'growth', 'badge' => 'growthBadge', 'change' => 'growthChange', 'icon' => 'fas fa-arrow-trend-up', 'color' => 'pink', 'period' => 'So với kỳ trước'],
-                ];
-            @endphp
-            @foreach($kpis as $kpi)
-                <div class="col-12 col-md-6 col-lg-4 d-flex">
-                    <div class="kpi-card {{ $kpi['color'] }} flex-fill">
+            {{-- Cột 1: Tổng doanh thu, Khách hàng, Giá trung bình --}}
+            <div class="col-12 col-md-4">
+                <div class="d-flex flex-column gap-4">
+                    {{-- Tổng doanh thu --}}
+                    <div class="kpi-card orange">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div class="flex-grow-1">
-                                <div class="kpi-label">{{ $kpi['label'] }}</div>
-                                <div class="kpi-value loading" id="{{ $kpi['id'] }}">0</div>
+                                <div class="kpi-label">TỔNG DOANH THU</div>
+                                <div class="kpi-value loading" id="totalRevenue">0</div>
                             </div>
-                            <div class="kpi-icon icon-{{ $kpi['color'] }}"><i class="{{ $kpi['icon'] }}"></i></div>
+                            <div class="kpi-icon icon-orange"><i class="fas fa-dollar-sign"></i></div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="kpi-period">{{ $kpi['period'] }}</span>
-                            <span class="change-badge change-positive" id="{{ $kpi['badge'] }}">
-                                <i class="fas fa-arrow-up"></i><span id="{{ $kpi['change'] }}">0%</span>
+                            <span class="kpi-period">Trong kỳ</span>
+                            <span class="change-badge change-positive" id="revenueBadge">
+                                <i class="fas fa-arrow-up"></i><span id="revenueChange">0%</span>
+                            </span>
+                        </div>
+                    </div>
+                    {{-- Khách hàng --}}
+                    <div class="kpi-card purple">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="kpi-label">SỐ LƯỢNG KHÁCH HÀNG</div>
+                                <div class="kpi-value loading" id="totalCustomers">0</div>
+                            </div>
+                            <div class="kpi-icon icon-purple"><i class="fas fa-users"></i></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="kpi-period">Khách duy nhất</span>
+                            <span class="change-badge change-positive" id="customerBadge">
+                                <i class="fas fa-arrow-up"></i><span id="customerChange">0%</span>
+                            </span>
+                        </div>
+                    </div>
+                    {{-- Giá trung bình --}}
+                    <div class="kpi-card green">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="kpi-label">GIÁ TRUNG BÌNH</div>
+                                <div class="kpi-value loading" id="avgPrice">0</div>
+                            </div>
+                            <div class="kpi-icon icon-green"><i class="fas fa-money-bill-wave"></i></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="kpi-period">Mỗi booking</span>
+                            <span class="change-badge change-positive" id="priceBadge">
+                                <i class="fas fa-arrow-up"></i><span id="priceChange">0%</span>
                             </span>
                         </div>
                     </div>
                 </div>
-            @endforeach
+            </div>
+
+            {{-- Cột 2: Đặt lẻ, Hợp đồng --}}
+            <div class="col-12 col-md-4">
+                <div class="d-flex flex-column gap-4">
+                    {{-- Đặt lẻ --}}
+                    <div class="kpi-card blue">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="kpi-label">ĐẶT LẺ</div>
+                                <div class="kpi-value loading" id="bookingsIndividual">0</div>
+                            </div>
+                            <div class="kpi-icon icon-blue"><i class="fas fa-calendar-day"></i></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="kpi-period">Bookings</span>
+                            <span class="change-badge change-positive" id="bookingIndividualBadge">
+                                <i class="fas fa-arrow-up"></i><span id="bookingIndividualChange">0%</span>
+                            </span>
+                        </div>
+                    </div>
+                    {{-- Hợp đồng --}}
+                    <div class="kpi-card cyan">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="kpi-label">HỢP ĐỒNG</div>
+                                <div class="kpi-value loading" id="bookingsContract">0</div>
+                            </div>
+                            <div class="kpi-icon icon-cyan"><i class="fas fa-file-contract"></i></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="kpi-period">Bookings</span>
+                            <span class="change-badge change-positive" id="bookingContractBadge">
+                                <i class="fas fa-arrow-up"></i><span id="bookingContractChange">0%</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Cột 3: Công suất, Tăng trưởng --}}
+            <div class="col-12 col-md-4">
+                <div class="d-flex flex-column gap-4">
+                    {{-- Công suất --}}
+                    <div class="kpi-card yellow">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="kpi-label">CÔNG SUẤT</div>
+                                <div class="kpi-value loading" id="utilization">0</div>
+                            </div>
+                            <div class="kpi-icon icon-yellow"><i class="fas fa-chart-line"></i></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="kpi-period">Trung bình</span>
+                            <span class="change-badge change-positive" id="utilizationBadge">
+                                <i class="fas fa-arrow-up"></i><span id="utilizationChange">0%</span>
+                            </span>
+                        </div>
+                    </div>
+                    {{-- Tăng trưởng --}}
+                    <div class="kpi-card pink">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="kpi-label">TĂNG TRƯỞNG</div>
+                                <div class="kpi-value loading" id="growth">0</div>
+                            </div>
+                            <div class="kpi-icon icon-pink"><i class="fas fa-arrow-trend-up"></i></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="kpi-period">So với kỳ trước</span>
+                            <span class="change-badge change-positive" id="growthBadge">
+                                <i class="fas fa-arrow-up"></i><span id="growthChange">0%</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="row g-4 mb-4 d-flex flex-wrap">
@@ -440,7 +594,7 @@
                             <th>#</th>
                             <th>Họ tên</th>
                             <th>Điện thoại</th>
-                            <th>Email</th>
+                            <!-- <th>Email</th> -->
                             <th class="text-center">Số lần đặt</th>
                             <th class="text-end">Tổng chi tiêu</th>
                         </tr>
@@ -525,8 +679,12 @@
 
                 document.getElementById('totalRevenue').textContent = formatCurrency(data.revenue.value);
                 updateBadge('revenueBadge', 'revenueChange', data.revenue.change);
-                document.getElementById('totalBookings').textContent = formatNumber(data.bookings.value);
-                updateBadge('bookingBadge', 'bookingChange', data.bookings.change);
+                // Hiển thị đặt lẻ
+                document.getElementById('bookingsIndividual').textContent = formatNumber(data.bookings_individual?.value || 0);
+                updateBadge('bookingIndividualBadge', 'bookingIndividualChange', data.bookings_individual?.change || 0);
+                // Hiển thị hợp đồng
+                document.getElementById('bookingsContract').textContent = formatNumber(data.bookings_contract?.value || 0);
+                updateBadge('bookingContractBadge', 'bookingContractChange', data.bookings_contract?.change || 0);
                 document.getElementById('utilization').textContent = data.utilization.value + '%';
                 updateBadge('utilizationBadge', 'utilizationChange', data.utilization.change);
                 document.getElementById('totalCustomers').textContent = formatNumber(data.customers.value);
@@ -763,7 +921,8 @@
                 data.forEach((c, i) => {
                     tbody.innerHTML += `
                                                     <tr>
-                                                        <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> <td>${c.phone}</td> <td>${c.email}</td>
+                                                        <td>${i + 1}</td> <td><strong>${c.fullname}</strong></td> 
+                                                        <td>${c.phone}</td>
                                                         <td class="text-center"><span class="badge bg-primary">${c.total_bookings}</span></td>
                                                         <td class="text-end"><strong>${formatCurrency(c.total_spent)}</strong></td>
                                                     </tr>`;
@@ -792,7 +951,7 @@
 
         document.getElementById('applyCustomDate')?.addEventListener('click', loadAllData);
 
-        document.getElementById('exportExcel').addEventListener('click', () => window.location.href = `${exportExcelUrl}?${getQueryParams()}`);
+        // document.getElementById('exportExcel').addEventListener('click', () => window.location.href = `${exportExcelUrl}?${getQueryParams()}`);
         document.getElementById('exportPdf').addEventListener('click', () => window.location.href = `${exportPdfUrl}?${getQueryParams()}`);
 
         document.addEventListener('DOMContentLoaded', function () {

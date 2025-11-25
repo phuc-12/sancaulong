@@ -60,17 +60,25 @@ class ManagerController extends Controller
             ->whereBetween('invoices.issue_date', [$range['start'], $range['end']])
             ->where('invoices.payment_status', 'like', '%thanh toán%');
         
-        // --- QUERY KPI: BOOKING ---
-        $bookingQuery = DB::table('bookings')
+        // --- QUERY KPI: BOOKING ĐẶT LẺ (từ invoices) ---
+        $bookingIndividualQuery = DB::table('bookings')
         ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
         ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
         ->distinct('bookings.invoice_detail_id')
         ->where('bookings.facility_id', $facilityId)
         ->whereBetween('bookings.booking_date', [$range['start'], $range['end']]);
 
+        // --- QUERY KPI: BOOKING HỢP ĐỒNG (từ long_term_contracts) ---
+        $bookingContractQuery = DB::table('bookings')
+        ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
+        ->distinct('bookings.invoice_detail_id')
+        ->where('bookings.facility_id', $facilityId)
+        ->whereBetween('bookings.booking_date', [$range['start'], $range['end']]);
+
         // Áp dụng lọc theo sân con
         if ($courtId && $courtId !== 'all') {
-            $bookingQuery->where('court_id', $courtId);
+            $bookingIndividualQuery->where('bookings.court_id', $courtId);
+            $bookingContractQuery->where('bookings.court_id', $courtId);
 
             $revenueQuery = DB::table('bookings')
                 ->where('facility_id', $facilityId)
@@ -80,7 +88,9 @@ class ManagerController extends Controller
         }
 
         // Tính toán
-        $bookingsCount = $bookingQuery->clone()->count();
+        $bookingsIndividualCount = $bookingIndividualQuery->clone()->count();
+        $bookingsContractCount = $bookingContractQuery->clone()->count();
+        $bookingsCount = $bookingsIndividualCount + $bookingsContractCount; // Tổng cả 2 loại
         $cancelCount = DB::table('invoices')
         ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
         ->where('invoice_details.facility_id', $facilityId)
@@ -115,6 +125,8 @@ class ManagerController extends Controller
         // Trả về giá trị trực tiếp thay vì object
         return response()->json([
             'bookings' => (int) $bookingsCount,
+            'bookings_individual' => (int) $bookingsIndividualCount, // Đặt lẻ
+            'bookings_contract' => (int) $bookingsContractCount, // Hợp đồng
             'revenue' => (float) $revenue,
             'cancel' => (int) $cancelCount,
             'utilization' => "$busy / $totalC",
