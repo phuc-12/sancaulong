@@ -14,6 +14,7 @@ class Users extends Authenticatable
     protected $table = 'users';
     protected $primaryKey = 'user_id';
 
+    public $timestamps = true;
 
     protected $fillable = [
         'fullname',
@@ -59,5 +60,25 @@ class Users extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'role_id', 'role_id');
     }
+
+    // Method để lấy email cho xác thực
+    public function getEmailForVerification()
+    {
+        return $this->email;
+    }
+
+    // Method kiểm tra email đã được xác thực chưa
+    public function hasVerifiedEmail()
+    {
+        return !is_null($this->email_verified_at);
+    }
+
+    // Method đánh dấu email đã được xác thực
+    // public function markEmailAsVerified()
+    // {
+    //     return $this->forceFill([
+    //         'email_verified_at' => $this->freshTimestamp(),
+    //     ])->save();
+    // }
 
 }
