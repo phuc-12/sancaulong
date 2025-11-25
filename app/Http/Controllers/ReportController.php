@@ -79,6 +79,8 @@ class ReportController extends Controller
         $kpiData = [
             'revenue' => ['value' => $currentData['revenue'], 'change' => $this->calculateChange($currentData['revenue'], $previousData['revenue'])],
             'bookings' => ['value' => $currentData['bookings'], 'change' => $this->calculateChange($currentData['bookings'], $previousData['bookings'])],
+            'bookings_individual' => ['value' => $currentData['bookings_individual'], 'change' => $this->calculateChange($currentData['bookings_individual'], $previousData['bookings_individual'] ?? 0)], // Đặt lẻ
+            'bookings_contract' => ['value' => $currentData['bookings_contract'], 'change' => $this->calculateChange($currentData['bookings_contract'], $previousData['bookings_contract'] ?? 0)], // Hợp đồng
             'utilization' => ['value' => $currentData['utilization'], 'change' => $this->calculateChange($currentData['utilization'], $previousData['utilization'])],
             'customers' => ['value' => $currentData['customers'], 'change' => $this->calculateChange($currentData['customers'], $previousData['customers'])],
             'avgPrice' => ['value' => $currentData['avgPrice'], 'change' => $this->calculateChange($currentData['avgPrice'], $previousData['avgPrice'])],
@@ -377,22 +379,26 @@ class ReportController extends Controller
 
     private function calculateKPI($ownerId, $dateRange, $facilityId, $courtId)
     {
-        // $bookingsQuery = DB::table('bookings')
-        // ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
-        // ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
-        // ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
-        // ->select('bookings.invoice_detail_id', 'invoices.final_amount as final_amount', 'bookings.court_id as court_id') // ⬅️ SỬA CÁCH DÙNG DISTINCT
-        // ->distinct()
-        // ->where('bookings.facility_id', $facilityId) // Lọc theo ID cố định
-        // ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
-        $bookingsQuery = DB::table('bookings')
-        ->select('invoice_detail_id')
+        // --- QUERY BOOKING ĐẶT LẺ (từ invoices) ---
+        $bookingIndividualQuery = DB::table('bookings')
+        ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
+        ->select('bookings.invoice_detail_id', 'invoices.final_amount as final_amount', 'bookings.court_id as court_id')
         ->distinct()
-        ->where('facility_id', $facilityId)
-        ->whereBetween('booking_date', [$dateRange['start'], $dateRange['end']]);
+        ->where('bookings.facility_id', $facilityId)
+        ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
+        
+        // --- QUERY BOOKING HỢP ĐỒNG (từ long_term_contracts) ---
+        $bookingContractQuery = DB::table('bookings')
+        ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
+        ->select('bookings.invoice_detail_id', 'bookings.court_id as court_id')
+        ->distinct()
+        ->where('bookings.facility_id', $facilityId)
+        ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
         
         if ($courtId !== 'all') {
-            // $bookingsQuery->where('court_id', $courtId);
+            $bookingIndividualQuery->where('bookings.court_id', $courtId);
+            $bookingContractQuery->where('bookings.court_id', $courtId);
 
             $revenue = DB::table(function ($query) use ($facilityId, $dateRange, $courtId) {
                 $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount','bookings.booking_date','bookings.court_id')
@@ -422,10 +428,15 @@ class ReportController extends Controller
             ->sum('final_amount');
         }
 
-        $bookingsQueryClone = clone $bookingsQuery;
-        $bookingsQueryClone2 = clone $bookingsQuery;
+        $bookingIndividualQueryClone = clone $bookingIndividualQuery;
+        $bookingContractQueryClone = clone $bookingContractQuery;
+        $bookingsQueryClone2 = clone $bookingIndividualQuery;
         
-        $bookings = $bookingsQueryClone->distinct('bookings.invoice_detail_id')->count('bookings.invoice_detail_id');
+        // Đếm từng loại
+        $bookingsIndividual = $bookingIndividualQueryClone->distinct('bookings.invoice_detail_id')->count('bookings.invoice_detail_id');
+        $bookingsContract = $bookingContractQueryClone->distinct('bookings.invoice_detail_id')->count('bookings.invoice_detail_id');
+        $bookings = $bookingsIndividual + $bookingsContract; // Tổng cả 2 loại
+        
         $customers = $bookingsQueryClone2->distinct('bookings.user_id')->count('bookings.user_id');
         $avgPrice = $bookings > 0 ? round($revenue / $bookings, 2) : 0;
         $utilization = $this->calculateUtilization($ownerId, $dateRange, $facilityId, $courtId);
@@ -433,6 +444,8 @@ class ReportController extends Controller
         return [
             'revenue' => round($revenue, 2),
             'bookings' => $bookings,
+            'bookings_individual' => $bookingsIndividual, // Đặt lẻ
+            'bookings_contract' => $bookingsContract, // Hợp đồng
             'utilization' => round($utilization, 1),
             'customers' => $customers,
             'avgPrice' => $avgPrice
