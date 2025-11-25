@@ -89,9 +89,10 @@ class StaffController extends Controller
             'long_term_contracts.issue_date as issue_date',
             'long_term_contracts.final_amount as final_amount'
         )
-        ->distinct()
+        ->distinct('long_term_contracts.contract_id')   // ⬅ Cực quan trọng
         ->orderBy('long_term_contracts.contract_id', 'desc')
-        ->get();
+        ->paginate(10);
+
 
         $mycontract_details = [];
 
@@ -398,7 +399,7 @@ class StaffController extends Controller
                 ->orWhere('users.fullname', 'like', "%$search%");
             });
         }
-
+        
         $long_term_contracts = $contractQuery->paginate(10)->appends($request->only('search'));
 
         // =============================

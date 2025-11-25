@@ -223,7 +223,13 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
     Route::post('/promotions/update/{id}', [ManagerController::class, 'promotions_update'])
         ->name('promotions.update');
     Route::delete('/promotions/delete/{id}', [ManagerController::class, 'promotions_delete'])
-        ->name('promotions.delete');
+
+    ->name('promotions.delete');
+
+    Route::get('/list_Contracts', [ManagerController::class,'list_Contracts'])->name('lich_co_dinh');
+    Route::post('/contract_details', [ManagerController::class,'contract_details'])->name('chi_tiet_ct');
+    Route::post('/cancel_contract', [ManagerController::class,'cancel_contract'])->name('cancel_contract');
+
 });
 
 //=============================================================================================================

@@ -1090,20 +1090,22 @@ class HomeController extends Controller
         $slots = json_decode($request->slots, true);
         $slotCollection = collect($slots);
         $invoice_detail_id = $request->invoice_detail_id;
-        
-        $long_term_contracts = DB::table('long_term_contracts')
-        ->join('invoice_details','invoice_details.invoice_detail_id', '=','long_term_contracts.invoice_detail_id')
-        ->join('promotions','promotions.promotion_id','=','long_term_contracts.promotion_id')
-        ->where('long_term_contracts.invoice_detail_id',$invoice_detail_id)
+
+        $long_term_contracts = DB::table('long_term_contracts as ltc')
+        ->leftJoin('invoice_details as id', 'id.invoice_detail_id', '=', 'ltc.invoice_detail_id')
+        ->leftJoin('promotions as p', 'p.promotion_id', '=', 'ltc.promotion_id')
+        ->where('ltc.invoice_detail_id', $invoice_detail_id)
         ->select(
-            'long_term_contracts.*',
-            'invoice_details.facility_id as facility_id',
-            'promotions.*',
-            'promotions.value as value',
-            'promotions.description as description',
+            'ltc.*',
+            'ltc.customer_id as customer_id',
+            DB::raw('id.facility_id as facility_id'),
+            DB::raw('p.promotion_id as promotion_id'),
+            DB::raw('p.description as description'),
+            DB::raw('p.discount_type as discount_type'),
+            DB::raw('p.value as value')
         )
         ->first();
-        // dd($long_term_contracts);
+
         $customer = DB::table('users')
         ->where('user_id',$long_term_contracts->customer_id)
         ->first();
@@ -1151,9 +1153,28 @@ class HomeController extends Controller
         ->unique()
         ->map(fn($id) => 'Sân ' . $id)
         ->implode(', ');
+        
+        $grouped = collect($slots)
+            ->groupBy(function ($item) {
+                return $item['booking_date'] . '_' . $item['court_id'];
+            })
+            ->map(function ($items) {
+                return [
+                    'booking_date'   => $items[0]['booking_date'],
+                    'court_id'       => $items[0]['court_id'],
+                    'start_time'     => $items->min('start_time'),
+                    'end_time'       => $items->max('end_time'),
+                    'total_duration' => $items->count() * 0.5, // mỗi slot 30 phút
+                    'total_price'    => $items->sum('unit_price'),
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        $slots = $grouped;
 
         return view('contract_details',[
-            'slots' => $groupedSlots,
+            'slots' => $grouped,
             'long_term_contracts' => $long_term_contracts,
             'customer' => $customer,
             'facilities' => $facilities,
@@ -1173,7 +1194,7 @@ class HomeController extends Controller
             'payment_status' => 'Đã Hủy',
             'updated_at' => now(),
         ]);
-
+        
         return view('layouts.redirect_mycontracts', [
             'user_id' => $user_id,
             'success_message' => 'Đã hủy hợp đồng!!! Vui lòng liên hệ sân để hoàn tiền.',
