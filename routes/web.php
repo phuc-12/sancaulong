@@ -25,6 +25,7 @@ Route::prefix('/')->controller(HomeController::class)
         Route::get('/', 'index')->name('trang_chu');
         Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
         Route::get('/load-more-san', 'loadMoreSan')->name('load.more.san');
+        Route::get('/venue',  'show')->name('chi_tiet_san_get');
         Route::post('/venue', 'show')->name('chi_tiet_san');
         Route::post('/thanh-toan', 'payments')->name('thanh.toan');
         // Route::get('/thanh-toan', function () {

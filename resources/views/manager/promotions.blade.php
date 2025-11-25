@@ -61,7 +61,7 @@
                                 $types = [
                                     // 'hours'     => 'Theo số giờ chơi',
                                     'special'   => 'Ngày đặc biệt',
-                                    'customer'  => 'Khách cố định',
+                                    'customer'  => 'Khách hàng cố định',
                                     'first'     => 'Lần đầu',
                                     'tournament'=> 'Tổ chức giải đấu',
                                     'invoice'   => 'Hóa đơn lớn',
@@ -168,7 +168,7 @@
                             <select name="discount_type" class="form-select" required>
                                 {{-- <option value="hours"      {{ $promo->discount_type=='hours' ? 'selected' : '' }}>Theo số giờ chơi</option> --}}
                                 <option value="special"    {{ $promo->discount_type=='special' ? 'selected' : '' }}>Ngày đặc biệt</option>
-                                <option value="customer"   {{ $promo->discount_type=='customer' ? 'selected' : '' }}>Khách cố định</option>
+                                <option value="customer"   {{ $promo->discount_type=='customer' ? 'selected' : '' }}>Khách hàng cố định</option>
                                 <option value="first"      {{ $promo->discount_type=='first' ? 'selected' : '' }}>Lần đầu</option>
                                 <option value="tournament" {{ $promo->discount_type=='tournament' ? 'selected' : '' }}>Tổ chức giải đấu</option>
                                 <option value="invoice"    {{ $promo->discount_type=='invoice' ? 'selected' : '' }}>Hóa đơn lớn</option>
@@ -250,7 +250,7 @@
                             <select name="discount_type" class="form-select" required>
                                 {{-- <option value="hours">Theo số giờ chơi</option> --}}
                                 <option value="special">Ngày đặc biệt</option>
-                                <option value="customer">Khách cố định</option>
+                                <option value="customer">Khách hàng cố định</option>
                                 <option value="first">Lần đầu</option>
                                 <option value="tournament">Tổ chức giải đấu</option>
                                 <option value="invoice">Hóa đơn lớn</option>

@@ -127,7 +127,10 @@
         </tbody>
     </table>
 
-    <p class="total">Tổng tiền: <span class="highlight">{{ number_format($contract->total_amount, 0, ',', '.') }} đ</span></p>
+    <p class="total">Thành tiền: <span class="highlight">{{ number_format($contract->total_amount, 0, ',', '.') }} đ</span></p>
+    <p >Khuyến mãi: <span class="highlight">{{ $promotions->description }}</span></p>
+    <p >Giảm: <span class="highlight">{{ $promotions->value*100 .'%' }}</span></p>
+    <p class="total">Thành tiền: <span class="highlight" style="font-size: 30px;">{{ number_format($contract->final_amount, 0, ',', '.') }} đ</span></p>
 </div>
 
 </body>

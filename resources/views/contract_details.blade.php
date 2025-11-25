@@ -111,8 +111,15 @@
                                 </tbody>
                             </table>
 
-						<p class="total">Tổng cộng: <span class="highlight">{{ number_format($long_term_contracts->total_amount, 0, ',', '.') }} đ</span></p>
-							{{-- <p class="total">Tổng cộng: <span class="highlight">{{ $summary['total_amount'] }} đ</span></p> --}}
+						    <p class="total">Tổng cộng: <span class="highlight">{{ number_format($long_term_contracts->total_amount, 0, ',', '.') }} đ</span></p>
+							@if (!empty($long_term_contracts) && !empty($long_term_contracts->description) && !empty($long_term_contracts->value))
+                                <div class="text-right mt-3">
+                                    <h5 class="text-lg font-semibold">Khuyến mãi: {{ $long_term_contracts->description }}</h5>
+                                </div>
+                                <div class="text-right mt-3">
+                                    <h5 class="text-lg font-semibold">Giảm: {{ $long_term_contracts->value*100 . '%' }}</h5>
+                                </div>
+                            @endif
 							<p class="total">Số tiền cần thanh toán: <span class="highlight">{{ number_format($long_term_contracts->final_amount, 0, ',', '.') }} đ</span></p>
 							
 							<div>

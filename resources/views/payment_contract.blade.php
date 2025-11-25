@@ -125,8 +125,21 @@
 						</table>
 
 						<p class="total">Tổng cộng: <span class="highlight">{{ number_format($summary['total_amount'], 0, ',', '.') }} đ</span></p>
-							{{-- <p class="total">Tổng cộng: <span class="highlight">{{ $summary['total_amount'] }} đ</span></p> --}}
-							<p class="total">Số tiền cần thanh toán: <span class="highlight">{{ number_format($summary['total_amount'], 0, ',', '.') }} đ</span></p>
+							{{-- Hiển thị khuyến mãi --}}
+							@if($summary['promotions'])
+								<div class="promotions rounded bg-green-50">
+									<p><strong>Khuyến mãi áp dụng:</strong> {{ $summary['promotions']->description ?? '' }}</p>
+									<p>
+										<strong>
+											Giảm: 
+										</strong>
+										<span class="text-red-600 font-bold">
+											{{ $summary['promotions']->value*100 . '%' }}
+										</span>
+									</p>
+								</div>
+							@endif
+							<p class="total">Số tiền cần thanh toán: <span class="highlight" style="font-size: 30px;">{{ number_format($summary['final_amount'], 0, ',', '.') }} đ</span></p>
 							
 							<div>
 								<p><strong>Chủ tài khoản:</strong> {{ $userInfo['account_name'] }}</p>
@@ -136,7 +149,8 @@
 									@csrf
 									<input type="hidden" name="start_date" id="start_date" value="{{ $summary['start_date'] }} ">
 									<input type="hidden" name="end_date" id="end_date" value="{{ $summary['end_date'] }}">
-									<input type="hidden" name="tongtien" id="tongtien" value="{{ $summary['total_amount'] }}">
+									<input type="hidden" name="total_amount" id="total_amount" value="{{ $summary['total_amount'] }}">
+									<input type="hidden" name="tongtien" id="tongtien" value="{{ $summary['final_amount'] }}">
 									<input type="hidden" name="details" id="details_input" value='@json($details["actual_dates"])'>
 									<input type="hidden" name="invoice_details_id" id="invoice_details_id" value="{{ $invoice_detail_id }}">
 									<input type="hidden" name="facility_id" id="facility_id" value="{{ $userInfo["facility_id"] }}">
@@ -144,6 +158,9 @@
 									<input type="hidden" name="slot_details" value='@json($details["slot_details"])'>
 									<input type="hidden" name="fullname" id="fullname" value="{{ $userInfo["user_name"] }}">
 									<input type="hidden" name="phone" id="phone" value="{{ $userInfo["phone"] }}">
+									@if($summary['promotions'])
+										<input type="hidden" name="promotion_id" id="promotion_id" value="{{ $summary["promotions"]->promotion_id }}">
+									@endif
 									<button 
 										type="button" 
 										class="btn btn-primary btn-lg" 
@@ -166,33 +183,6 @@
 							
 						</div>
 					</div>
-					{{-- <table> 
-						<thead> 
-							<tr> 
-								<th>T.Gian</th> 
-								<th>Dịch vụ</th> 
-								<th>SL</th> 
-								<th>Đ.Giá</th> 
-							</tr> 
-						</thead> 
-						<tbody> 
-							@php $total = 0; @endphp 
-							@foreach ($details['actual_dates'] as $item) 
-								@php $date = \Carbon\Carbon::parse($item['date'])->format('d/m'); @endphp 
-								@foreach ($details['courts'] as $court) 
-									@foreach ($details['slot_details'] as $slot) 
-										@php $amount = $slot['amount']; $total += $amount; @endphp 
-											<tr> 
-												<td>{{ $date }}</td> 
-												<td>Sân {{ $court }}</td> 
-												<td>30 phút</td> 
-												<td>{{ number_format($amount, 0, ',', '.') }}đ</td> 
-											</tr> 
-										@endforeach 
-									@endforeach 
-								@endforeach 
-						</tbody> 
-					</table> --}}
 				</section>
 			</div>
 			<!-- Container -->
@@ -219,7 +209,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('showQRBtn');
     const qrImage = document.getElementById('qrImage');
-    const total = {{ $summary['total_amount'] }};
+    const total = {{ $summary['final_amount'] }};
     let intervalId = null, isPaid = false;
 
     btn.addEventListener('click', function() {

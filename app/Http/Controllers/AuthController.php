@@ -168,43 +168,46 @@ class AuthController extends Controller
 
     //Dang nhap theo role
     public function postLogin(LoginRequest $request)
-    {
-        $credentials = $request->only('email', 'password');
+{
+    $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            $user = Auth::user();
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+        $user = Auth::user();
 
-            // 1 = admin
-            // 2 = owner (Chủ sân)
-            // 3 = staff (Nhân viên)
-            // 4 = manager (Quản lý sân)
-            // 5 = customer (Khách hàng)
+        // Nếu là KHÁCH HÀNG
+        if ($user->role_id == 5) {
 
-            switch ($user->role_id) {
-                case 1:
-                    // Admin
-                    return redirect()->route('admin.index');
-                case 2:
-                    // Chủ sân (Owner)
-                    return redirect()->route('owner.index');
-                case 3:
-                    // Nhân viên (Staff)
-                    return redirect()->route('staff.index');
-                case 4:
-                    // Quản lý sân (Manager)
-                    return redirect()->route('manager.index');
-                case 5:
-                    // Khách hàng (Customer)
-                    return redirect()->route('trang_chu');
-                default:
-                    // Mặc định (ví dụ: vai trò không xác định)
-                    return redirect()->route('trang_chu');
+            // Nếu có URL intended → quay lại trang chi tiết sân
+            if (session()->has('url.intended')) {
+                $intended = session('url.intended');
+                session()->forget('url.intended');
+                return redirect($intended);
             }
+
+            // Nếu không có intended → về trang chủ khách hàng
+            return redirect()->route('trang_chu');
         }
 
-        return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
+        // 🔥 CÁC ROLE KHÁC: ADMIN, OWNER, STAFF, MANAGER → BỎ QUA intended
+
+        switch ($user->role_id) {
+            case 1:
+                return redirect()->route('admin.index');
+            case 2:
+                return redirect()->route('owner.index');
+            case 3:
+                return redirect()->route('staff.index');
+            case 4:
+                return redirect()->route('manager.index');
+            default:
+                return redirect()->route('trang_chu');
+        }
     }
+
+    return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
+}
+
 
     //Dang xuat
     public function logout(Request $request)
