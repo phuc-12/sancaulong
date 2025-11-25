@@ -299,7 +299,12 @@
             </div>
             <div class="col-md-6 text-end">
                 <p class="d-inline-block me-2 mb-0">Giá từ:</p>   
-                 <h3 class="primary-text d-inline-block">{{ $thongtinsan->courtPrice->default_price ?? 'Chưa có giá' }}</span>/Giờ</span></h3>
+                <h3 class="primary-text d-inline-block">
+                    {{ isset($thongtinsan->courtPrice->default_price) 
+                        ? number_format($thongtinsan->courtPrice->default_price, 0, ',', '.') . '₫' 
+                        : 'Chưa có giá' 
+                    }}/Giờ
+                </h3>
             </div>
         </div>
     </div>
