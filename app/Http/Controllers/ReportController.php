@@ -377,33 +377,46 @@ class ReportController extends Controller
 
     private function calculateKPI($ownerId, $dateRange, $facilityId, $courtId)
     {
+        // $bookingsQuery = DB::table('bookings')
+        // ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        // ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
+        // ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
+        // ->select('bookings.invoice_detail_id', 'invoices.final_amount as final_amount', 'bookings.court_id as court_id') // ⬅️ SỬA CÁCH DÙNG DISTINCT
+        // ->distinct()
+        // ->where('bookings.facility_id', $facilityId) // Lọc theo ID cố định
+        // ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
         $bookingsQuery = DB::table('bookings')
-        ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
-        ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
-        
-        ->select('bookings.invoice_detail_id', 'invoices.final_amount as final_amount', 'bookings.court_id as court_id') // ⬅️ SỬA CÁCH DÙNG DISTINCT
+        ->select('invoice_detail_id')
         ->distinct()
-        ->where('bookings.facility_id', $facilityId) // Lọc theo ID cố định
-        ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
+        ->where('facility_id', $facilityId)
+        ->whereBetween('booking_date', [$dateRange['start'], $dateRange['end']]);
         
         if ($courtId !== 'all') {
-            $bookingsQuery->where('court_id', $courtId);
+            // $bookingsQuery->where('court_id', $courtId);
 
-            $revenue = DB::table('bookings')
-            ->where('facility_id', $facilityId)
-            ->where('court_id', $courtId)
-            ->whereBetween('booking_date', [$dateRange['start'], $dateRange['end']])
-            ->sum('unit_price');
-        }
-        else 
-        {
-            $revenue = DB::table(function ($query) use ($facilityId, $dateRange) {
-                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount')
+            $revenue = DB::table(function ($query) use ($facilityId, $dateRange, $courtId) {
+                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount','bookings.booking_date','bookings.court_id')
                     ->distinct()
                     ->from('invoices')
                     ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+                    ->join('bookings', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
                     ->where('invoice_details.facility_id', $facilityId)
-                    ->whereBetween('invoices.issue_date', [$dateRange['start'], $dateRange['end']])
+                    ->where('bookings.court_id', $courtId)
+                    ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']])
+                    ->where('invoices.payment_status', 'like', '%thanh toán%');
+            }, 'distinct_invoices')
+            ->sum('final_amount');
+        }
+        else
+        {
+            $revenue = DB::table(function ($query) use ($facilityId, $dateRange) {
+                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount','bookings.booking_date')
+                    ->distinct()
+                    ->from('invoices')
+                    ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+                    ->join('bookings', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+                    ->where('invoice_details.facility_id', $facilityId)
+                    ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']])
                     ->where('invoices.payment_status', 'like', '%thanh toán%');
             }, 'distinct_invoices')
             ->sum('final_amount');
@@ -411,8 +424,6 @@ class ReportController extends Controller
 
         $bookingsQueryClone = clone $bookingsQuery;
         $bookingsQueryClone2 = clone $bookingsQuery;
-
-        
         
         $bookings = $bookingsQueryClone->distinct('bookings.invoice_detail_id')->count('bookings.invoice_detail_id');
         $customers = $bookingsQueryClone2->distinct('bookings.user_id')->count('bookings.user_id');
