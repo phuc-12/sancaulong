@@ -61,7 +61,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email"
-                                       value="{{ old('email', $user->email) }}" required>
+                                       value="{{ old('email', $user->email) }}" required readonly>
                             </div>
                         </div>
 
@@ -100,6 +100,7 @@
                         </div>
 
                         <div class="mt-4 text-end">
+                            <a href="{{ route('trang_chu') }}" class="btn btn-secondary btn-lg me-2">Hủy</a>
                             <button type="submit" class="btn btn-primary btn-lg">Lưu Thay Đổi</button>
                         </div>
 
