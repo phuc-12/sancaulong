@@ -184,75 +184,41 @@ class AuthController extends Controller
     public function postLogin(LoginRequest $request)
     {
         $credentials = $request->only('email', 'password');
-        //Kiểm tra email có tồn tại không
+
+        // Kiểm tra email có tồn tại không
         $checkUser = Users::where('email', $request->email)->first();
         if (!$checkUser) {
             return back()
-                ->withInput($request->only('email')) // Giữ lại email trên form
+                ->withInput($request->only('email'))
                 ->withErrors(['email' => 'Tài khoản không tồn tại']);
         }
+
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // Kiểm tra email đã xác thực chưa
             if (is_null($user->email_verified_at)) {
                 Auth::logout();
                 return back()->withErrors([
-                    'email' => 'Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn hoặc nhấn "Gửi lại email xác thực".'
+                    'email' => 'Vui lòng xác thực email trước khi đăng nhập.'
                 ])->withInput()->with('show_resend', true)->with('user_email', $user->email);
             }
 
             $request->session()->regenerate();
 
-            // 1 = admin
-            // 2 = owner (Chủ sân)
-            // 3 = staff (Nhân viên)
-            // 4 = manager (Quản lý sân)
-            // 5 = customer (Khách hàng)
-
             switch ($user->role_id) {
-                case 1:
-                    // Admin
-                    return redirect()->route('admin.index');
-                case 2:
-                    // Chủ sân (Owner)
-                    return redirect()->route('owner.index');
-                case 3:
-                    // Nhân viên (Staff)
-                    return redirect()->route('staff.index');
-                case 4:
-                    // Quản lý sân (Manager)
-                    return redirect()->route('manager.index');
-                case 5:
-                    // Khách hàng (Customer)
-                    return redirect()->route('trang_chu');
-                default:
-                    // Mặc định (ví dụ: vai trò không xác định)
-                    return redirect()->route('trang_chu');
+                case 1: return redirect()->route('admin.index');
+                case 2: return redirect()->route('owner.index');
+                case 3: return redirect()->route('staff.index');
+                case 4: return redirect()->route('manager.index');
+                case 5: return redirect()->route('trang_chu');
+                default: return redirect()->route('trang_chu');
             }
-
-            // Nếu không có intended → về trang chủ khách hàng
-            return redirect()->route('trang_chu');
         }
 
-        // 🔥 CÁC ROLE KHÁC: ADMIN, OWNER, STAFF, MANAGER → BỎ QUA intended
-
-        switch ($user->role_id) {
-            case 1:
-                return redirect()->route('admin.index');
-            case 2:
-                return redirect()->route('owner.index');
-            case 3:
-                return redirect()->route('staff.index');
-            case 4:
-                return redirect()->route('manager.index');
-            default:
-                return redirect()->route('trang_chu');
-        }
+        // Sai email hoặc mật khẩu
+        return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
     }
 
-    return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
-}
 
 
     //Dang xuat
