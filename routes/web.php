@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProfileController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PasswordResetController;
 
 //Trang chu
 Route::get('/', [HomeController::class, 'index'])->name('index');
@@ -62,16 +64,34 @@ Route::prefix('users')->controller(UserController::class)
 //Dang ky
 Route::get('register', [AuthController::class, 'register'])->name('register');
 Route::post('register', [AuthController::class, 'postRegister'])->name('postRegister');
+// Email Verification routes
+Route::get('/email/verify-notice', [EmailVerificationController::class, 'notice'])
+    ->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->name('verification.verify');
+
+Route::post('/email/resend', [EmailVerificationController::class, 'resend'])
+    ->name('verification.resend');
 //Dang nhap
 Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'postLogin'])->name('postLogin');
 //Dang xuat
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
-
+//Cap nhat thong tin
 Route::middleware('auth')->group(function () {
     Route::get('/profile/{id}', [HomeController::class, 'profile'])->name('user.profile');
     Route::get('/my-courts', [HomeController::class, 'myCourts'])->name('user.courts');
 });
+//Quen mat khau
+// Route hiển thị trang quên mật khẩu
+Route::get('/forgot-password', function () {
+    return view('auth.forgotpassword');
+})->name('forgot-password');
+
+Route::post('/password/send-code', [PasswordResetController::class, 'sendCode'])->name('password.send-code');
+Route::post('/password/verify-code', [PasswordResetController::class, 'verifyCode'])->name('password.verify-code');
+Route::post('/password/reset', [PasswordResetController::class, 'resetPassword'])->name('password.reset');
 //=============================================================================================================
 //admin
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
@@ -199,11 +219,11 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
     Route::get('/promotions', [ManagerController::class, 'promotions'])
         ->name('promotions');
     Route::post('/promotions/create', [ManagerController::class, 'promotions_create'])
-    ->name('promotions.create');
+        ->name('promotions.create');
     Route::post('/promotions/update/{id}', [ManagerController::class, 'promotions_update'])
-    ->name('promotions.update');
+        ->name('promotions.update');
     Route::delete('/promotions/delete/{id}', [ManagerController::class, 'promotions_delete'])
-    ->name('promotions.delete');
+        ->name('promotions.delete');
 });
 
 //=============================================================================================================

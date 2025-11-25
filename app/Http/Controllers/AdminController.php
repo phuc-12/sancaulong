@@ -199,7 +199,7 @@ class AdminController extends Controller
                 if ($quantityCourt > 0) {
                     $courtResult = $this->autoCreateCourts($facility->facility_id, $quantityCourt);
 
-                    Log::info('Courts created for new facility', [
+                    Log::info('Các sân con đã được tạo cho cơ sở mới', [
                         'facility_id' => $facility->facility_id,
                         'facility_name' => $facility->facility_name,
                         'requested_quantity' => $quantityCourt,
@@ -215,7 +215,7 @@ class AdminController extends Controller
 
                 $successMessage = "Đã duyệt cập nhật thông tin nhạy cảm cho cơ sở '{$facility->facility_name}'!";
 
-                Log::info('Sensitive update approved', [
+                Log::info('Cập nhật nhạy cảm đã được phê duyệt', [
                     'facility_id' => $facility->facility_id,
                     'facility_name' => $facility->facility_name,
                 ]);
@@ -231,7 +231,7 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Error approving facility', [
+            Log::error('Lỗi khi phê duyệt cơ sở', [
                 'facility_id' => $facilityId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -266,7 +266,7 @@ class AdminController extends Controller
 
             Courts::insert($courts);
 
-            Log::info('Courts created on facility activation', [
+            Log::info('Các sân con được tạo khi cơ sở được phê duyệt', [
                 'facility_id' => $facilityId,
                 'existing_count' => $existingCount,
                 'courts_added' => count($courts),
@@ -281,7 +281,7 @@ class AdminController extends Controller
         }
 
         // Trường hợp đã có đủ sân (không làm gì)
-        Log::info('Courts already exist', [
+        Log::info('Các sân con đã tồn tại', [
             'facility_id' => $facilityId,
             'quantity' => $quantity
         ]);
