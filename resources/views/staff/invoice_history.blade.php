@@ -38,32 +38,44 @@
                         <th>Khách hàng</th>
                         <th>Ngày đặt</th>
                         <th>Tổng tiền</th>
+                        <th>Ngày áp dụng</th>
+                        <th>Sử dụng</th>
                         <th>Tình trạng</th>
-                        <th></th>
+
                     </tr>
                 </thead>
 
-                <tbody class="text-center">
-                    @php $index = 1; @endphp
+                <tbody>
+                    @php 
+                        // Tính số thứ tự dựa trên trang hiện tại
+                        $index = ($invoices->currentPage() - 1) * $invoices->perPage();
+                    @endphp
 
-                    @isset($invoices)
-                        @forelse ($invoices as $invoice)
-                        <tr>
-                            <td>{{ $index++ }}</td>
-                            <td>{{ $invoice->fullname }}</td>
-                            <td>{{ date('d/m/Y', strtotime($invoice->issue_date)) }}</td>
-                            <td>{{ number_format($invoice->final_amount) }}₫</td>
+                    @forelse ($invoices as $invoice)
+                        @php
+                            $firstBooking = $mybooking_details[$invoice->invoice_detail_id]->first() ?? null;
+                            $bookingDate = $firstBooking->booking_date ?? null;
+                            $isExpired = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->lt(\Carbon\Carbon::today()) : false;
 
+                            // Format ngày
+                            $formattedIssueDate = $invoice->issue_date ? \Carbon\Carbon::parse($invoice->issue_date)->format('d/m/Y H:i:s') : '';
+                            $formattedBookingDate = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->format('d/m/Y') : '';
+                        @endphp
+
+                        <tr class="text-center">
+                            <td>{{ ++$index }}</td>
+                            <td class="fw-semibold">{{ $invoice->facility_name }}</td>
+                            {{-- <td>{{ $invoice->fullname }}</td> --}}
+                            <td>{{ $formattedIssueDate }}</td>
+                            <td class="fw-bold text-success">{{ number_format($invoice->final_amount, 0, ',', '.') }}₫</td>
+                            <td>{{ $formattedBookingDate }}</td>
                             <td>
-                                @if ($invoice->payment_status === 'Đã Hủy')
-                                    <span class="badge bg-danger px-3 py-2">Đã hủy</span>
-                                @elseif ($invoice->payment_status === 'Đã thanh toán')
-                                    <span class="badge bg-success px-3 py-2">Đã thanh toán</span>
+                                @if($isExpired)
+                                    <span class="badge bg-warning text-dark">Đã quá hạn</span>
                                 @else
-                                    <span class="badge bg-warning text-dark px-3 py-2">Chưa thanh toán</span>
+                                    <span class="badge bg-info text-dark">Chưa sử dụng</span>
                                 @endif
                             </td>
-
                             <td>
                                 @if ($invoice->payment_status === 'Đã Hủy')
                                     <span class="text-danger fw-semibold">Đã hủy</span>
@@ -80,16 +92,14 @@
                                 @endif
                             </td>
                         </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-muted py-3">Không có lịch đặt nào</td>
-                            </tr>
-                        @endforelse
-                    @else
+                    @empty
                         <tr>
-                            <td colspan="6" class="text-muted">Không có thông tin khách hàng</td>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+                                Chưa có lịch đặt nào
+                            </td>
                         </tr>
-                    @endisset
+                    @endforelse
                 </tbody>
 
             </table>

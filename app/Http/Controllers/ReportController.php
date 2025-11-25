@@ -400,21 +400,29 @@ class ReportController extends Controller
             $bookingIndividualQuery->where('bookings.court_id', $courtId);
             $bookingContractQuery->where('bookings.court_id', $courtId);
 
-            $revenue = DB::table('bookings')
-            ->where('facility_id', $facilityId)
-            ->where('court_id', $courtId)
-            ->whereBetween('booking_date', [$dateRange['start'], $dateRange['end']])
-            ->sum('unit_price');
-        }
-        else 
-        {
-            $revenue = DB::table(function ($query) use ($facilityId, $dateRange) {
-                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount')
+            $revenue = DB::table(function ($query) use ($facilityId, $dateRange, $courtId) {
+                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount','bookings.booking_date','bookings.court_id')
                     ->distinct()
                     ->from('invoices')
                     ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+                    ->join('bookings', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
                     ->where('invoice_details.facility_id', $facilityId)
-                    ->whereBetween('invoices.issue_date', [$dateRange['start'], $dateRange['end']])
+                    ->where('bookings.court_id', $courtId)
+                    ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']])
+                    ->where('invoices.payment_status', 'like', '%thanh toán%');
+            }, 'distinct_invoices')
+            ->sum('final_amount');
+        }
+        else
+        {
+            $revenue = DB::table(function ($query) use ($facilityId, $dateRange) {
+                $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount','bookings.booking_date')
+                    ->distinct()
+                    ->from('invoices')
+                    ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+                    ->join('bookings', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+                    ->where('invoice_details.facility_id', $facilityId)
+                    ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']])
                     ->where('invoices.payment_status', 'like', '%thanh toán%');
             }, 'distinct_invoices')
             ->sum('final_amount');

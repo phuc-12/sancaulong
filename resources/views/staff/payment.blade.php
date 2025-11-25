@@ -58,58 +58,62 @@
                             </tr>
                         </thead>
 
-                        <tbody class="text-center">
-                            @php $index = 1; @endphp
+                        <tbody>
+                        @php 
+                            // Tính số thứ tự dựa trên trang hiện tại
+                            $index = ($invoices->currentPage() - 1) * $invoices->perPage();
+                        @endphp
 
-                            @isset($invoices)
-                                @forelse($invoices as $invoice)
-                                <tr>
-                                    <td>{{ $index++ }}</td>
-                                    <td>{{ $invoice->fullname }}</td>
-                                    <td>{{ date('d/m/Y', strtotime($invoice->issue_date)) }}</td>
-                                    <td>{{ number_format($invoice->final_amount) }}₫</td>
+                        @forelse ($invoices as $invoice)
+                            @php
+                                $firstBooking = $mybooking_details[$invoice->invoice_detail_id]->first() ?? null;
+                                $bookingDate = $firstBooking->booking_date ?? null;
+                                $isExpired = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->lt(\Carbon\Carbon::today()) : false;
 
-                                    <td>
-                                        @if ($invoice->payment_status === 'Đã Hủy')
-                                            <span class="badge bg-danger">Đã hủy</span>
-                                        @elseif ($invoice->payment_status === 'Đã thanh toán')
-                                            <span class="badge bg-success">Đã thanh toán</span>
-                                        @else
-                                            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
-                                        @endif
-                                    </td>
+                                // Format ngày
+                                $formattedIssueDate = $invoice->issue_date ? \Carbon\Carbon::parse($invoice->issue_date)->format('d/m/Y H:i:s') : '';
+                                $formattedBookingDate = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->format('d/m/Y') : '';
+                            @endphp
 
-                                    <td>
-                                        @if ($invoice->payment_status === 'Đã Hủy')
-                                            <span class="text-danger fw-semibold">Đã hủy</span>
-                                        @elseif ($invoice->payment_status === 'Đã thanh toán')
-                                            <span class="text-success fw-semibold">Đã thanh toán</span>
-                                        @else
-                                            <form action="{{ route('staff.chi_tiet_hd_nv') }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
-                                                <input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
-                                                <input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
-                                                <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
-                                                <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
-                                                <button class="btn btn-sm btn-primary px-3">
-                                                    Chi tiết
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-muted">Không có hóa đơn nào</td>
-                                    </tr>
-                                @endforelse
-                            @else
-                                <tr>
-                                    <td colspan="6" class="text-muted">Không có dữ liệu</td>
-                                </tr>
-                            @endisset
-                        </tbody>
+                            <tr class="text-center">
+                                <td>{{ ++$index }}</td>
+                                <td class="fw-semibold">{{ $invoice->facility_name }}</td>
+                                {{-- <td>{{ $invoice->fullname }}</td> --}}
+                                <td>{{ $formattedIssueDate }}</td>
+                                <td class="fw-bold text-success">{{ number_format($invoice->final_amount, 0, ',', '.') }}₫</td>
+                                <td>{{ $formattedBookingDate }}</td>
+                                <td>
+                                    @if($isExpired)
+                                        <span class="badge bg-warning text-dark">Đã quá hạn</span>
+                                    @else
+                                        <span class="badge bg-info text-dark">Chưa sử dụng</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($invoice->payment_status === 'Đã Hủy')
+                                        <span class="text-danger fw-semibold">Đã hủy</span>
+                                    @else
+                                        <form action="{{ route('staff.chi_tiet_hd_nv') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="facility_id" value="{{ $invoice->facility_id }}">
+                                            <input type="hidden" name="user_id" value="{{ $invoice->customer_id }}">
+                                            <input type="hidden" name="slots" value='@json($mybooking_details[$invoice->invoice_detail_id] ?? [])'>
+                                            <input type="hidden" name="invoice_detail_id" value="{{ $invoice->invoice_detail_id }}">
+                                            <input type="hidden" name="invoice_id" value="{{ $invoice->invoice_id }}">
+                                            <button class="btn btn-sm btn-primary px-3">Chi tiết</button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+                                    Chưa có lịch đặt nào
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
 
                     </table>
                     <!-- Pagination -->
