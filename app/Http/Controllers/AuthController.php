@@ -230,10 +230,30 @@ class AuthController extends Controller
                     // Mặc định (ví dụ: vai trò không xác định)
                     return redirect()->route('trang_chu');
             }
+
+            // Nếu không có intended → về trang chủ khách hàng
+            return redirect()->route('trang_chu');
         }
 
-        return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
+        // 🔥 CÁC ROLE KHÁC: ADMIN, OWNER, STAFF, MANAGER → BỎ QUA intended
+
+        switch ($user->role_id) {
+            case 1:
+                return redirect()->route('admin.index');
+            case 2:
+                return redirect()->route('owner.index');
+            case 3:
+                return redirect()->route('staff.index');
+            case 4:
+                return redirect()->route('manager.index');
+            default:
+                return redirect()->route('trang_chu');
+        }
     }
+
+    return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
+}
+
 
     //Dang xuat
     public function logout(Request $request)

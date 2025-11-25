@@ -88,7 +88,10 @@ class HomeController extends Controller
         $thongtinsan = Facilities::where('facility_id', $idSan)->firstOrFail();
         // Nếu chưa đăng nhập → chuyển về trang login
         if (!Auth::check()) {
-            return redirect()->route('login'); // 'login' là tên route login
+            session([
+                'url.intended' => route('chi_tiet_san_get', ['facility_id' => $idSan])
+            ]);
+            return redirect()->route('login');
         }
 
         // Nếu đã đăng nhập → lấy thông tin customer
@@ -437,7 +440,14 @@ class HomeController extends Controller
             ];
         }
         $courts = Courts::where('facility_id', $idSan)->get();
-        
+        // Lấy các khuyến mãi hợp lệ cho sân và có discount_type = 'Khách hàng thân thiết'
+        $promotions = DB::table('promotions')
+        ->where('facility_id', $idSan)
+        ->where('discount_type', 'customer')
+        ->whereDate('start_date', '<=', $dateStart)
+        ->whereDate('end_date', '>=', $dateStart)
+        ->get();
+        // dd($promotions);
         return view('contract', compact(
             'thongtinsan',
             'customer',
@@ -453,7 +463,8 @@ class HomeController extends Controller
             'dateStart',
             'dateEnd',
             'fullname',
-            'phone'
+            'phone',
+            'promotions',
         ));
     }
 
@@ -473,7 +484,12 @@ class HomeController extends Controller
             $facility_id = $request->input('facility_id');
             $user_id = $data['user_id'] ?? null;
 
-
+            $promotion_id = $request->promotion_id;
+            // Lấy các khuyến mãi hợp lệ cho sân và có discount_type = 'Khách hàng thân thiết'
+            $promotions = DB::table('promotions')
+            ->where('promotion_id', $promotion_id)
+            ->get();
+            // dd($promotions);
             if (!$startDate || !$endDate || empty($dayOfWeeks) || empty($timeSlots) || empty($courts) || empty($actualDates)) {
                 return response()->json([
                     'status' => 'error',
@@ -577,10 +593,20 @@ class HomeController extends Controller
                 $courts = Courts::where('facility_id', $idSan)->get();
                 $fullname = $request->fullname;
                 $phone = $request->phone;
+                $conflictsGrouped = [];
+                foreach ($conflicts as $c) {
+                    $key = $c['date'].'_'.$c['court_id'];
+                    $conflictsGrouped[$key]['date'] = $c['date'];
+                    $conflictsGrouped[$key]['court_id'] = $c['court_id'];
+                    $conflictsGrouped[$key]['time_slots'][] = $c['time_slot_id'];
+                }
+
+                // Tạo array gọn
+                $conflicts = array_values($conflictsGrouped);
                 return view('contract', compact(
                     'thongtinsan', 'customer', 'timeSlots', 'dates',
                     'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon',
-                    'dateStart', 'dateEnd', 'courts','fullname','phone',
+                    'dateStart', 'dateEnd', 'courts','fullname','phone', 'promotions'
                 ))->with([
                     'message' => 'Có khung giờ đã được đặt trước, vui lòng chọn lại!',
                     'conflicts' => $conflicts // <--- phải truyền conflicts vào view
@@ -657,7 +683,13 @@ class HomeController extends Controller
             }
             // Tính tổng
             $totalAmount = collect($lines)->sum('amount');
+            
+            $promotion = $promotions->first(); // Lấy object đầu tiên
 
+            $final_amount = $totalAmount;
+            if ($promotion) {
+                $final_amount = $totalAmount - $totalAmount * ($promotion->value ?? 0);
+            }
             // Tạo summary gọn
             $summary = [
                 'start_date' => $startDate,
@@ -666,7 +698,9 @@ class HomeController extends Controller
                 'total_days' => $totalDays,
                 'total_slots' => $slotDetails->count(),
                 'total_courts' => $totalCourts,
-                'total_amount' => $totalAmount
+                'total_amount' => $totalAmount,
+                'final_amount' => $final_amount,
+                'promotions' => $promotion,
             ];
 
             // Thông tin user/facility
@@ -708,6 +742,7 @@ class HomeController extends Controller
         $invoiceDetailId = $request->input('invoice_details_id');
         $userId = $request->input('user_id');
         $facility_id = $request->input('facility_id');
+        $total_amount = $request->input('total_amount');
         $total = $request->input('tongtien');
         $start_date = $request->start_date;
         $end_date = $request->end_date;
@@ -743,7 +778,7 @@ class HomeController extends Controller
                 'facility_id' => $facility_id,
             ]);
         }
-        $promotion_id = null;
+        $promotion_id = $request->promotion_id;
         $payment_method = 1;
         $payment_status = 'Đã thanh toán';
         $deposit = 0;
@@ -754,7 +789,7 @@ class HomeController extends Controller
             'issue_date' => now(),
             'start_date' => $start_date,
             'end_date' => $end_date,
-            'total_amount' => $total,
+            'total_amount' => $total_amount,
             'promotion_id' => $promotion_id,
             'final_amount' => $total,
             'payment_status' => $payment_status,
@@ -810,7 +845,9 @@ class HomeController extends Controller
                 }
             }
         }
-        
+        $promotions = DB::table('promotions')
+        ->where('promotion_id',$promotion_id)
+        ->first();
         // Lấy danh sách sân duy nhất
         $courts = collect($slots)->pluck('courts')->unique()->toArray();
         // Chuyển mảng thành chuỗi để hiển thị
@@ -821,6 +858,7 @@ class HomeController extends Controller
             'contract' => $contract,
             'slots' => $slots,
             'courts' => $courtsString, // truyền chuỗi
+            'promotions' => $promotions,
         ]);
 
         if($customer->email){
@@ -987,6 +1025,7 @@ class HomeController extends Controller
             'invoices.*',
             'invoices.final_amount as final_amount',
             'promotions.*',
+            'promotions.value as value',
             'promotions.description as description',
 
             )
@@ -1054,10 +1093,14 @@ class HomeController extends Controller
         
         $long_term_contracts = DB::table('long_term_contracts')
         ->join('invoice_details','invoice_details.invoice_detail_id', '=','long_term_contracts.invoice_detail_id')
+        ->join('promotions','promotions.promotion_id','=','long_term_contracts.promotion_id')
         ->where('long_term_contracts.invoice_detail_id',$invoice_detail_id)
         ->select(
             'long_term_contracts.*',
-            'invoice_details.facility_id as facility_id'
+            'invoice_details.facility_id as facility_id',
+            'promotions.*',
+            'promotions.value as value',
+            'promotions.description as description',
         )
         ->first();
         // dd($long_term_contracts);

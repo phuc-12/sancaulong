@@ -296,31 +296,36 @@
 
         <h3 class="mb-3 text-white">Lịch đặt sân</h3>
         @if(!empty($conflicts))
-            <div class="alert alert-danger">
-                <strong>{{ $message ?? 'Có khung giờ trùng!' }}</strong>
-                <table class="table table-bordered mt-2">
-                    <thead>
-                        <tr>
-                            <th>Ngày</th>
-                            <th>Sân</th>
-                            <th>Khung giờ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($conflicts as $c)
+<div class="alert alert-danger">
+    <strong>{{ $message ?? 'Có khung giờ trùng!' }}</strong>
+    <table class="table table-bordered mt-2">
+        <thead>
+            <tr>
+                <th>Ngày</th>
+                <th>Sân</th>
+                <th>Khung giờ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($conflicts as $c)
+                <tr>
+                    <td>{{ $c['date'] }}</td>
+                    <td>Sân số {{ $c['court_id'] }}</td>
+                    <td>
+                        @foreach($c['time_slots'] as $tsId)
                             @php
-                                $slot = collect($timeSlots)->firstWhere('time_slot_id', $c['time_slot_id']);
+                                $slot = collect($timeSlots)->firstWhere('time_slot_id', $tsId);
                             @endphp
-                            <tr>
-                                <td>{{ $c['date'] }}</td>
-                                <td>Sân số {{ $c['court_id'] }}</td>
-                                <td>{{ $slot ? $slot->start_time.' - '.$slot->end_time : 'N/A' }}</td>
-                            </tr>
+                            {{ $slot ? $slot['start_time'].' - '.$slot['end_time'] : 'N/A' }}<br>
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+@endif
+
         {{-- Chọn thứ trong tuần --}}
         <div class="mb-3 text-white">
             <label>
@@ -378,6 +383,29 @@
                 @endforeach
             </div>
         </div>
+
+        @if($promotions->isNotEmpty())
+            <div class="promotions border rounded p-4 my-4 bg-green-50" style="background-color: white">
+                <h3 class="text-lg font-semibold mb-2">Khuyến mãi áp dụng</h3>
+                <ul class="list-disc list-inside">
+                    @foreach($promotions as $promo)
+                        <li class="mb-1">
+                            <span class="font-medium">{{ $promo->description }}</span>:
+                            Giảm <span class="text-red-600">{{ $promo->value*100 . '%' }}</span>
+                            <br>
+                            @php $promotion_id = $promo->promotion_id; @endphp
+                            <input type="hidden" name="promotion_id" value="{{ $promotion_id }}">
+                            {{-- <small>Thời gian: {{ \Carbon\Carbon::parse($promo->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($promo->end_date)->format('d/m/Y') }}</small> --}}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @else
+            <div class="promotions border rounded p-4 my-4 bg-gray-100 text-gray-600">
+                Không có khuyến mãi nào áp dụng cho hợp đồng này.
+            </div>
+        @endif
+
         <div class="text-center mt-4">
             <input type="hidden" name="default_price" id="default_price" value="{{ $thongtinsan->courtPrice->default_price }}">
             <input type="hidden" name="special_price" id="special_price" value="{{ $thongtinsan->courtPrice->special_price  }}">
@@ -385,6 +413,7 @@
             <input type="hidden" name="user_id" id="user_id" value="{{ $customer->user_id }}">
             <input type="hidden" name="fullname" value="{{ $fullname }}">
             <input type="hidden" name="phone" value="{{ $phone }}">
+            
             <button type="submit" class="btn btn-warning px-5 py-2">XÁC NHẬN VÀ THANH TOÁN</button>
         </div>
     </form>
