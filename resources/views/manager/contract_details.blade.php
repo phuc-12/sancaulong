@@ -1,6 +1,6 @@
-@extends('layouts.main');
+@extends('layouts.manager')
 
-@section('contract_details_content')
+@section('manager_content')
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -50,18 +50,6 @@
         .highlight { color: green; font-weight: bold; }
     </style>
 </head>
-<!-- Breadcrumb -->
-		<div class="breadcrumb mb-0">
-			<span class="primary-right-round"></span>
-			<div class="container" style="margin-top: 40px;">
-				<h1 class="text-white">Hoàn Thành Đặt Sân</h1>
-				<ul>
-					<li><a href="index.html">Trang Chủ</a></li>
-					<li>Thanh Toán</li>
-				</ul>
-			</div>
-		</div>
-
 		<!-- Page Content -->
 		<div class="content">
 			<div class="">
@@ -125,10 +113,10 @@
                                     <h5 class="text-lg font-semibold">Giảm: {{ $long_term_contracts->value*100 . '%' }}</h5>
                                 </div>
                             @endif
-							<p class="total">Số tiền cần thanh toán: <span class="highlight">{{ number_format($long_term_contracts->final_amount, 0, ',', '.') }} đ</span></p>
+							<p class="total">Số tiền cần thanh toán: <span class="highlight" style="font-size: 30px">{{ number_format($long_term_contracts->final_amount, 0, ',', '.') }} đ</span></p>
 							
 							<div>
-								<form action="{{ route('cancel_contract') }}" method="POST">
+								<form action="{{ route('manager.cancel_contract') }}" method="POST">
 									@csrf
 									<input type="hidden" name="invoice_detail_id" value="{{ $long_term_contracts->invoice_detail_id }}">
 									<input type="hidden" name="user_id" value="{{ $customer->user_id }}">

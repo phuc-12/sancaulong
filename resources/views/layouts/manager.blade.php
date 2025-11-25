@@ -112,7 +112,7 @@
             </li> --}}
             <li class="nav-item">
                 <a href="{{ route('manager.contracts') }}"
-                    class="nav-link {{ request()->routeIs('manager.contracts') ? 'active' : '' }}">
+                    class="nav-link {{ request()->routeIs('manager.contracts','manager.contract_details') ? 'active' : '' }}">
                     <i class="bi bi-journal-text"></i>
                     Quản lý Hợp Đồng
                 </a>

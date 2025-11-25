@@ -128,8 +128,10 @@
     </table>
 
     <p class="total">Thành tiền: <span class="highlight">{{ number_format($contract->total_amount, 0, ',', '.') }} đ</span></p>
-    <p >Khuyến mãi: <span class="highlight">{{ $promotions->description }}</span></p>
-    <p >Giảm: <span class="highlight">{{ $promotions->value*100 .'%' }}</span></p>
+    @if (!empty($promotions) && !empty($promotions->description) && !empty($promotions->value))
+        <p >Khuyến mãi: <span class="highlight">{{ $promotions->description }}</span></p>
+        <p >Giảm: <span class="highlight">{{ $promotions->value*100 .'%' }}</span></p>
+    @endif
     <p class="total">Thành tiền: <span class="highlight" style="font-size: 30px;">{{ number_format($contract->final_amount, 0, ',', '.') }} đ</span></p>
 </div>
 

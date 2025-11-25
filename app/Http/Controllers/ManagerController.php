@@ -235,9 +235,6 @@ class ManagerController extends Controller
     // Trang Quản lý Hợp đồng dài hạn
     public function contracts()
     {
-        // Tương lai: Lấy danh sách hợp đồng
-        // $contracts = Contract::where('facility_id', ...)->get();
-        // return view('manager.contracts', compact('contracts'));
         return view('manager.contracts');
     }
 
@@ -385,6 +382,54 @@ class ManagerController extends Controller
                 'ten' => 'Sân ' . $i
             ];
         }
+        
+        // --- Thêm phần tìm kiếm ---
+    $search = $request->query('search'); // input tìm kiếm từ form
+    $long_term_contracts = DB::table('long_term_contracts')
+        ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
+        ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
+        ->leftJoin('bookings', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+        ->where('facilities.facility_id', $idSan)
+        ->when($search, function($query, $search) {
+            $query->where(function($q) use ($search) {
+                $q->where('users.fullname', 'like', "%$search%")
+                ->orWhere('users.phone', 'like', "%$search%") // ✅ thêm số điện thoại
+                ->orWhere('facilities.facility_name', 'like', "%$search%")
+                ->orWhere('long_term_contracts.payment_status', 'like', "%$search%")
+                ->orWhere('long_term_contracts.final_amount', 'like', "%$search%");
+            });
+        })
+        ->select(
+            'long_term_contracts.*',
+            'facilities.facility_name as facility_name',
+            'users.fullname as fullname',
+            'users.phone as phone', // ✅ lấy số điện thoại ra view
+            'long_term_contracts.issue_date as issue_date',
+            'long_term_contracts.final_amount as final_amount'
+        )
+        ->distinct('long_term_contracts.contract_id')
+        ->orderBy('long_term_contracts.contract_id', 'desc')
+        ->paginate(10)
+        ->withQueryString(); // giữ query string khi phân trang
+
+
+        $mycontract_details = [];
+
+        foreach ($long_term_contracts as $ct) {
+            $details = DB::table('bookings')
+                ->join('long_term_contracts', 'long_term_contracts.invoice_detail_id', '=', 'bookings.invoice_detail_id')
+                ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
+                ->where('long_term_contracts.invoice_detail_id', $ct->invoice_detail_id)
+                ->select(
+                    'bookings.*',
+                    'time_slots.start_time',
+                    'time_slots.end_time'
+                )
+                ->get();
+
+            $mycontract_details[$ct->invoice_detail_id] = $details;
+        }
 
         return view('manager.contracts', compact(
             'courts',
@@ -400,7 +445,9 @@ class ManagerController extends Controller
             'dateStart',
             'dateEnd',
             'dateStart',
-            'dateEnd'
+            'dateEnd',
+            'long_term_contracts',
+            'mycontract_details',
         ));
     }
 
@@ -688,4 +735,119 @@ class ManagerController extends Controller
                         ->with('success', 'Đã xoá khuyến mãi thành công!');
     }
 
+    
+    public function contract_details(Request $request)
+    {
+        $slots = json_decode($request->slots, true);
+        $slotCollection = collect($slots);
+        $invoice_detail_id = $request->invoice_detail_id;
+
+        $long_term_contracts = DB::table('long_term_contracts as ltc')
+        ->leftJoin('invoice_details as id', 'id.invoice_detail_id', '=', 'ltc.invoice_detail_id')
+        ->leftJoin('promotions as p', 'p.promotion_id', '=', 'ltc.promotion_id')
+        ->where('ltc.invoice_detail_id', $invoice_detail_id)
+        ->select(
+            'ltc.*',
+            'ltc.customer_id as customer_id',
+            DB::raw('id.facility_id as facility_id'),
+            DB::raw('p.promotion_id as promotion_id'),
+            DB::raw('p.description as description'),
+            DB::raw('p.discount_type as discount_type'),
+            DB::raw('p.value as value')
+        )
+        ->first();
+
+        $customer = DB::table('users')
+        ->where('user_id',$long_term_contracts->customer_id)
+        ->first();
+        
+        $facilities = DB::table('facilities')
+        ->where('facility_id',$long_term_contracts->facility_id)
+        ->first();
+        
+        $groupedSlots = collect($slots)
+        ->groupBy(function ($item) {
+            return $item['booking_date'] . '_' . $item['court_id'];
+        })
+        ->map(function ($group) {
+            $first = $group->first();
+            return [
+                'booking_date' => $first['booking_date'],
+                'court_id' => $first['court_id'],
+                // mỗi slot là 0.5 giờ → tổng giờ = số slot * 0.5
+                'total_duration' => count($group) * 0.5,
+                // tổng tiền cộng dồn
+                'total_price' => collect($group)->sum('unit_price'),
+            ];
+        })
+        ->values();
+        $daysOfWeek = $groupedSlots
+        ->map(function ($slot) {
+            $date = Carbon::parse($slot['booking_date']);
+            return match ($date->dayOfWeek) {
+                0 => 'Chủ nhật',
+                1 => 'Thứ 2',
+                2 => 'Thứ 3',
+                3 => 'Thứ 4',
+                4 => 'Thứ 5',
+                5 => 'Thứ 6',
+                6 => 'Thứ 7',
+            };
+        })
+        ->unique() // loại trùng
+        ->values()
+        ->implode(', '); // nối thành chuỗi "Thứ 2, Thứ 4, Thứ 6"
+
+        // ✅ Lấy danh sách các sân duy nhất
+        $courts = $groupedSlots
+        ->pluck('court_id')
+        ->unique()
+        ->map(fn($id) => 'Sân ' . $id)
+        ->implode(', ');
+        
+        $grouped = collect($slots)
+            ->groupBy(function ($item) {
+                return $item['booking_date'] . '_' . $item['court_id'];
+            })
+            ->map(function ($items) {
+                return [
+                    'booking_date'   => $items[0]['booking_date'],
+                    'court_id'       => $items[0]['court_id'],
+                    'start_time'     => $items->min('start_time'),
+                    'end_time'       => $items->max('end_time'),
+                    'total_duration' => $items->count() * 0.5, // mỗi slot 30 phút
+                    'total_price'    => $items->sum('unit_price'),
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        $slots = $grouped;
+
+        return view('manager.contract_details',[
+            'slots' => $grouped,
+            'long_term_contracts' => $long_term_contracts,
+            'customer' => $customer,
+            'facilities' => $facilities,
+            'daysOfWeek' => $daysOfWeek, // ✅ truyền ra view
+            'courts' => $courts,
+        ]);
+    }
+
+    public function cancel_contract(Request $request)
+    {
+        $invoice_detail_id = $request->invoice_detail_id;
+
+        // Xóa booking liên quan
+        Bookings::where('invoice_detail_id', $invoice_detail_id)->delete();
+
+        // Cập nhật trạng thái hợp đồng
+        DB::table('long_term_contracts')->where('invoice_detail_id', $invoice_detail_id)->update([
+            'payment_status' => 'Đã Hủy',
+            'updated_at' => now(),
+        ]);
+
+        // Quay trở lại trang trước đó với flash message
+        return redirect()->back()->with('success_message', 'Đã hủy hợp đồng!!! Vui lòng liên hệ sân để hoàn tiền.');
+    }
 }
