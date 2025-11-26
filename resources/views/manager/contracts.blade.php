@@ -460,8 +460,16 @@
         </div>
     </div>
 </div>
+<a id="list">
+    @if (session('success_message'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success_message') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+</a>
 <div class="table-responsive rounded-3 mt-3">
-    <form method="GET" class="mb-3 d-flex justify-content-between align-items-center border">
+    <form method="GET" action="#list" class="mb-3 d-flex justify-content-between align-items-center border">
         <input type="text" name="search" value="{{ request('search') }}" class="form-control w-50" placeholder="Tìm theo khách hàng, sân, tình trạng hoặc tổng tiền...">
         <button type="submit" class="btn btn-primary ms-2">Tìm kiếm</button>
     </form>
@@ -514,6 +522,7 @@
                                 @csrf
                                 <input type="hidden" name="invoice_detail_id" value="{{ $ct->invoice_detail_id }}">
                                 <input type="hidden" name="slots" value='@json($details ?? [])'>
+                                <input type="hidden" name="userMana" value="{{ auth()->id() }}">
                                 <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">Chi tiết</button>
                             </form>
                         @endif
