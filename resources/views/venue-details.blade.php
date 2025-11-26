@@ -920,7 +920,7 @@
                                 <input type="hidden" name="slots" id="slotsInput">
                                 <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
                                 <input type="hidden" name="facility_id" value="{{ $thongtinsan->facility_id }}">
-                                <button id="payBtn" type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;" disabled>Thanh toán <i class="feather-arrow-right-circle ms-2"></i></button>
+                                <button id="payBtn" type="submit" class="btn btn-secondary d-flex justify-content-center align-items-center" style="width: 100%; margin: 5px 3px; height: 60px;" disabled>XÁC NHẬN <i class="feather-arrow-right-circle ms-2"></i></button>
                             </div>
                         </form>
                     </div>
