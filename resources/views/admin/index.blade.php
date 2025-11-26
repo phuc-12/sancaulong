@@ -92,9 +92,9 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li>
-                            <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
+                            <!-- <a class="dropdown-item" href="{{ route('user.profile', ['id' => auth()->id()]) }}">
                                 <i class="fas fa-user me-2"></i> Hồ sơ
-                            </a>
+                            </a> -->
                         </li>
                         <li>
                             <a class="dropdown-item text-danger" href="javascript:void(0)"
