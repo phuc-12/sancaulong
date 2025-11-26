@@ -141,31 +141,55 @@ class ManagerController extends Controller
         $range = $this->getDateRange($request);
         $courtId = $request->court;
 
-        $query = DB::table('bookings')
+        // Query đặt lẻ (từ invoices)
+        $individualQuery = DB::table('bookings')
             ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
+            ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+            ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
             ->where('bookings.facility_id', $manager->facility_id)
             ->whereBetween('bookings.booking_date', [$range['start'], $range['end']])
             ->where('bookings.status', '!=', 'Đã Hủy');
 
+        // Query hợp đồng (từ long_term_contracts)
+        $contractQuery = DB::table('bookings')
+            ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
+            ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
+            ->where('bookings.facility_id', $manager->facility_id)
+            ->whereBetween('bookings.booking_date', [$range['start'], $range['end']])
+            ->where('long_term_contracts.payment_status', 'like', '%thanh toán%');
+
         if ($courtId && $courtId !== 'all') {
-            $query->where('bookings.court_id', $courtId);
+            $individualQuery->where('bookings.court_id', $courtId);
+            $contractQuery->where('bookings.court_id', $courtId);
         }
 
-        // Group by giờ
-        $data = $query->select(DB::raw('HOUR(time_slots.start_time) as hour'), DB::raw('COUNT(*) as total'))
+        // Group by giờ cho đặt lẻ
+        $individualData = $individualQuery->select(DB::raw('HOUR(time_slots.start_time) as hour'), DB::raw('COUNT(*) as total'))
+            ->groupBy('hour')
+            ->pluck('total', 'hour')
+            ->toArray();
+
+        // Group by giờ cho hợp đồng
+        $contractData = $contractQuery->select(DB::raw('HOUR(time_slots.start_time) as hour'), DB::raw('COUNT(*) as total'))
             ->groupBy('hour')
             ->pluck('total', 'hour')
             ->toArray();
 
         // Fill 24h
         $labels = [];
-        $counts = [];
+        $individualCounts = [];
+        $contractCounts = [];
         for ($i = 5; $i <= 23; $i++) {
             $labels[] = "$i:00";
-            $counts[] = $data[$i] ?? 0;
+            $individualCounts[] = $individualData[$i] ?? 0;
+            $contractCounts[] = $contractData[$i] ?? 0;
         }
 
-        return response()->json(['labels' => $labels, 'counts' => $counts]);
+        return response()->json([
+            'labels' => $labels,
+            'individual' => $individualCounts,
+            'contract' => $contractCounts
+        ]);
     }
 
     // 5. API: BIỂU ĐỒ SÂN (Doanh thu)
@@ -174,8 +198,11 @@ class ManagerController extends Controller
         $manager = Auth::user();
         $range = $this->getDateRange($request);
 
-        $query = DB::table('bookings')
+        // Query đặt lẻ (từ invoices)
+        $individualQuery = DB::table('bookings')
             ->join('courts', 'bookings.court_id', '=', 'courts.court_id')
+            ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+            ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
             ->where('bookings.facility_id', $manager->facility_id)
             ->where('courts.facility_id', $manager->facility_id)
             ->whereBetween('bookings.booking_date', [$range['start'], $range['end']])
@@ -184,10 +211,41 @@ class ManagerController extends Controller
             ->groupBy('courts.court_name')
             ->get();
 
-        
+        // Query hợp đồng (từ long_term_contracts)
+        $contractQuery = DB::table('bookings')
+            ->join('courts', 'bookings.court_id', '=', 'courts.court_id')
+            ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
+            ->where('bookings.facility_id', $manager->facility_id)
+            ->where('courts.facility_id', $manager->facility_id)
+            ->whereBetween('bookings.booking_date', [$range['start'], $range['end']])
+            ->where('long_term_contracts.payment_status', 'like', '%thanh toán%')
+            ->select('courts.court_name', DB::raw('SUM(bookings.unit_price) as total'))
+            ->groupBy('courts.court_name')
+            ->get();
+
+        // Lấy tất cả tên sân từ cả 2 query
+        $allCourtNames = $individualQuery->pluck('court_name')
+            ->merge($contractQuery->pluck('court_name'))
+            ->unique()
+            ->sort()
+            ->values();
+
+        // Tạo map cho dễ lookup
+        $individualMap = $individualQuery->keyBy('court_name');
+        $contractMap = $contractQuery->keyBy('court_name');
+
+        // Tạo arrays cho từng loại
+        $individualRevenues = [];
+        $contractRevenues = [];
+        foreach ($allCourtNames as $courtName) {
+            $individualRevenues[] = (float) ($individualMap[$courtName]->total ?? 0);
+            $contractRevenues[] = (float) ($contractMap[$courtName]->total ?? 0);
+        }
+
         return response()->json([
-            'labels' => $query->pluck('court_name'),
-            'revenues' => $query->pluck('total')->map(fn($val) => (float) $val) // Cast sang float
+            'labels' => $allCourtNames,
+            'individual' => $individualRevenues,
+            'contract' => $contractRevenues
         ]);
 
     }

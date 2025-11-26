@@ -84,25 +84,31 @@
 
         {{-- 2. KPI CARDS --}}
         <div class="row g-4 mb-4">
-            <div class="col-md-3">
+            <div class="col-md-2 col-lg-2">
                 <div class="kpi-card" style="border-color: #4a90e2;">
-                    <div class="text-muted fw-bold small">LƯỢT ĐẶT</div>
-                    <div class="kpi-value" id="kpiBookings">...</div>
+                    <div class="text-muted fw-bold small">ĐẶT LẺ</div>
+                    <div class="kpi-value" id="kpiBookingsIndividual">...</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2 col-lg-2">
+                <div class="kpi-card" style="border-color: #17a2b8;">
+                    <div class="text-muted fw-bold small">HỢP ĐỒNG</div>
+                    <div class="kpi-value" id="kpiBookingsContract">...</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-lg-2">
                 <div class="kpi-card" style="border-color: #2ecc71;">
                     <div class="text-muted fw-bold small">DOANH THU</div>
                     <div class="kpi-value" id="kpiRevenue">...</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2 col-lg-2">
                 <div class="kpi-card" style="border-color: #e74c3c;">
                     <div class="text-muted fw-bold small">LƯỢT HỦY</div>
                     <div class="kpi-value" id="kpiCancel">...</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2 col-lg-2">
                 <div class="kpi-card" style="border-color: #f1c40f;">
                     <div class="text-muted fw-bold small">SÂN BẬN / TỔNG</div>
                     <div class="kpi-value" id="kpiUtil">...</div>
@@ -206,7 +212,8 @@
                 const d = await res.json();
                 console.log('✅ KPI Data:', d);
 
-                document.getElementById('kpiBookings').innerText = d.bookings || 0;
+                document.getElementById('kpiBookingsIndividual').innerText = d.bookings_individual || 0;
+                document.getElementById('kpiBookingsContract').innerText = d.bookings_contract || 0;
                 document.getElementById('kpiRevenue').innerText = formatCurrency(d.revenue);
                 document.getElementById('kpiCancel').innerText = d.cancel || 0;
                 document.getElementById('kpiUtil').innerText = d.utilization || '0/0';
@@ -226,18 +233,32 @@
                     type: 'bar',
                     data: {
                         labels: d.labels || [],
-                        datasets: [{
-                            label: 'Lượt đặt',
-                            data: d.counts || [],
-                            backgroundColor: 'rgba(74, 144, 226, 0.8)',
-                            borderColor: 'rgb(74, 144, 226)',
-                            borderWidth: 2
-                        }]
+                        datasets: [
+                            {
+                                label: 'Đặt lẻ',
+                                data: d.individual || [],
+                                backgroundColor: 'rgba(74, 144, 226, 0.8)',
+                                borderColor: 'rgb(74, 144, 226)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Hợp đồng',
+                                data: d.contract || [],
+                                backgroundColor: 'rgba(23, 162, 184, 0.8)',
+                                borderColor: 'rgb(23, 162, 184)',
+                                borderWidth: 2
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { 
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            } 
+                        },
                         scales: { y: { beginAtZero: true } }
                     }
                 });
@@ -252,27 +273,40 @@
                 const d = await res.json();
                 console.log('✅ Revenue Data:', d);
 
-                const revenues = (d.revenues || []).map(v => parseFloat(v) || 0);
+                const individualRevenues = (d.individual || []).map(v => parseFloat(v) || 0);
+                const contractRevenues = (d.contract || []).map(v => parseFloat(v) || 0);
 
                 if (chart2) chart2.destroy();
                 chart2 = new Chart(document.getElementById('courtChart'), {
                     type: 'bar',
                     data: {
                         labels: d.labels || [],
-                        datasets: [{
-                            label: 'Doanh thu',
-                            data: revenues,
-                            backgroundColor: 'rgba(46, 204, 113, 0.8)',
-                            borderColor: 'rgb(46, 204, 113)',
-                            borderWidth: 2
-                        }]
+                        datasets: [
+                            {
+                                label: 'Đặt lẻ',
+                                data: individualRevenues,
+                                backgroundColor: 'rgba(46, 204, 113, 0.8)',
+                                borderColor: 'rgb(46, 204, 113)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Hợp đồng',
+                                data: contractRevenues,
+                                backgroundColor: 'rgba(23, 162, 184, 0.8)',
+                                borderColor: 'rgb(23, 162, 184)',
+                                borderWidth: 2
+                            }
+                        ]
                     },
                     options: {
                         indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            },
                             tooltip: {
                                 callbacks: {
                                     label: (c) => formatCurrency(c.raw)
