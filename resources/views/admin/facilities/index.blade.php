@@ -104,11 +104,11 @@
                                                 <i class="bi bi-info-circle"></i> Chi tiết
                                             </button>
                                             {{-- Có thể thêm nút duyệt lại --}}
-                                            <!-- <form action="{{ route('admin.facility.approve', $facility->facility_id) }}" method="POST"
+                                            <form action="{{ route('admin.facility.approve', $facility->facility_id) }}" method="POST"
                                                 class="d-inline ms-1 needs-confirmation" data-confirm-message="Duyệt lại cơ sở này?">
                                                 @csrf <button type="submit" class="btn btn-sm btn-outline-warning" title="Duyệt lại"><i
                                                         class="bi bi-arrow-clockwise"></i> Duyệt Lại</button>
-                                            </form> -->
+                                            </form>
                                         @endif
                                     </td>
                                 </tr>

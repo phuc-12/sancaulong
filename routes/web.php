@@ -67,7 +67,17 @@ Route::post('register', [AuthController::class, 'postRegister'])->name('postRegi
 Route::get('register/confirm/{token}', [AuthController::class, 'confirmPendingRegistration'])->name('register.confirm');
 Route::post('register/resend', [AuthController::class, 'resendPendingVerification'])->name('register.resend');
 // Email Verification routes
+// Hiển thị trang thông báo
+Route::get('/email/verify-notice', [EmailVerificationController::class, 'notice'])
+    ->name('verification.notice');
 
+// Xử lý gửi lại email
+Route::post('/email/resend', [EmailVerificationController::class, 'resend'])
+    ->name('verification.resend');
+
+// Xử lý xác nhận token (Link trong email bấm vào sẽ chạy vào đây)
+Route::get('/email/verify/{token}', [EmailVerificationController::class, 'verify'])
+    ->name('verification.verify');
 //Dang nhap
 Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'postLogin'])->name('postLogin');

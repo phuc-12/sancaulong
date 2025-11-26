@@ -67,8 +67,8 @@
 
         /* ====== TITLE ====== */
         .register-card h3 {
-            font-size: 28px;
-            font-weight: 800;
+            font-size: 35px;
+            font-weight: 700;
             text-align: center;
             color: #064A43;
             margin-bottom: 25px;

@@ -318,6 +318,7 @@ class AdminController extends Controller
         $facility = Facilities::findOrFail($facilityId);
 
         $facility->status = 'từ chối';
+        $facility->rejection_reason = null;
         $facility->is_active = 0;
         $facility->need_reapprove = 1;
         // Giữ nguyên pending_request_type để owner biết yêu cầu nào bị từ chối
