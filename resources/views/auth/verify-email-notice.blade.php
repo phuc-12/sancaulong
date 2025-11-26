@@ -159,20 +159,22 @@
 
         <p>
             Vui lòng kiểm tra hộp thư đến (và cả thư mục spam) của bạn. 
-            Nhấp vào liên kết trong email để kích hoạt tài khoản.
+            Nhấp vào liên kết trong email (trên cùng trình duyệt này) để kích hoạt tài khoản.
         </p>
 
-        <div class="resend-section">
-            <p class="text-muted mb-3">Chưa nhận được email?</p>
-            <form id="resendForm">
-                @csrf
-                <input type="hidden" name="email" value="{{ session('email') }}" id="resendEmail">
-                <button type="submit" class="btn-secondary-custom" id="resendBtn">
-                    <i class="bi bi-arrow-clockwise me-2"></i>Gửi lại email
-                </button>
-            </form>
-            <div id="resendMessage" class="mt-3"></div>
-        </div>
+        @if(session()->has('pending_registration_token'))
+            <div class="resend-section">
+                <p class="text-muted mb-3">Chưa nhận được email?</p>
+                <form id="resendForm">
+                    @csrf
+                    <input type="hidden" name="email" value="{{ session('email') }}" id="resendEmail">
+                    <button type="submit" class="btn-secondary-custom" id="resendBtn">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Gửi lại email
+                    </button>
+                </form>
+                <div id="resendMessage" class="mt-3"></div>
+            </div>
+        @endif
 
         <div class="mt-4">
             <a href="{{ route('login') }}" class="btn-primary-custom">
@@ -195,7 +197,7 @@
         btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang gửi...';
 
         try {
-            const response = await fetch('{{ route("verification.resend") }}', {
+            const response = await fetch('{{ route("register.resend") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
