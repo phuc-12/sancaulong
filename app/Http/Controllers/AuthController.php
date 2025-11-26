@@ -198,28 +198,31 @@ class AuthController extends Controller
 
             if (is_null($user->email_verified_at)) {
                 Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Vui lòng xác thực email trước khi đăng nhập.'
-                ])->withInput()->with('show_resend', true)->with('user_email', $user->email);
+                return back()
+                    ->withErrors(['email' => 'Vui lòng xác thực email trước khi đăng nhập.'])
+                    ->withInput()
+                    ->with('show_resend', true)
+                    ->with('user_email', $user->email);
             }
 
             $request->session()->regenerate();
 
-            // 🔥 Ưu tiên chuyển lại trang trước khi login
-            if (session()->has('url.intended')) {
+            // 🔥 KHÁCH hàng (role 5) → ưu tiên chuyển lại trang trước khi login
+            if ($user->role_id == 5 && session()->has('url.intended')) {
                 return redirect()->intended();
             }
 
-            // Nếu không có intended thì mới redirect theo role
+            // 🔥 Các role khác → chuyển theo role
             switch ($user->role_id) {
                 case 1: return redirect()->route('admin.index');
                 case 2: return redirect()->route('owner.index');
                 case 3: return redirect()->route('staff.index');
                 case 4: return redirect()->route('manager.index');
-                case 5: return redirect()->route('trang_chu');
+                case 5: return redirect()->route('trang_chu'); // fallback nếu không có intended
                 default: return redirect()->route('trang_chu');
             }
         }
+
 
         // Sai email hoặc mật khẩu
         return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);

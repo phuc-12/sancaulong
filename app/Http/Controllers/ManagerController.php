@@ -823,7 +823,7 @@ class ManagerController extends Controller
             ->toArray();
 
         $slots = $grouped;
-
+        $userMana = $request->userMana;
         return view('manager.contract_details',[
             'slots' => $grouped,
             'long_term_contracts' => $long_term_contracts,
@@ -831,13 +831,14 @@ class ManagerController extends Controller
             'facilities' => $facilities,
             'daysOfWeek' => $daysOfWeek, // ✅ truyền ra view
             'courts' => $courts,
+            'userMana' => $userMana,
         ]);
     }
 
     public function cancel_contract(Request $request)
     {
         $invoice_detail_id = $request->invoice_detail_id;
-
+        $facility_id = $request->facility_id;
         // Xóa booking liên quan
         Bookings::where('invoice_detail_id', $invoice_detail_id)->delete();
 
@@ -848,6 +849,22 @@ class ManagerController extends Controller
         ]);
 
         // Quay trở lại trang trước đó với flash message
-        return redirect()->back()->with('success_message', 'Đã hủy hợp đồng!!! Vui lòng liên hệ sân để hoàn tiền.');
+        $userMana = $request->input('userMana');
+        $checkMana = Users::where('user_id', $userMana)
+        ->select('role_id')
+        ->first();
+        // dd($userMana, $checkMana);
+        if($checkMana->role_id === 4)
+        {
+            return redirect()->route('manager.contracts')->with('success_message', 'Đã hủy hợp đồng!!! Vui lòng liên hệ sân để hoàn tiền.');
+        }
+        else 
+        {
+            return view('layouts.redirect_post', [
+                'facility_id' => $facility_id,
+                'user_id' => $userMana,
+                'success_message' => 'Thanh toán và đặt sân cố định thành công!!!'
+            ]);
+        }
     }
 }

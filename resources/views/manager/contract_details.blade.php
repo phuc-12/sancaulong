@@ -120,7 +120,8 @@
 									@csrf
 									<input type="hidden" name="invoice_detail_id" value="{{ $long_term_contracts->invoice_detail_id }}">
 									<input type="hidden" name="user_id" value="{{ $customer->user_id }}">
-									
+									<input type="hidden" name="userMana" value="{{ $userMana }}">
+                                    <input type="hidden" name="facility_id" value="{{ $facilities->facility_id }}">
 									<div class="d-flex justify-content-center gap-2">
 										<button type="submit" class="btn btn-danger btn-sm w-100 course_item_btn" style="width: 100%; height: 60px;">
 											HỦY HỢP ĐỒNG
@@ -142,7 +143,7 @@
 		<!-- /Page Content -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.querySelector('form[action="{{ route('cancel_contract') }}"]').addEventListener('submit', function(e) {
+document.querySelector('form[action="{{ route('manager.cancel_contract') }}"]').addEventListener('submit', function(e) {
     e.preventDefault();
     Swal.fire({
         title: 'Xác nhận hủy hợp đồng?',
