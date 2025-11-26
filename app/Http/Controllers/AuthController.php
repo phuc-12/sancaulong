@@ -205,6 +205,12 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
+            // 🔥 Ưu tiên chuyển lại trang trước khi login
+            if (session()->has('url.intended')) {
+                return redirect()->intended();
+            }
+
+            // Nếu không có intended thì mới redirect theo role
             switch ($user->role_id) {
                 case 1: return redirect()->route('admin.index');
                 case 2: return redirect()->route('owner.index');
