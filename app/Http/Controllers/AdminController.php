@@ -315,20 +315,15 @@ class AdminController extends Controller
      */
     public function reject(Request $request, $facilityId)
     {
-        $request->validate([
-            'rejection_reason' => 'required|string|max:500',
-        ]);
-
         $facility = Facilities::findOrFail($facilityId);
 
         $facility->status = 'từ chối';
-        $facility->rejection_reason = $request->rejection_reason;
         $facility->is_active = 0;
         $facility->need_reapprove = 1;
         // Giữ nguyên pending_request_type để owner biết yêu cầu nào bị từ chối
         $facility->save();
 
-        return redirect()->route('admin.facilities.approval')
+        return redirect()->route('admin.facilities.index')
             ->with('success', 'Đã từ chối cơ sở.');
     }
 

@@ -64,15 +64,10 @@ Route::prefix('users')->controller(UserController::class)
 //Dang ky
 Route::get('register', [AuthController::class, 'register'])->name('register');
 Route::post('register', [AuthController::class, 'postRegister'])->name('postRegister');
+Route::get('register/confirm/{token}', [AuthController::class, 'confirmPendingRegistration'])->name('register.confirm');
+Route::post('register/resend', [AuthController::class, 'resendPendingVerification'])->name('register.resend');
 // Email Verification routes
-Route::get('/email/verify-notice', [EmailVerificationController::class, 'notice'])
-    ->name('verification.notice');
 
-Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-    ->name('verification.verify');
-
-Route::post('/email/resend', [EmailVerificationController::class, 'resend'])
-    ->name('verification.resend');
 //Dang nhap
 Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'postLogin'])->name('postLogin');

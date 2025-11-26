@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\EmailVerificationController;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EmailVerificationMail;
 
 class AuthController extends Controller
 {
@@ -50,32 +52,6 @@ class AuthController extends Controller
                     // Xóa tài khoản cũ
                     $existingUser->delete();
 
-                    // Tạo tài khoản mới
-                    $newUser = Users::create([
-                        'fullname' => $request->get('fullname'),
-                        'email' => $email,
-                        'phone' => $phone,
-                        'password' => Hash::make($request->get('password')),
-                        'role_id' => $roleId,
-                        'status' => 1,
-                        'email_verified_at' => null, // Chưa xác thực
-                    ]);
-
-                    // Gửi email xác thực
-                    EmailVerificationController::sendVerificationEmail($newUser);
-
-                    DB::commit();
-
-                    Log::info('New account created', [
-                        'new_user_id' => $newUser->user_id,
-                        'email' => $email,
-                        'phone' => $phone
-                    ]);
-
-                    return redirect()->route('verification.notice')
-                        ->with('email', $email)
-                        ->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.');
-
                 } else {
                     // TRƯỜNG HỢP 2: Có cả SĐT và Email
                     // → Tài khoản đã tồn tại hoàn chỉnh
@@ -108,36 +84,25 @@ class AuthController extends Controller
                         ->withInput($request->except('password', 'password_confirmation'))
                         ->withErrors(['email' => 'Email này đã được sử dụng']);
                 }
-
-                // TRƯỜNG HỢP 3: Không có SĐT, không có Email
-                // → Tạo tài khoản mới
-
-                $newUser = Users::create([
-                    'fullname' => $request->get('fullname'),
-                    'email' => $email,
-                    'phone' => $phone,
-                    'password' => Hash::make($request->get('password')),
-                    'role_id' => $roleId,
-                    'status' => 1,
-                    'email_verified_at' => null, // Chưa xác thực
-                ]);
-
-                // Gửi email xác thực
-                EmailVerificationController::sendVerificationEmail($newUser);
-
-                DB::commit();
-
-                Log::info('Tài khoản mới đã được tạo thành công', [
-                    'user_id' => $newUser->user_id,
-                    'email' => $email,
-                    'phone' => $phone,
-                    'role_id' => $roleId
-                ]);
-
-                return redirect()->route('verification.notice')
-                    ->with('email', $email)
-                    ->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.');
             }
+
+            $pendingData = $this->buildPendingRegistrationData($request, $roleId);
+
+            DB::commit();
+
+            $token = $this->storePendingRegistration($pendingData);
+
+            $this->sendPendingVerificationMail($pendingData['email'], $pendingData['fullname'], $token);
+
+            Log::info('Pending registration stored', [
+                'email' => $email,
+                'phone' => $phone,
+                'token' => $token,
+            ]);
+
+            return redirect()->route('register')
+                ->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.')
+                ->with('email', $email);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -172,6 +137,100 @@ class AuthController extends Controller
         }
 
         return $masked . '@' . $domain;
+    }
+
+    private function buildPendingRegistrationData(RegisterRequest $request, int $roleId): array
+    {
+        return [
+            'fullname' => $request->get('fullname'),
+            'email' => $request->get('email'),
+            'phone' => $request->get('phone'),
+            'password' => Hash::make($request->get('password')),
+            'role_id' => $roleId,
+            'status' => 1,
+        ];
+    }
+
+    private function storePendingRegistration(array $data): string
+    {
+        $token = (string) Str::uuid();
+
+        session()->put('pending_registration_token', $token);
+        session()->put('pending_registration_data', $data);
+        session()->put('pending_registration_created_at', now());
+
+        return $token;
+    }
+
+    private function clearPendingRegistration(): void
+    {
+        session()->forget([
+            'pending_registration_token',
+            'pending_registration_data',
+            'pending_registration_created_at',
+        ]);
+    }
+
+    private function sendPendingVerificationMail(string $email, string $fullname, string $token): void
+    {
+        $verificationUrl = route('register.confirm', ['token' => $token]);
+        Mail::to($email)->send(new EmailVerificationMail($verificationUrl, $fullname));
+    }
+
+    public function confirmPendingRegistration(Request $request, string $token)
+    {
+        $pendingToken = session('pending_registration_token');
+        $pendingData = session('pending_registration_data');
+
+        if (!$pendingToken || !$pendingData || $token !== $pendingToken) {
+            return redirect()->route('register')
+                ->withErrors(['error' => 'Thông tin đăng ký không hợp lệ hoặc đã hết hạn. Vui lòng đăng ký lại.']);
+        }
+
+        DB::beginTransaction();
+        try {
+            $user = Users::create([
+                'fullname' => $pendingData['fullname'],
+                'email' => $pendingData['email'],
+                'phone' => $pendingData['phone'],
+                'password' => $pendingData['password'],
+                'role_id' => $pendingData['role_id'],
+                'status' => $pendingData['status'],
+                'email_verified_at' => now(),
+            ]);
+
+            DB::commit();
+
+            // Xóa session pending
+            session()->forget(['pending_registration_token', 'pending_registration_data', 'pending_registration_created_at']);
+
+            return redirect()->route('login')->with('success', 'Xác thực email thành công! Bạn có thể đăng nhập ngay.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('register')->withErrors(['error' => 'Không thể tạo tài khoản. Vui lòng thử lại.']);
+        }
+    }
+
+
+    public function resendPendingVerification(Request $request)
+    {
+        $pendingToken = session('pending_registration_token');
+        $pendingData = session('pending_registration_data');
+
+        if (!$pendingToken || !$pendingData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy thông tin đăng ký cần xác thực. Vui lòng đăng ký lại.',
+            ], 404);
+        }
+
+        $this->sendPendingVerificationMail($pendingData['email'], $pendingData['fullname'], $pendingToken);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email xác thực đã được gửi lại.',
+        ]);
     }
 
     //Dang nhap
@@ -214,12 +273,18 @@ class AuthController extends Controller
 
             // 🔥 Các role khác → chuyển theo role
             switch ($user->role_id) {
-                case 1: return redirect()->route('admin.index');
-                case 2: return redirect()->route('owner.index');
-                case 3: return redirect()->route('staff.index');
-                case 4: return redirect()->route('manager.index');
-                case 5: return redirect()->route('trang_chu'); // fallback nếu không có intended
-                default: return redirect()->route('trang_chu');
+                case 1:
+                    return redirect()->route('admin.index');
+                case 2:
+                    return redirect()->route('owner.index');
+                case 3:
+                    return redirect()->route('staff.index');
+                case 4:
+                    return redirect()->route('manager.index');
+                case 5:
+                    return redirect()->route('trang_chu'); // fallback nếu không có intended
+                default:
+                    return redirect()->route('trang_chu');
             }
         }
 

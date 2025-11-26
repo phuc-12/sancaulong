@@ -499,7 +499,7 @@ class ReportController extends Controller
             }, 'distinct_invoices')
             ->sum('final_amount');
         }
-        else
+        else 
         {
             $revenue = DB::table(function ($query) use ($facilityId, $dateRange) {
                 $query->select('invoice_details.invoice_detail_id', 'invoices.final_amount','bookings.booking_date')

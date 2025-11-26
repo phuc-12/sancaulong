@@ -27,6 +27,7 @@ class Users extends Authenticatable
         'facility_id',
         'status',
         'permissions',
+        'email_verified_at',
     ];
 
     protected $hidden = [

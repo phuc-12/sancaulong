@@ -331,7 +331,7 @@ class OwnerController extends Controller
                     unlink(public_path($existingFacility->image));
                 }
             }
-            dd($facilityData);
+            // dd($facilityData);
             // --- LƯU HOẶC CẬP NHẬT FACILITY ---
             $facility = Facilities::updateOrCreate(
                 ['owner_id' => Auth::id()],
