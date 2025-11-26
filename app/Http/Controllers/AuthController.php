@@ -88,10 +88,12 @@ class AuthController extends Controller
 
             $pendingData = $this->buildPendingRegistrationData($request, $roleId);
 
-            DB::commit();
+            DB::commit(); // Kết thúc transaction kiểm tra dữ liệu
 
+            // 1. Lưu vào Session
             $token = $this->storePendingRegistration($pendingData);
 
+            // 2. Gửi mail (Quan trọng: xem bước 2 bên dưới)
             $this->sendPendingVerificationMail($pendingData['email'], $pendingData['fullname'], $token);
 
             Log::info('Pending registration stored', [
@@ -100,9 +102,10 @@ class AuthController extends Controller
                 'token' => $token,
             ]);
 
-            return redirect()->route('register')
-                ->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.')
-                ->with('email', $email);
+            // 3. Chuyển hướng sang route mới
+            return redirect()->route('verification.notice')
+                ->with('email', $email)
+                ->with('success', 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -173,7 +176,8 @@ class AuthController extends Controller
 
     private function sendPendingVerificationMail(string $email, string $fullname, string $token): void
     {
-        $verificationUrl = route('register.confirm', ['token' => $token]);
+        $verificationUrl = route('verification.verify', ['token' => $token]);
+
         Mail::to($email)->send(new EmailVerificationMail($verificationUrl, $fullname));
     }
 
@@ -187,7 +191,20 @@ class AuthController extends Controller
                 ->withErrors(['error' => 'Thông tin đăng ký không hợp lệ hoặc đã hết hạn. Vui lòng đăng ký lại.']);
         }
 
+        if (Users::where('email', $pendingData['email'])->exists()) {
+            $this->clearPendingRegistration();
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Email này đã được sử dụng. Vui lòng đăng nhập hoặc đăng ký bằng email khác.']);
+        }
+
+        if (Users::where('phone', $pendingData['phone'])->exists()) {
+            $this->clearPendingRegistration();
+            return redirect()->route('login')
+                ->withErrors(['phone' => 'Số điện thoại này đã được dùng cho một tài khoản khác.']);
+        }
+
         DB::beginTransaction();
+
         try {
             $user = Users::create([
                 'fullname' => $pendingData['fullname'],
@@ -201,17 +218,29 @@ class AuthController extends Controller
 
             DB::commit();
 
-            // Xóa session pending
-            session()->forget(['pending_registration_token', 'pending_registration_data', 'pending_registration_created_at']);
+            $this->clearPendingRegistration();
 
-            return redirect()->route('login')->with('success', 'Xác thực email thành công! Bạn có thể đăng nhập ngay.');
+            Log::info('Pending registration confirmed', [
+                'user_id' => $user->user_id,
+                'email' => $user->email,
+            ]);
+
+            return redirect()->route('login')
+                ->with('success', 'Xác thực email thành công! Bạn có thể đăng nhập ngay.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('register')->withErrors(['error' => 'Không thể tạo tài khoản. Vui lòng thử lại.']);
+
+            Log::error('Failed to confirm pending registration', [
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('register')
+                ->withErrors(['error' => 'Không thể kích hoạt tài khoản. Vui lòng thử lại.']);
         }
     }
-
 
     public function resendPendingVerification(Request $request)
     {
@@ -266,12 +295,11 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
-            // 🔥 KHÁCH hàng (role 5) → ưu tiên chuyển lại trang trước khi login
             if ($user->role_id == 5 && session()->has('url.intended')) {
                 return redirect()->intended();
             }
 
-            // 🔥 Các role khác → chuyển theo role
+            // Các role khác → chuyển theo role
             switch ($user->role_id) {
                 case 1:
                     return redirect()->route('admin.index');
@@ -292,8 +320,6 @@ class AuthController extends Controller
         // Sai email hoặc mật khẩu
         return back()->withErrors(['email' => 'Sai email hoặc mật khẩu']);
     }
-
-
 
     //Dang xuat
     public function logout(Request $request)

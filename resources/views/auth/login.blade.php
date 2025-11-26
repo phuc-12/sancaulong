@@ -85,8 +85,9 @@
 
             /* ====== TITLE ====== */
             .login-title {
-                font-size: 30px;
-                font-weight: 800;
+                font-family: "Poppins", sans-serif;
+                font-size: 35px;
+                font-weight: 700;
                 text-align: center;
                 color: #064A43;
                 margin-bottom: 25px;
