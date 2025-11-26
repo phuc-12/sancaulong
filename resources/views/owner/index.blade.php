@@ -446,7 +446,7 @@
                             <div class="flex-grow-1">
                                 <div class="kpi-label">SỐ LƯỢNG KHÁCH HÀNG</div>
                                 <div class="kpi-value loading" id="totalCustomers">0</div>
-                            </div>
+                </div>
                             <div class="kpi-icon icon-purple"><i class="fas fa-users"></i></div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
@@ -767,8 +767,36 @@
                 const ctx = document.getElementById('hourlyChart').getContext('2d');
                 hourlyChartInstance = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels: data.labels, datasets: [{ label: 'Số lượt đặt', data: data.counts, backgroundColor: 'rgba(255,211,61,0.7)', borderColor: 'rgb(255,211,61)', borderWidth: 2 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                    data: { 
+                        labels: data.labels || [],
+                        datasets: [
+                            {
+                                label: 'Đặt lẻ',
+                                data: data.individual || [],
+                                backgroundColor: 'rgba(255,211,61,0.7)',
+                                borderColor: 'rgb(255,211,61)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Hợp đồng',
+                                data: data.contract || [],
+                                backgroundColor: 'rgba(23,162,184,0.7)',
+                                borderColor: 'rgb(23,162,184)',
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            } 
+                        }, 
+                        scales: { y: { beginAtZero: true } } 
+                    }
                 });
             } catch (err) { console.error("Lỗi tải Biểu đồ Giờ:", err); }
         }
@@ -891,16 +919,54 @@
                 if (courtsChartInstance) courtsChartInstance.destroy();
 
                 const labels = data.map(d => `${d.court_name}`);
-                const revenues = data.map(d => d.revenue);
+                const individualRevenues = data.map(d => d.individual_revenue || 0);
+                const contractRevenues = data.map(d => d.contract_revenue || 0);
 
                 const ctx = document.getElementById('courtsComparisonChart').getContext('2d');
                 courtsChartInstance = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels: labels, datasets: [{ label: 'Doanh thu', data: revenues, backgroundColor: 'rgba(74,144,226,0.7)', borderColor: 'rgb(74,144,226)', borderWidth: 2 }] },
+                    data: { 
+                        labels: labels, 
+                        datasets: [
+                            {
+                                label: 'Đặt lẻ',
+                                data: individualRevenues,
+                                backgroundColor: 'rgba(46,204,113,0.7)',
+                                borderColor: 'rgb(46,204,113)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Hợp đồng',
+                                data: contractRevenues,
+                                backgroundColor: 'rgba(23,162,184,0.7)',
+                                borderColor: 'rgb(23,162,184)',
+                                borderWidth: 2
+                            }
+                        ]
+                    },
                     options: {
-                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => formatCurrency(ctx.parsed.x) } } },
-                        scales: { x: { beginAtZero: true, ticks: { callback: value => formatCurrency(value) } } }
+                        indexAxis: 'y', 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            }, 
+                            tooltip: { 
+                                callbacks: { 
+                                    label: ctx => formatCurrency(ctx.parsed.x) 
+                                } 
+                            } 
+                        },
+                        scales: { 
+                            x: { 
+                                beginAtZero: true, 
+                                ticks: { 
+                                    callback: value => formatCurrency(value) 
+                                } 
+                            } 
+                        }
                     }
                 });
             } catch (err) { console.error("Lỗi tải Biểu đồ So sánh Sân:", err); }

@@ -84,31 +84,31 @@
 
         {{-- 2. KPI CARDS --}}
         <div class="row g-4 mb-4">
-            <div class="col-md-2 col-lg-2">
+            <div class="col-lg">
                 <div class="kpi-card" style="border-color: #4a90e2;">
                     <div class="text-muted fw-bold small">ĐẶT LẺ</div>
                     <div class="kpi-value" id="kpiBookingsIndividual">...</div>
                 </div>
             </div>
-            <div class="col-md-2 col-lg-2">
+            <div class="col-lg">
                 <div class="kpi-card" style="border-color: #17a2b8;">
                     <div class="text-muted fw-bold small">HỢP ĐỒNG</div>
                     <div class="kpi-value" id="kpiBookingsContract">...</div>
                 </div>
             </div>
-            <div class="col-md-2 col-lg-2">
+            <div class="col-lg">
                 <div class="kpi-card" style="border-color: #2ecc71;">
                     <div class="text-muted fw-bold small">DOANH THU</div>
                     <div class="kpi-value" id="kpiRevenue">...</div>
                 </div>
             </div>
-            <div class="col-md-2 col-lg-2">
+            <div class="col-lg">
                 <div class="kpi-card" style="border-color: #e74c3c;">
                     <div class="text-muted fw-bold small">LƯỢT HỦY</div>
                     <div class="kpi-value" id="kpiCancel">...</div>
                 </div>
             </div>
-            <div class="col-md-2 col-lg-2">
+            <div class="col-lg">
                 <div class="kpi-card" style="border-color: #f1c40f;">
                     <div class="text-muted fw-bold small">SÂN BẬN / TỔNG</div>
                     <div class="kpi-value" id="kpiUtil">...</div>

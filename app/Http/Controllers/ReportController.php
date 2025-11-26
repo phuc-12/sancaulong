@@ -155,27 +155,60 @@ class ReportController extends Controller
             $dateRange = $this->getDateRange($range);
         }
 
-        $query = DB::table('bookings')
+        // Query đặt lẻ (từ invoices)
+        $individualQuery = DB::table('bookings')
             ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
+            ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+            ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
             ->where('bookings.facility_id', $ownerFacilityId)
             ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
 
+        // Query hợp đồng (từ long_term_contracts)
+        $contractQuery = DB::table('bookings')
+            ->join('time_slots', 'bookings.time_slot_id', '=', 'time_slots.time_slot_id')
+            ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
+            ->where('bookings.facility_id', $ownerFacilityId)
+            ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']])
+            ->where('long_term_contracts.payment_status', 'like', '%thanh toán%');
+
         if ($courtId !== 'all') {
-            $query->where('bookings.court_id', $courtId);
+            $individualQuery->where('bookings.court_id', $courtId);
+            $contractQuery->where('bookings.court_id', $courtId);
         }
 
-        $hourlyData = $query
+        // Group by giờ cho đặt lẻ
+        $individualData = $individualQuery
             ->select(DB::raw('HOUR(time_slots.start_time) as hour'), DB::raw('COUNT(*) as count'))
             ->groupBy('hour')
             ->orderBy('hour', 'asc')
-            ->get();
+            ->get()
+            ->pluck('count', 'hour')
+            ->toArray();
 
-        $labels = $hourlyData->pluck('hour')->map(function ($hour) {
-            return $hour . ':00';
-        })->toArray();
-        $counts = $hourlyData->pluck('count')->toArray();
+        // Group by giờ cho hợp đồng
+        $contractData = $contractQuery
+            ->select(DB::raw('HOUR(time_slots.start_time) as hour'), DB::raw('COUNT(*) as count'))
+            ->groupBy('hour')
+            ->orderBy('hour', 'asc')
+            ->get()
+            ->pluck('count', 'hour')
+            ->toArray();
 
-        return response()->json(['labels' => $labels, 'counts' => $counts]);
+        // Fill từ 5h đến 23h
+        $labels = [];
+        $individualCounts = [];
+        $contractCounts = [];
+        for ($i = 5; $i <= 23; $i++) {
+            $labels[] = $i . ':00';
+            $individualCounts[] = $individualData[$i] ?? 0;
+            $contractCounts[] = $contractData[$i] ?? 0;
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'individual' => $individualCounts,
+            'contract' => $contractCounts
+        ]);
     }
 
     /**
@@ -271,27 +304,80 @@ class ReportController extends Controller
             $dateRange = $this->getDateRange($range);
         }
 
-        $query = DB::table('bookings')
+        // Query đặt lẻ (từ invoices)
+        $individualQuery = DB::table('bookings')
             ->join('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
             ->join('courts', function ($join) {
                 $join->on('bookings.court_id', '=', 'courts.court_id')
                     ->on('bookings.facility_id', '=', 'courts.facility_id');
             })
+            ->join('invoice_details', 'bookings.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
+            ->join('invoices', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
             ->where('bookings.facility_id', $ownerFacilityId)
-            ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']]);
+            ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']])
+            ->where('bookings.status', 'like', '%thanh toán%');
+
+        // Query hợp đồng (từ long_term_contracts)
+        $contractQuery = DB::table('bookings')
+            ->join('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
+            ->join('courts', function ($join) {
+                $join->on('bookings.court_id', '=', 'courts.court_id')
+                    ->on('bookings.facility_id', '=', 'courts.facility_id');
+            })
+            ->join('long_term_contracts', 'bookings.invoice_detail_id', '=', 'long_term_contracts.invoice_detail_id')
+            ->where('bookings.facility_id', $ownerFacilityId)
+            ->whereBetween('bookings.booking_date', [$dateRange['start'], $dateRange['end']])
+            ->where('long_term_contracts.payment_status', 'like', '%thanh toán%');
 
         if ($courtId !== 'all') {
-            $query->where('bookings.court_id', $courtId);
+            $individualQuery->where('bookings.court_id', $courtId);
+            $contractQuery->where('bookings.court_id', $courtId);
         }
 
-        $courtData = $query
-            ->select('courts.court_name', 'facilities.facility_name', DB::raw('COUNT(*) as bookings'), DB::raw('SUM(bookings.unit_price) as revenue'))
+        // Lấy dữ liệu đặt lẻ
+        $individualData = $individualQuery
+            ->select('courts.court_name', 'facilities.facility_name', DB::raw('SUM(bookings.unit_price) as revenue'))
             ->groupBy('courts.court_id', 'courts.court_name', 'facilities.facility_id', 'facilities.facility_name')
-            ->orderBy('revenue', 'desc')
-            ->limit(10)
-            ->get();
+            ->get()
+            ->keyBy('court_name');
 
-        return response()->json($courtData);
+        // Lấy dữ liệu hợp đồng
+        $contractData = $contractQuery
+            ->select('courts.court_name', 'facilities.facility_name', DB::raw('SUM(bookings.unit_price) as revenue'))
+            ->groupBy('courts.court_id', 'courts.court_name', 'facilities.facility_id', 'facilities.facility_name')
+            ->get()
+            ->keyBy('court_name');
+
+        // Gộp tất cả tên sân
+        $allCourtNames = $individualData->pluck('court_name')
+            ->merge($contractData->pluck('court_name'))
+            ->unique()
+            ->sort()
+            ->values();
+
+        // Tạo response với dữ liệu tách biệt
+        $result = [];
+        foreach ($allCourtNames as $courtName) {
+            $individualRevenue = (float) ($individualData[$courtName]->revenue ?? 0);
+            $contractRevenue = (float) ($contractData[$courtName]->revenue ?? 0);
+            $totalRevenue = $individualRevenue + $contractRevenue;
+
+            if ($totalRevenue > 0) {
+                $result[] = [
+                    'court_name' => $courtName,
+                    'individual_revenue' => $individualRevenue,
+                    'contract_revenue' => $contractRevenue,
+                    'revenue' => $totalRevenue
+                ];
+            }
+        }
+
+        // Sắp xếp theo tổng doanh thu giảm dần
+        usort($result, function($a, $b) {
+            return $b['revenue'] <=> $a['revenue'];
+        });
+
+        return response()->json(array_slice($result, 0, 10));
     }
 
     /**
