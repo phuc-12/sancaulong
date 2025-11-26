@@ -1,6 +1,9 @@
 @extends('layouts.owner')
 
 @section('owner_content')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <h1 class="h3 mb-4">Đăng Ký / Cập Nhật Cơ Sở Sân</h1>
 
     {{-- Hiển thị thông báo thành công (nếu có) --}}
@@ -91,19 +94,40 @@
                         </div>
 
                         <div class="row">
-    <div class="col-md-6 mb-3">
-        <label for="open_time" class="form-label"><b>Giờ mở cửa</b> <span class="text-danger">*</span></label>
-        <input type="time" class="form-control" id="open_time" name="open_time"
-            value="{{ old('open_time', $facility->open_time ?? '05:00:00') }}" 
-            step="1" required>
-    </div>
-    <div class="col-md-6 mb-3">
-        <label for="close_time" class="form-label"><b>Giờ đóng cửa</b> <span class="text-danger">*</span></label>
-        <input type="time" class="form-control" id="close_time" name="close_time"
-            value="{{ old('close_time', $facility->close_time ?? '22:00:00') }}" 
-            step="1" required>
-    </div>
-</div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="open_time" class="form-label">
+                                    <b>Giờ mở cửa</b> <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="open_time" name="open_time"
+                                    value="{{ old('open_time', $facility->open_time ?? '05:00:00') }}"
+                                    required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="close_time" class="form-label">
+                                    <b>Giờ đóng cửa</b> <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="close_time" name="close_time"
+                                    value="{{ old('close_time', $facility->close_time ?? '23:59:00') }}"
+                                    required>
+                            </div>
+<script>
+    flatpickr("#open_time", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i:S",
+        time_24hr: true
+    });
+
+    flatpickr("#close_time", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i:S",
+        time_24hr: true
+    });
+</script> 
+                        </div>
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
