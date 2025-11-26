@@ -241,6 +241,7 @@ class OwnerController extends Controller
      */
     public function requestApproval(Request $request)
     {
+        // dd($request->all());
         // --- VALIDATION ---
         $validatedData = $request->validate([
             'facility_name' => 'required|string|max:100',
@@ -249,8 +250,8 @@ class OwnerController extends Controller
             'open_time' => 'required',
             'close_time' => 'required|after:open_time',
             'description' => 'nullable|string|max:65535',
-            'business_license' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
-            'image' => 'nullable|file|mimes:jpeg,png,jpg|max:2048',
+            'business_license' => 'nullable|file|mimetypes:image/*,application/pdf|max:2048',
+            'image' => 'nullable|image|max:2048',
             'default_price' => 'nullable|numeric|min:0',
             'special_price' => 'nullable|numeric|min:0',
             'owner_phone' => 'nullable|string|max:20',
@@ -331,7 +332,7 @@ class OwnerController extends Controller
                     unlink(public_path($existingFacility->image));
                 }
             }
-            dd($facilityData);
+
             // --- LƯU HOẶC CẬP NHẬT FACILITY ---
             $facility = Facilities::updateOrCreate(
                 ['owner_id' => Auth::id()],
