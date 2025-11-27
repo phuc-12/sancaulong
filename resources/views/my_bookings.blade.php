@@ -1,6 +1,7 @@
 @extends('layouts.main')
 
 @section('my_bookings_content')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <section class="breadcrumb breadcrumb-list mb-0">
     <span class="primary-right-round"></span>
     <div class="container">
@@ -31,6 +32,46 @@
                 @endif
 
                 <div class="table-responsive rounded-3 mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <form action="{{ route('lich_dat_san') }}" method="GET" class="d-flex" onsubmit="return validateDate()">
+                            <input type="hidden" name="user_id" value="{{ $user_id }}">
+
+                            <!-- Ô tìm kiếm tên sân -->
+                            <input type="text" name="facility_name" value="{{ request('facility_name') }}" 
+                                class="form-control me-2" 
+                                placeholder="Tìm theo tên sân">
+
+                            <!-- Ô tìm kiếm ngày -->
+                            <input type="text" name="booking_date" value="{{ request('booking_date') }}" 
+                                class="form-control me-2" 
+                                placeholder="Tìm theo ngày dd/mm/yyyy (09/02/2025)" id="bookingDateInput">
+
+                            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                        </form>
+
+                    </div>
+
+<script>
+function validateDate() {
+    const dateInput = document.getElementById('bookingDateInput').value.trim();
+    if (!dateInput) return true;
+
+    const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+
+    if (!dateRegex.test(dateInput)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Ngày không hợp lệ',
+            text: 'Vui lòng nhập đúng định dạng: dd/mm/yyyy (ví dụ: 23/11/2025)',
+            confirmButtonText: 'Đã hiểu',
+            confirmButtonColor: '#d33',
+        });
+        return false;
+    }
+
+    return true;
+}
+</script>
                     <table class="table table-hover table-bordered align-middle">
                         <thead class="table-primary text-center">
                             <tr>
