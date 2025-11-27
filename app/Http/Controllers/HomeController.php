@@ -886,11 +886,11 @@ class HomeController extends Controller
 
     public function list_Invoices(Request $request)
     {
-        // Lấy user_id từ query string GET hoặc từ POST
         $user_id = $request->query('user_id', $request->user_id);
+        $facilityName = $request->query('facility_name', null);
+        $bookingDateInput = $request->query('booking_date', null);
 
-        // Lấy invoices của user, paginate 10 bản ghi/trang
-        $invoices = DB::table('invoices')
+        $invoicesQuery = DB::table('invoices')
             ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
             ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
             ->join('users', 'users.user_id', '=', 'invoices.customer_id')
@@ -904,30 +904,53 @@ class HomeController extends Controller
                 'invoice_details.invoice_detail_id as invoice_detail_id',
                 'invoice_details.facility_id as facility_id'
             )
-            ->orderBy('invoices.invoice_id', 'desc')
-            ->paginate(10)
-            ->appends(['user_id' => $user_id]); // giữ user_id khi bấm trang 2
+            ->orderBy('invoices.invoice_id', 'desc');
 
-        $success_message = $request->query('success_message', null); // nếu có thông báo
+        // Lọc theo tên sân
+        if ($facilityName) {
+            $invoicesQuery->where('facilities.facility_name', 'like', "%{$facilityName}%");
+        }
 
-        // Build mybooking_details cho các invoice trên trang hiện tại
+        // Lọc theo ngày
+        if ($bookingDateInput) {
+            try {
+                $bookingDate = \Carbon\Carbon::createFromFormat('d/m/Y', $bookingDateInput)->format('Y-m-d');
+
+                $invoicesQuery->whereExists(function($q) use ($bookingDate) {
+                    $q->select(DB::raw(1))
+                    ->from('bookings')
+                    ->join('invoice_details as id2', 'bookings.invoice_detail_id', '=', 'id2.invoice_detail_id')
+                    ->whereRaw('id2.invoice_detail_id = invoice_details.invoice_detail_id')
+                    ->where('bookings.booking_date', $bookingDate);
+                });
+
+            } catch (\Exception $e) {
+                return redirect()->route('list_invoices', ['user_id' => $user_id])
+                    ->with('success_message', 'Ngày nhập không hợp lệ, vui lòng nhập theo định dạng dd/mm/yyyy');
+            }
+        }
+
+        $invoices = $invoicesQuery->paginate(10)->appends([
+            'user_id' => $user_id,
+            'facility_name' => $facilityName,
+            'booking_date' => $bookingDateInput
+        ]);
+
+        // Build mybooking_details
         $mybooking_details = [];
         foreach ($invoices as $invoice) {
             $details = DB::table('bookings')
                 ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
                 ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
                 ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
-                ->select(
-                    'bookings.*',
-                    'time_slots.start_time',
-                    'time_slots.end_time'
-                )
+                ->select('bookings.*','time_slots.start_time','time_slots.end_time')
                 ->get();
 
             $mybooking_details[$invoice->invoice_detail_id] = $details;
         }
 
-        // Trả về view
+        $success_message = $request->query('success_message', null);
+
         return view('my_bookings', compact('user_id', 'invoices', 'mybooking_details', 'success_message'));
     }
     public function list_Contracts(Request $request)
@@ -935,8 +958,11 @@ class HomeController extends Controller
         $user_id = $request->user_id;
         $success_message = $request->success_message;
 
-        // Lấy hợp đồng dài hạn của user, phân trang 10 bản ghi/trang
-        $long_term_contracts = DB::table('long_term_contracts')
+        $searchName = $request->query('search_name');
+        $searchDateInput = $request->query('search_date');
+
+        // Query gốc
+        $contractsQuery = DB::table('long_term_contracts')
             ->join('invoice_details', 'long_term_contracts.invoice_detail_id', '=', 'invoice_details.invoice_detail_id')
             ->join('facilities', 'facilities.facility_id', '=', 'invoice_details.facility_id')
             ->join('users', 'users.user_id', '=', 'long_term_contracts.customer_id')
@@ -947,29 +973,61 @@ class HomeController extends Controller
                 'users.fullname as fullname',
                 'long_term_contracts.issue_date as issue_date',
                 'long_term_contracts.final_amount as final_amount'
-            )
+            );
+
+        // Tìm theo tên sân
+        if (!empty($searchName)) {
+            $contractsQuery->where('facilities.facility_name', 'like', "%$searchName%");
+        }
+
+        // Tìm theo ngày áp dụng
+        if (!empty($searchDateInput)) {
+            // Convert dd/mm/yyyy → yyyy-mm-dd
+            try {
+                $searchDate = \Carbon\Carbon::createFromFormat('d/m/Y', $searchDateInput)->format('Y-m-d');
+
+                $contractsQuery->whereExists(function ($q) use ($searchDate) {
+                    $q->select(DB::raw(1))
+                        ->from('bookings')
+                        ->whereRaw('bookings.invoice_detail_id = long_term_contracts.invoice_detail_id')
+                        ->where('bookings.booking_date', '=', $searchDate);
+                });
+
+            } catch (\Exception $e) {
+                return back()->with('success_message', 'Ngày nhập không đúng định dạng (dd/mm/yyyy)');
+            }
+        }
+
+        // Paginate
+        $long_term_contracts = $contractsQuery
             ->orderBy('long_term_contracts.issue_date', 'desc')
             ->paginate(10)
-            ->appends(['user_id' => $user_id]); // giữ user_id khi bấm trang 2
+            ->appends([
+                'user_id' => $user_id,
+                'search_name' => $searchName,
+                'search_date' => $searchDateInput,
+            ]);
 
-        // Lấy danh sách invoice_detail_id của trang hiện tại
+        // Lấy booking details
         $invoiceIds = $long_term_contracts->pluck('invoice_detail_id')->toArray();
 
-        // Lấy chi tiết booking cho tất cả invoice_detail_id trong trang
         $mycontract_details = DB::table('bookings')
             ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
             ->whereIn('bookings.invoice_detail_id', $invoiceIds)
-            ->select(
-                'bookings.*',
-                'time_slots.start_time',
-                'time_slots.end_time'
-            )
+            ->select('bookings.*', 'time_slots.start_time', 'time_slots.end_time')
             ->get()
-            ->groupBy('invoice_detail_id'); // nhóm theo invoice_detail_id để view dễ dùng
+            ->groupBy('invoice_detail_id');
 
-        // Trả về view
-        return view('my_contracts', compact('user_id', 'long_term_contracts', 'mycontract_details', 'success_message'));
+        return view('my_contracts', compact(
+            'user_id',
+            'long_term_contracts',
+            'mycontract_details',
+            'success_message',
+            'searchName',
+            'searchDateInput'
+        ));
     }
+
     public function search(Request $request)
     {
         // 1. Lấy từ khóa tìm kiếm từ URL (?keyword=...)

@@ -1,6 +1,7 @@
 @extends('layouts.main')
 
 @section('my_contracts_content')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <section class="breadcrumb breadcrumb-list mb-0">
     <span class="primary-right-round"></span>
     <div class="container">
@@ -28,6 +29,45 @@
                 @endif
 
                 <div class="table-responsive rounded-3 mt-3">
+					<form method="GET" action="{{ route('lich_co_dinh') }}" class="row g-3 mb-4" onsubmit="return validateDate();">
+						<input type="hidden" name="user_id" value="{{ $user_id }}">
+
+						<div class="col-md-4">
+							<input type="text" name="search_name" class="form-control"
+								placeholder="Tìm theo tên sân..."
+								value="{{ request('search_name') }}">
+						</div>
+
+						<div class="col-md-4">
+							<input type="text" name="search_date" id="bookingDateInput" class="form-control"
+								placeholder="Tìm theo ngày dd/mm/yyyy (09/02/2025)"
+								value="{{ request('search_date') }}">
+						</div>
+
+						<div class="col-md-3 d-flex align-items-end">
+							<button class="btn btn-primary w-60">Tìm kiếm</button>
+						</div>
+					</form>
+<script>
+function validateDate() {
+    const dateInput = document.getElementById('bookingDateInput').value.trim();
+    if (!dateInput) return true;
+
+    const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+
+    if (!regex.test(dateInput)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Ngày không hợp lệ',
+            text: 'Hãy nhập đúng định dạng dd/mm/yyyy, ví dụ: 23/11/2025',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+        });
+        return false;
+    }
+    return true;
+}
+</script>
                     <table class="table table-hover table-bordered align-middle">
                         <thead class="table-primary text-center">
                             <tr>

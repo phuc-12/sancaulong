@@ -148,7 +148,9 @@
 
     <p class="total">Tổng thời gian: {{ $result }}</p>
     <p class="total">Thành tiền: {{ number_format($total) }} đ</p>
-    <p class="total">Khuyến mãi: {{ $description->description }}</p>
+    <p class="">
+        Khuyến mãi: {{ $description->description ?? 'Không có' }}
+    </p>
     <h3 class="total">Tổng tiền: {{ number_format($total_final) }} đ</h3>
     <!-- ============ QR THANH TOÁN ============ -->
     {{-- <div class="qr-code" style="text-align:center; margin-top: 12px;">
