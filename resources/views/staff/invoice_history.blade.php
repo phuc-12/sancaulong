@@ -1,7 +1,7 @@
 @extends('layouts.staff')
 
 @section('staff_content')
-<h1 class="h3 mb-4 fw-bold">Lịch Sử Hóa Đơn</h1>
+<h1 class="h3 mb-4 fw-bold">Lịch Sử Đặt Sân</h1>
 
 <div class="card shadow-sm border-0">
 
@@ -64,7 +64,7 @@
 
                         <tr class="text-center">
                             <td>{{ ++$index }}</td>
-                            <td class="fw-semibold">{{ $invoice->facility_name }}</td>
+                            <td class="fw-semibold">{{ $invoice->fullname }}</td>
                             {{-- <td>{{ $invoice->fullname }}</td> --}}
                             <td>{{ $formattedIssueDate }}</td>
                             <td class="fw-bold text-success">{{ number_format($invoice->final_amount, 0, ',', '.') }}₫</td>

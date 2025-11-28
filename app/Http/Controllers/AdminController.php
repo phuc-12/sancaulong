@@ -382,7 +382,10 @@ class AdminController extends Controller
 
         $customers = Users::where('role_id', 5)
             ->when($search, function ($query) use ($search) {
-                $query->where('fullname', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('fullname', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+                });
             })
             ->orderBy('fullname', 'asc')
             ->paginate(15);
