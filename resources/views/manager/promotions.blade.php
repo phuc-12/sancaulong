@@ -305,6 +305,38 @@
     </div>
 </div>
 <script>
+// RÀNG BUỘC: Giá trị % không được vượt 100%
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Áp dụng cho cả modal thêm và sửa
+    document.querySelectorAll("input[name='value']").forEach(input => {
+        input.addEventListener("input", function () {
+            let v = parseFloat(this.value);
+
+            // Nếu nhập dạng phần trăm (0 < v < 1)
+            if (v > 0 && v < 1) {
+                if (v > 1) this.value = 1;
+            }
+
+            // Nếu người dùng cố tình nhập >1 nhưng vẫn muốn % (VD: 1.2)
+            if (v > 1 && v < 100) {
+                // Người dùng nhập 20 => hiểu nhầm → không cho nhập dạng này
+                // Ngăn người dùng nhập % lớn hơn 1
+                Swal.fire({
+                    icon: "warning",
+                    title: "Giá trị % không hợp lệ",
+                    text: "Giảm giá phần trăm chỉ nhận giá trị tối đa 1 (tương ứng 100%).",
+                });
+                this.value = 1;
+            }
+
+            // Không cho nhập số âm
+            if (v < 0) this.value = 0;
+        });
+    });
+
+});
+
 document.addEventListener("DOMContentLoaded", function () {
 
     document.querySelectorAll('.btn-delete').forEach(btn => {
