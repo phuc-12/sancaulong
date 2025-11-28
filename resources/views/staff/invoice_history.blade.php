@@ -1,7 +1,7 @@
 @extends('layouts.staff')
 
 @section('staff_content')
-<h1 class="h3 mb-4 fw-bold">Lịch Sử Đặt Sân</h1>
+<h1 class="h3 mb-4 fw-bold">Lịch Sử Hóa Đơn</h1>
 
 <div class="card shadow-sm border-0">
 

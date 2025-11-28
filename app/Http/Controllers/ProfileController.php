@@ -35,7 +35,7 @@ class ProfileController extends Controller
         // --- VALIDATION (Xác thực dữ liệu) ---
         $validatedData = $request->validate([
             'fullname' => 'required|string|max:100',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|min:10',
             'address' => 'nullable|string|max:255',
             'CCCD' => ['nullable', 'string', 'max:50', Rule::unique('users', 'CCCD')->ignore($user->user_id, 'user_id')],
             'email' => ['required', 'string', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user->user_id, 'user_id')],

@@ -69,7 +69,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="phone" class="form-label">Số điện thoại</label>
                                 <input type="tel" class="form-control" id="phone" name="phone"
-                                       value="{{ old('phone', $user->phone) }}">
+                                       value="{{ old('phone', $user->phone) }}" required>
                             </div>
                              <div class="col-md-6 mb-3">
                                 <label for="CCCD" class="form-label">Số CCCD</label>
