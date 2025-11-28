@@ -329,13 +329,22 @@ class AdminController extends Controller
     }
 
     //Hiển thị trang Quản lý Cơ sở (Doanh nghiệp)
-    public function manageFacilities()
+    public function manageFacilities(Request $request)
     {
+        $search = $request->input('search');
+
         $facilities = Facilities::with('owner')
+            ->when($search, function ($query) use ($search) {
+                $query->where('facility_name', 'like', "%{$search}%");
+            })
             ->orderBy('status', 'asc')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
-        return view('admin.facilities.index', compact('facilities'));
+
+        // Giữ lại search khi phân trang
+        $facilities->appends(['search' => $search]);
+
+        return view('admin.facilities.index', compact('facilities', 'search'));
     }
 
     //TẠM KHÓA CƠ SỞ
@@ -367,15 +376,21 @@ class AdminController extends Controller
 //KHÁCH HÀNG
 
     // === HIỂN THỊ DANH SÁCH KHÁCH HÀNG ===
-    public function listCustomers()
+    public function listCustomers(Request $request)
     {
-        // Lấy tất cả user có role_id = 5 (Customer)
-        $customers = Users::where('role_id', 5)
-            ->orderBy('fullname', 'asc')
-            ->paginate(15); // Phân trang
+        $search = $request->input('search');
 
-        // Trả về view mới, truyền danh sách khách hàng
-        return view('admin.customers.index', compact('customers'));
+        $customers = Users::where('role_id', 5)
+            ->when($search, function ($query) use ($search) {
+                $query->where('fullname', 'like', "%{$search}%");
+            })
+            ->orderBy('fullname', 'asc')
+            ->paginate(15);
+
+        // Giữ search khi phân trang
+        $customers->appends(['search' => $search]);
+
+        return view('admin.customers.index', compact('customers', 'search'));
     }
 
     // ===  HIỂN THỊ FORM SỬA KHÁCH HÀNG ===

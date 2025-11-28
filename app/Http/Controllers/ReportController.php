@@ -76,16 +76,25 @@ class ReportController extends Controller
         $currentData = $this->calculateKPI($ownerId, $dateRange, $ownerFacilityId, $courtId);
         $previousData = $this->calculateKPI($ownerId, $previousRange, $ownerFacilityId, $courtId);
 
-        $kpiData = [
-            'revenue' => ['value' => $currentData['revenue'], 'change' => $this->calculateChange($currentData['revenue'], $previousData['revenue'])],
-            'bookings' => ['value' => $currentData['bookings'], 'change' => $this->calculateChange($currentData['bookings'], $previousData['bookings'])],
-            'bookings_individual' => ['value' => $currentData['bookings_individual'], 'change' => $this->calculateChange($currentData['bookings_individual'], $previousData['bookings_individual'] ?? 0)], // Đặt lẻ
-            'bookings_contract' => ['value' => $currentData['bookings_contract'], 'change' => $this->calculateChange($currentData['bookings_contract'], $previousData['bookings_contract'] ?? 0)], // Hợp đồng
-            'utilization' => ['value' => $currentData['utilization'], 'change' => $this->calculateChange($currentData['utilization'], $previousData['utilization'])],
-            'customers' => ['value' => $currentData['customers'], 'change' => $this->calculateChange($currentData['customers'], $previousData['customers'])],
-            'avgPrice' => ['value' => $currentData['avgPrice'], 'change' => $this->calculateChange($currentData['avgPrice'], $previousData['avgPrice'])],
-            'growth' => ['value' => $this->calculateChange($currentData['revenue'], $previousData['revenue']), 'change' => 0]
-        ];
+        $status = DB::table('facilities')->where('facility_id',$ownerFacilityId)->first();
+
+        if($status->status == 'đã duyệt')
+        {
+            $kpiData = [
+                'revenue' => ['value' => $currentData['revenue'], 'change' => $this->calculateChange($currentData['revenue'], $previousData['revenue'])],
+                'bookings' => ['value' => $currentData['bookings'], 'change' => $this->calculateChange($currentData['bookings'], $previousData['bookings'])],
+                'bookings_individual' => ['value' => $currentData['bookings_individual'], 'change' => $this->calculateChange($currentData['bookings_individual'], $previousData['bookings_individual'] ?? 0)], // Đặt lẻ
+                'bookings_contract' => ['value' => $currentData['bookings_contract'], 'change' => $this->calculateChange($currentData['bookings_contract'], $previousData['bookings_contract'] ?? 0)], // Hợp đồng
+                'utilization' => ['value' => $currentData['utilization'], 'change' => $this->calculateChange($currentData['utilization'], $previousData['utilization'])],
+                'customers' => ['value' => $currentData['customers'], 'change' => $this->calculateChange($currentData['customers'], $previousData['customers'])],
+                'avgPrice' => ['value' => $currentData['avgPrice'], 'change' => $this->calculateChange($currentData['avgPrice'], $previousData['avgPrice'])],
+                'growth' => ['value' => $this->calculateChange($currentData['revenue'], $previousData['revenue']), 'change' => 0]
+            ];
+        }
+        else 
+        {
+            $kpiData = null;
+        }
 
         return response()->json($kpiData);
     }

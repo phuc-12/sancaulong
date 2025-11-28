@@ -49,7 +49,7 @@
                 <a href="{{ route('admin.customers.index') }}"
                     class="nav-link {{ request()->routeIs('admin.customers.index') ? 'active' : '' }}">
                     <i class="bi bi-people-fill"></i>
-                    Quản lý Khách Hàng
+                    Quản lý Tài Khoản
                 </a>
             </li>
             <!-- <li>

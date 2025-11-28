@@ -3,6 +3,22 @@
 @section('customers_content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">Quản lý Khách hàng</h1>
+
+        <form action="{{ route('admin.customers.index') }}" method="GET" class="d-flex">
+            <input type="text" name="search" value="{{ $search ?? '' }}"
+                class="form-control form-control-sm me-2"
+                placeholder="Tìm theo tên khách hàng...">
+
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-search"></i> Tìm
+            </button>
+
+            @if(!empty($search))
+                <a href="{{ route('admin.customers.index') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            @endif
+        </form>
     </div>
 
     {{-- Hiển thị thông báo (Thành công/Lỗi) --}}
