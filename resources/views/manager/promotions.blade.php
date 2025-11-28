@@ -2,6 +2,7 @@
 
 @section('manager_content')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 fw-bold">Quản lý khuyến mãi / Sự kiện</h1>
 
@@ -118,11 +119,10 @@
                             {{-- Nút Delete --}}
                             <form action="{{ route('manager.promotions.delete', $promo->promotion_id) }}"
                                 method="POST"
-                                class="d-inline"
-                                onsubmit="return confirm('Bạn có chắc muốn xoá chương trình này?')">
+                                class="d-inline delete-form">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </form>
@@ -304,4 +304,31 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            let form = this.closest('.delete-form');
+
+            Swal.fire({
+                title: 'Bạn có chắc chắn xoá?',
+                text: "Hành động này không thể hoàn tác!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xoá ngay',
+                cancelButtonText: 'Huỷ'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+
+        });
+    });
+
+});
+</script>
 @endsection

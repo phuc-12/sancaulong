@@ -281,6 +281,13 @@ class AuthController extends Controller
                 ->withErrors(['email' => 'Tài khoản không tồn tại']);
         }
 
+        // 🔥 Kiểm tra trạng thái tài khoản
+        if ($checkUser->status == 0) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Tài khoản của bạn đã bị khóa.']);
+        }
+
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
