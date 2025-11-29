@@ -304,8 +304,9 @@ class HomeController extends Controller
             ->select('invoice_id')
             ->where('invoice_detail_id', $invoiceDetailId)
             ->first();
-        $total_final = $request->total_final;
         
+        $total_final = $request->total_final;
+        dd($total_final);
         
         DB::table(table: 'invoices')->insert([
             'invoice_id' => $invoice_details->invoice_id,
@@ -1077,16 +1078,15 @@ class HomeController extends Controller
         $invoice_detail_id = $request->invoice_detail_id;
         $invoices = DB::table('invoices')
         ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
-        ->join('promotions','promotions.promotion_id','=','invoices.promotion_id')
+        ->leftJoin('promotions', 'promotions.promotion_id', '=', 'invoices.promotion_id') // <<< sửa ở đây
         ->where('invoice_details.invoice_detail_id', $invoice_detail_id)
         ->select(
             'invoices.*',
             'invoices.final_amount as final_amount',
             'promotions.*',
             'promotions.value as value',
-            'promotions.description as description',
-
-            )
+            'promotions.description as description'
+        )
         ->first();
 
         // dd($invoices);
