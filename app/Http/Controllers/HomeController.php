@@ -306,7 +306,6 @@ class HomeController extends Controller
             ->first();
         
         $total_final = $request->total_final;
-        dd($total_final);
         
         DB::table(table: 'invoices')->insert([
             'invoice_id' => $invoice_details->invoice_id,

@@ -82,7 +82,12 @@
 										<i class="feather-check-circle"></i> Lịch cố định
 									</button>
 								</form>
-
+							
+							</li>
+							<li class="nav-item">
+								<a href="{{ route('chat.history') }}" class="nav-link btn btn-outline-light btn-sm">
+									<i class="feather-message-circle"></i> Lịch sử Chat
+								</a>
 							</li>
 							<li class="nav-item dropdown">
 								<a class="nav-link d-flex align-items-center text-white" href="#" id="userDropdown"
@@ -261,6 +266,7 @@
 	@yield('search_content')
 	@yield('invoice_details_content')
 	@yield('contract_details_content')
+	@yield('chat_history_content')
 	{{-- -------------------------------------- --}}
 
 	<footer class="footer">
