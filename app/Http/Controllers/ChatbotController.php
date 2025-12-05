@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookings;
+use App\Models\ChatHistory;
 use App\Models\Facilities;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -23,32 +24,134 @@ class ChatbotController extends Controller
         $this->booking = $booking;
     }
 
-    public function handle(): void
-    {
-        DriverManager::loadDriver(\BotMan\Drivers\Web\WebDriver::class);
-        $botman = BotManFactory::create([]);
-
-        $botman->hears('{message}', function (BotMan $bot, $message) {
-            foreach ($this->processMessage($message) as $reply) {
-                $bot->reply($reply);
-            }
-        });
-
-        $botman->listen();
-    }
-
     public function chat(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'message' => 'required|string',
         ]);
 
+        // 1. Xử lý tin nhắn để lấy phản hồi
         $responses = $this->processMessage($validated['message'], $request);
+
+        // 2. Lưu vào DB (Đã sửa để lưu cả khách chưa đăng nhập)
+        $this->saveChatHistory($validated['message'], $responses, $request);
 
         return response()->json([
             'reply' => $responses[0] ?? '😅 Xin lỗi, tôi chưa hiểu ý bạn.',
             'replies' => $responses,
         ]);
+    }
+
+    /**
+     * SỬA ĐỔI: Lưu lịch sử chat (Gộp Message và Reply vào 1 dòng)
+     */
+    private function saveChatHistory(string $message, $responses, Request $request = null): void
+    {
+        try {
+            $nluData = $this->nlu->analyze($message);
+            $userId = auth()->id();
+
+            // Nếu responses không phải là mảng, chuyển nó thành mảng để đồng bộ
+            if (!is_array($responses)) {
+                $responses = [$responses];
+            }
+
+            // Lưu vào DB
+            // Nhờ bước 1 (protected $casts), Laravel sẽ tự động json_encode $responses
+            ChatHistory::create([
+                'user_id' => $userId,
+                'message' => $message,
+                'reply' => $responses,
+                'intent' => $nluData['intent'] ?? 'unknown',
+                'entities' => $nluData['entities'] ?? [],
+                'session_key' => session()->getId(),
+                'ip' => $request ? $request->ip() : null,
+                'user_agent' => $request ? $request->userAgent() : null,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Lỗi lưu lịch sử chat: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Lấy lịch sử chat của user
+     */
+    public function getChatHistory(Request $request): JsonResponse
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn cần đăng nhập để xem lịch sử chat.'
+            ], 401);
+        }
+
+        try {
+            // Lấy 50 tin nhắn gần nhất
+            $histories = ChatHistory::forUser(auth()->id())
+                ->recent(50)
+                ->get()
+                ->reverse() // Đảo ngược để tin cũ nhất ở trên
+                ->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => $histories
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi khi tải lịch sử chat.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Xóa lịch sử chat của user
+     */
+    public function clearChatHistory(Request $request): JsonResponse
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn cần đăng nhập.'
+            ], 401);
+        }
+
+        try {
+            ChatHistory::where('user_id', auth()->id())->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa lịch sử chat.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi khi xóa lịch sử.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Hiển thị trang lịch sử chat
+     */
+    public function showChatHistory()
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        // Lấy 50 cặp hội thoại gần nhất
+        $histories = ChatHistory::forUser(auth()->id())
+            ->recent(50)
+            ->get()
+            ->reverse()
+            ->values();
+
+        return view('chat.history', compact('histories'));
     }
 
     private function processMessage(string $message, Request $request = null): array
@@ -68,21 +171,14 @@ class ChatbotController extends Controller
         }
 
         // XỬ LÝ "CÒN SÂN KHÁC KHÔNG"
-        // Kiểm tra nếu user hỏi "còn sân khác", "cơ sở khác"
         if ($intent === 'find_other_facilities') {
-            // Nếu KHÔNG CÓ thời gian trong câu hỏi hiện tại
             if (!$nluData['entities']['time'] || !$nluData['entities']['date']) {
-                // Lấy context từ session (từ lần hỏi trước)
                 $lastContext = session('chatbot_last_query_context');
 
                 if ($lastContext && isset($lastContext['time']) && isset($lastContext['date'])) {
-                    // Tự động dùng lại thời gian và ngày từ context
                     $nluData['entities']['time'] = $lastContext['time'];
                     $nluData['entities']['date'] = $lastContext['date'];
-
-                    // KHÔNG GỬI MESSAGE RIÊNG - Sẽ được xử lý trong buildOtherFacilitiesResponse
                 } else {
-                    // Không có context trước đó
                     if ($request) {
                         session(['chatbot_finding_other_facilities' => true]);
                     }
@@ -92,7 +188,6 @@ class ChatbotController extends Controller
             }
         }
 
-        // Nếu đang trong flow tìm cơ sở khác (đã set flag trước đó)
         if (
             $isFindingOtherFacilities && $nluData['entities']['time'] &&
             ($intent === 'check_availability' || $intent === 'unknown')
@@ -640,9 +735,9 @@ HTML;
         foreach ($facilities as $index => $facility) {
             $msg .= ($index + 1) . ". <b>{$facility['facility_name']}</b><br>";
             if (!empty($facility['address'])) {
-                $msg .= "   📌 {$facility['address']}<br>";
+                $msg .= "   📌 {$facility['address']}<br>";
             }
-            $msg .= "   ✅ Còn: " . implode(', ', $facility['available_courts']) . "<br><br>";
+            $msg .= "   ✅ Còn: " . implode(', ', $facility['available_courts']) . "<br><br>";
         }
 
         $msg .= "📍 Bạn muốn đặt tại cơ sở nào?<br>VD: Nhập tên cơ sở hoặc số thứ tự";
@@ -929,12 +1024,12 @@ HTML;
         foreach ($facilities as $facility) {
             $msg .= "📍 <b>" . $facility['facility_name'] . "</b><br>";
             if (!empty($facility['address'])) {
-                $msg .= "   📌 Địa chỉ: " . $facility['address'] . "<br>";
+                $msg .= "   📌 Địa chỉ: " . $facility['address'] . "<br>";
             }
-            $msg .= "   ✅ Còn trống: <b>" . implode(', ', $facility['available_courts']) . "</b> (" . $facility['count'] . " sân)<br>";
+            $msg .= "   ✅ Còn trống: <b>" . implode(', ', $facility['available_courts']) . "</b> (" . $facility['count'] . " sân)<br>";
 
             if (!empty($facility['booking_data'])) {
-                $msg .= "   " . $this->generateBookingButton($facility['booking_data']);
+                $msg .= "   " . $this->generateBookingButton($facility['booking_data']);
             }
 
             $msg .= "<br>";
