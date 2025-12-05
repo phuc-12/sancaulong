@@ -82,7 +82,7 @@
 										<i class="feather-check-circle"></i> Lịch cố định
 									</button>
 								</form>
-							
+
 							</li>
 							<li class="nav-item">
 								<a href="{{ route('chat.history') }}" class="nav-link btn btn-outline-light btn-sm">
@@ -253,31 +253,34 @@
 	</script>
 
 	{{-- -------------------------------------- --}}
-	@yield('index_content')
-	@yield('listing-grid_content')
-	@yield('venue-details_content')
-	@yield('payments_content')
-	@yield('login')
-	@yield('payment_content')
-	{{-- @yield('contract_content')
-	@yield('payment_contract_content') --}}
-	@yield('my_bookings_content')
-	@yield('my_contracts_content')
-	@yield('search_content')
-	@yield('invoice_details_content')
-	@yield('contract_details_content')
-	@yield('chat_history_content')
+
+	<main id="main-content">
+		@yield('index_content')
+		@yield('listing-grid_content')
+		@yield('venue-details_content')
+		@yield('payments_content')
+		@yield('login')
+		@yield('payment_content')
+		{{-- @yield('contract_content')
+		@yield('payment_contract_content') --}}
+		@yield('my_bookings_content')
+		@yield('my_contracts_content')
+		@yield('search_content')
+		@yield('invoice_details_content')
+		@yield('contract_details_content')
+		@yield('chat_history_content')
+	</main>
 	{{-- -------------------------------------- --}}
 
 	<footer class="footer">
 		<div class="container">
 			<!-- Footer Join -->
-			<div class="footer-join aos" data-aos="fade-up">
+			<!-- <div class="footer-join aos" data-aos="fade-up">
 				<h2>We Welcome Your Passion And Expertise</h2>
 				<p class="sub-title">Join our empowering sports community today and grow with us.</p>
 				<a href="register.php" class="btn btn-primary"><i class="feather-user-plus"></i> Tham gia cùng chúng
 					tôi</a>
-			</div>
+			</div> -->
 			<!-- /Footer Join -->
 
 			<!-- Footer Top -->
@@ -481,7 +484,6 @@
 	<!-- /Footer -->
 	<!-- Chatbot Widget -->
 	<button id="chatbot-button" style="padding bottom: 50px;">💬</button>
-
 	<div id="chatbot-box">
 		<div id="chat-header">Chatbot Sân Cầu Lông</div>
 		<div id="chat-body"></div>
@@ -508,8 +510,6 @@
 		</svg>
 	</div>
 	<!-- scrollToTop end -->
-
-
 
 	<!-- jQuery -->
 	<script src="{{ asset('js/jquery-3.7.1.min.js') }}" type=""></script>
@@ -565,14 +565,14 @@
 		const send = document.getElementById('chat-send');
 		const quickActions = document.getElementById('quick-actions');
 		const quickActionBtns = document.querySelectorAll('.quick-action-btn');
-		
+
 		// Biến để kiểm tra đã hiển thị lời chào chưa
 		let hasShownGreeting = false;
 
 		btn.addEventListener('click', () => {
 			const isOpening = box.style.display !== 'flex';
 			box.style.display = isOpening ? 'flex' : 'none';
-			
+
 			// Nếu đang mở chatbot và chưa hiển thị lời chào
 			if (isOpening && !hasShownGreeting) {
 				// Hiển thị lời chào tự động
@@ -614,7 +614,7 @@
 
 			addMessage(msg, 'user');
 			input.value = '';
-			
+
 			// Ẩn quick actions khi người dùng gửi tin nhắn
 			quickActions.style.display = 'none';
 
@@ -631,7 +631,7 @@
 
 				const data = await res.json();
 				addMessage(data.reply ?? 'Xin lỗi, tôi không nhận được phản hồi.', 'bot');
-				
+
 				// Hiển thị lại quick actions sau khi chatbot trả lời (nếu cần)
 				// Có thể bỏ comment dòng dưới nếu muốn hiển thị lại nút
 				// setTimeout(() => { quickActions.style.display = 'flex'; }, 500);
@@ -640,6 +640,22 @@
 				addMessage('Xin lỗi, chatbot đang gặp sự cố. Vui lòng thử lại sau.', 'bot');
 			}
 		}
+
+		async function loadHistory() {
+			const res = await fetch("/chat/history");
+			const data = await res.json();
+
+			if (data.success) {
+				data.data.forEach(item => {
+					if (item.message) {
+						addMessageToUI(item.message, "user");
+					} else {
+						item.reply.forEach(r => addMessageToUI(r, "bot"));
+					}
+				});
+			}
+		}
+
 
 		send.addEventListener('click', sendMessage);
 

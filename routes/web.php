@@ -27,7 +27,7 @@ Route::prefix('/')->controller(HomeController::class)
         Route::get('/', 'index')->name('trang_chu');
         Route::get('/listing-grid', 'listing_grid')->name('danh_sach_san');
         Route::get('/load-more-san', 'loadMoreSan')->name('load.more.san');
-        Route::get('/venue',  'show')->name('chi_tiet_san_get');
+        Route::get('/venue', 'show')->name('chi_tiet_san_get');
         Route::post('/venue', 'show')->name('chi_tiet_san');
         Route::post('/thanh-toan', 'payments')->name('thanh.toan');
         // Route::get('/thanh-toan', function () {
@@ -229,11 +229,11 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
         ->name('promotions.update');
     Route::delete('/promotions/delete/{id}', [ManagerController::class, 'promotions_delete'])
 
-    ->name('promotions.delete');
+        ->name('promotions.delete');
 
-    Route::get('/list_Contracts', [ManagerController::class,'list_Contracts'])->name('lich_co_dinh');
-    Route::post('/contract_details', [ManagerController::class,'contract_details'])->name('chi_tiet_ct');
-    Route::post('/cancel_contract', [ManagerController::class,'cancel_contract'])->name('cancel_contract');
+    Route::get('/list_Contracts', [ManagerController::class, 'list_Contracts'])->name('lich_co_dinh');
+    Route::post('/contract_details', [ManagerController::class, 'contract_details'])->name('chi_tiet_ct');
+    Route::post('/cancel_contract', [ManagerController::class, 'cancel_contract'])->name('cancel_contract');
 
 });
 
@@ -301,4 +301,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/chatbot/payment/{booking_id}', [ChatbotController::class, 'showPaymentPage'])
         ->name('chatbot.payment');
 
+    Route::get('/chat-history', [ChatbotController::class, 'showChatHistory'])
+        ->name('chat.history');
+
+    Route::get('/api/chat-history', [ChatbotController::class, 'getChatHistory'])
+        ->name('chat.history.api');
+
+    Route::delete('/chat-history', [ChatbotController::class, 'clearChatHistory'])
+        ->name('chat.history.clear');
 });
+
