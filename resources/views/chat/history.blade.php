@@ -15,6 +15,7 @@
         /* Đẩy nội dung xuống để không bị Header che mất */
         .history-page-wrapper {
             padding-top: 90px;
+            margin-bottom: 200px;
             height: 500px;
             padding-bottom: 60px;
             background-color: #f8f9fa;
