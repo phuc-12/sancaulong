@@ -89,7 +89,7 @@ class StaffController extends Controller
             'long_term_contracts.issue_date as issue_date',
             'long_term_contracts.final_amount as final_amount'
         )
-        ->distinct('long_term_contracts.contract_id')   // ⬅ Cực quan trọng
+        ->distinct('long_term_contracts.contract_id')   
         ->orderBy('long_term_contracts.contract_id', 'desc')
         ->paginate(10);
 
@@ -111,11 +111,13 @@ class StaffController extends Controller
             $mycontract_details[$ct->invoice_detail_id] = $details;
         }
         
+        $facilityName = DB::table("facilities")->where('facility_id',$facilityId)->first();
         return view('staff.index', [
             'invoices' => $invoices,
             'mybooking_details' => $mybooking_details,
             'long_term_contracts' => $long_term_contracts,
             'mycontract_details' => $mycontract_details,
+            'facilityName' => $facilityName->facility_name,
         ]);
     }
 

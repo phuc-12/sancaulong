@@ -1,7 +1,7 @@
 @extends('layouts.manager')
 
 @section('manager_content')
-    {{-- ✅ THÊM META TAGS ĐỂ TRUYỀN URLS --}}
+
     <meta name="api-courts" content="{{ route('manager.api.courts') }}">
     <meta name="api-kpi" content="{{ route('manager.api.kpi') }}">
     <meta name="api-hourly" content="{{ route('manager.api.hourly') }}">
@@ -54,7 +54,15 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 text-gray-800">Dashboard Quản lý</h1>
         </div>
-
+        {{-- THÔNG TIN CƠ SỞ --}}
+        @if(isset($facilityName))
+        <div class="facility-info">
+            <div class="facility-name">
+                <i class="bi bi-building"></i>
+                <span>{{ $facilityName }}</span>
+            </div>
+        </div>
+        @endif
         {{-- 1. BỘ LỌC --}}
         <div class="filter-section">
             <div class="d-flex flex-wrap gap-3 align-items-center">
@@ -139,7 +147,6 @@
     <script>
         console.log('🚀 Script đã load!');
 
-        // ✅ LẤY API URLs TỪ META TAGS
         const API = {
             courts: document.querySelector('meta[name="api-courts"]').content,
             kpi: document.querySelector('meta[name="api-kpi"]').content,
