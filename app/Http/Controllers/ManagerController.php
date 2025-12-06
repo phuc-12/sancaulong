@@ -19,13 +19,15 @@ class ManagerController extends Controller
     // Trang Tổng quan của Quản lý sân
     public function index()
     {
+        
         $manager = Auth::user();
         if (!$manager || !$manager->facility_id) {
             abort(403, 'Tài khoản quản lý chưa được gán cơ sở.');
         }
         // Truyền ID sang view để JS dùng
         $facilityId = $manager->facility_id;
-        return view('manager.index', compact('facilityId'));
+        $facilityName = DB::table("facilities")->where('facility_id',$facilityId)->first();
+        return view('manager.index', ['facilityId','facilityName'=>$facilityName->facility_name]);
     }
 
     // 2. API: LẤY DANH SÁCH SÂN (Cho Dropdown)

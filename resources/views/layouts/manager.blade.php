@@ -73,6 +73,36 @@
             margin-right: 0.5rem;
         }
 
+        /* Style cho tên cơ sở */
+        .facility-info {
+            background: linear-gradient(135deg, #198754 0%, #157347 100%);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+        }
+
+        .facility-info .facility-name {
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .facility-info .facility-name i {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .facility-info .facility-address {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            margin-bottom: 0;
+            padding-left: 1.7rem;
+        }
+
         #main-content {
             margin-left: var(--sidebar-width);
             padding: 2rem;
