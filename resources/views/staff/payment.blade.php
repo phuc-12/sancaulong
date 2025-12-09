@@ -53,6 +53,8 @@
                                 <th>Khách hàng</th>
                                 <th>Ngày đặt</th>
                                 <th>Tổng tiền</th>
+                                <th>Ngày áp dụng</th>
+                                <th>Sử dụng</th>
                                 <th>Tình trạng</th>
                                 <th></th>
                             </tr>
