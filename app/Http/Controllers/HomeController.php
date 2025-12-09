@@ -32,10 +32,11 @@ class HomeController extends Controller
 
     public function listing_grid(Request $request)
     {
+        //Lấy tổng giá từng sân con
         $total_count = Facilities::where('status', 'đã duyệt')->count();
         $offset = $request->get('offset', 0);
         $limit = 9;
-
+        //Lấy danh sách sân
         $danhsachsan = Facilities::with('courtPrice')
             ->where('status', 'đã duyệt')
             ->skip($offset)
@@ -116,7 +117,6 @@ class HomeController extends Controller
             $bookingsData[$b->booking_date][$b->time_slot_id][$b->court_id] = true;
         }
 
-
         // Từ điển chuyển đổi thứ sang tiếng Việt
         $thuTiengViet = [
             'Mon' => 'Thứ hai',
@@ -173,7 +173,7 @@ class HomeController extends Controller
         } else {
             $slots[] = $slotInfo;
         }
-
+        //Lưu session slots
         session(['selected_slots' => $slots]);
         return response()->json($slots);
     }
