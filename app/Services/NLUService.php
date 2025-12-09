@@ -33,6 +33,13 @@ class NLUService
                 ]
             ];
         }
+        // Kiểm tra giá tương tự
+        if (preg_match('/(tương tự|giống|ngang.*giá|tầm.*giá|như.*vậy|cỡ.*đó)/', $text)) {
+            return [
+                'intent' => 'find_similar_price',
+                'entities' => []
+            ];
+        }
 
         // Kiểm tra giá 
         if (preg_match('/(giá|price|bao nhiêu|chi phí|giá cả|giá tiền)/', $text)) {
@@ -40,6 +47,20 @@ class NLUService
                 'intent' => 'check_price',
                 'entities' => [
                     'facility_name' => $this->extractFacilityName($text)
+                ]
+            ];
+        }
+        // Regex nhận dạng giá tiền
+        if (preg_match('/(\d+(?:k|000)?)/', $text, $m)) {
+
+            // convert: 100k → 100000
+            $price = strtolower($m[1]);
+            $price = str_replace(["k"], ["000"], $price);
+
+            return [
+                'intent' => 'input_price',
+                'entities' => [
+                    'price' => (int) $price
                 ]
             ];
         }

@@ -42,7 +42,7 @@ class Facilities extends Model
         'is_active' => 'boolean',
         'need_reapprove' => 'boolean',
     ];
-    
+
     public function courtPrice()
     {
         return $this->hasOne(Court_prices::class, 'facility_id', 'facility_id');
@@ -69,6 +69,10 @@ class Facilities extends Model
     {
         return $this->hasMany(Bookings::class, 'facility_id', 'facility_id');
     }
-
+    public function latestPrice()
+    {
+        return $this->hasOne(Court_prices::class, 'facility_id')
+            ->orderBy('effective_date', 'desc');
+    }
 }
 

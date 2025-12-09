@@ -207,49 +207,103 @@ class ChatbotController extends Controller
                 break;
 
             case 'check_price':
-                $facilityName = $nluData['entities']['facility_name'] ?? null;
+    $facilityName = $nluData['entities']['facility_name'] ?? null;
 
-                if (!$facilityName) {
-                    session(['chatbot_checking_price' => true]);
-                    $responses[] = 'Bạn muốn xem giá sân ở cơ sở nào? Vui lòng cho tôi biết tên cơ sở.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
-                } else {
-                    $priceInfo = $this->booking->getPriceInfo($facilityName);
+    if (!$facilityName) {
+        session(['chatbot_checking_price' => true]);
+        $responses[] = 'Bạn muốn xem giá sân ở cơ sở nào? Vui lòng cho tôi biết tên cơ sở.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
+    } else {
+        $priceInfo = $this->booking->getPriceInfo($facilityName);
 
-                    if ($priceInfo === null) {
-                        session(['chatbot_checking_price' => true]);
-                        $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng kiểm tra lại tên cơ sở hoặc thử tên khác.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
-                    } else {
-                        if (is_array($priceInfo)) {
-                            $responses[] = $priceInfo['message'] . $this->generateBookingButton($priceInfo['booking_data']);
+        if ($priceInfo === null) {
+            session(['chatbot_checking_price' => true]);
+            $responses[] = '❌ Không tìm thấy cơ sở "<b>' . htmlspecialchars($facilityName) . '</b>".<br>Vui lòng kiểm tra lại tên cơ sở hoặc thử tên khác.<br>VD: Thủ Đức, Quận 1, Hóc môn...';
+        } else {
 
-                            if (!empty($priceInfo['similar_facilities'])) {
-                                $similarMsg = "<br>💡 <b>Các cơ sở có giá tương tự:</b><br>";
-                                foreach ($priceInfo['similar_facilities'] as $similar) {
-                                    $similarMsg .= "📍 <b>{$similar['facility_name']}</b> - ";
-                                    $similarMsg .= "Giá: " . number_format($similar['default_price'], 0, ',', '.') . "đ";
-                                    if (!empty($similar['address'])) {
-                                        $similarMsg .= " ({$similar['address']})";
-                                    }
-                                    $similarMsg .= $this->generateBookingButton([
-                                        'facility_id' => $similar['facility_id'],
-                                        'facility_name' => $similar['facility_name']
-                                    ]);
-                                    $similarMsg .= "<br>";
-                                }
-                                $responses[] = $similarMsg;
-                            }
-                        } else {
-                            $responses[] = $priceInfo;
+            // ----------------------------
+            // 1️⃣ LƯU SESSION CHÍNH XÁC
+            // ----------------------------
+            if (is_array($priceInfo)) {
+
+                $facilityId = $priceInfo['booking_data']['facility_id'];
+                $basePrice  = $priceInfo['current_price']; // Giá chuẩn để tìm sân tương tự
+
+                session([
+                    'last_viewed_facility_id' => $facilityId,
+                    'last_viewed_price' => $basePrice
+                ]);
+
+                // HIỂN THỊ GIÁ SÂN CHÍNH
+                $responses[] = $priceInfo['message'] 
+                    . $this->generateBookingButton($priceInfo['booking_data']);
+
+                // HIỂN THỊ CÁC SÂN TƯƠNG TỰ
+                if (!empty($priceInfo['similar_facilities'])) {
+
+                    $similarMsg = "<br>💡 <b>Các sân có giá tương tự (" 
+                        . number_format($basePrice, 0, ',', '.') . "đ):</b><br>";
+
+                    foreach ($priceInfo['similar_facilities'] as $sim) {
+
+                        $similarMsg .= "📍 <b>{$sim['facility_name']}</b> - "
+                            . number_format($sim['default_price'], 0, ',', '.') . "đ";
+
+                        if (!empty($sim['address'])) {
+                            $similarMsg .= " ({$sim['address']})";
                         }
-                        session()->forget('chatbot_checking_price');
+
+                        $similarMsg .= $this->generateBookingButton([
+                            'facility_id' => $sim['facility_id'],
+                            'facility_name' => $sim['facility_name']
+                        ]);
+
+                        $similarMsg .= "<br>";
+                    }
+
+                    $responses[] = $similarMsg;
+                }
+
+            } else {
+                $responses[] = $priceInfo;
+            }
+
+            session()->forget('chatbot_checking_price');
+        }
+    }
+
+    if ($request) {
+        session()->forget('chatbot_finding_other_facilities');
+    }
+    break;
+
+
+            // === Xử lý tìm sân tương tự ===
+            case 'find_similar_price':
+                $lastId = session('last_viewed_facility_id');
+                $lastPrice = session('last_viewed_price');
+
+                if (!$lastId || !$lastPrice) {
+                    $responses[] = '😅 Bạn cần xem giá một sân cụ thể trước, sau đó mới hỏi tìm sân tương tự được ạ.';
+                } else {
+                    // Gọi hàm public mới sửa bên Service
+                    $similars = $this->booking->findSimilarPriceFacilities($lastId, $lastPrice);
+
+                    if (empty($similars)) {
+                        $responses[] = '❌ Không tìm thấy sân nào khác có mức giá tương tự tầm ' . number_format($lastPrice) . 'đ.';
+                    } else {
+                        $msg = "💡 <b>Các sân có giá tương tự (" . number_format($lastPrice) . "đ):</b><br><br>";
+                        foreach ($similars as $sim) {
+                            $msg .= "📍 <b>{$sim['facility_name']}</b> - " . number_format($sim['default_price']) . "đ";
+                            $msg .= $this->generateBookingButton([
+                                'facility_id' => $sim['facility_id'],
+                                'facility_name' => $sim['facility_name']
+                            ]);
+                            $msg .= "<br><br>";
+                        }
+                        $responses[] = $msg;
                     }
                 }
-
-                if ($request) {
-                    session()->forget('chatbot_finding_other_facilities');
-                }
                 break;
-
             case 'view_booking':
                 $responses[] = $this->buildBookingHistoryResponse();
                 $this->clearAllSessions($request);

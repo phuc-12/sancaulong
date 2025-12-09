@@ -396,6 +396,7 @@ class BookingService
             return null;
         }
 
+        // Tìm cơ sở theo tên
         $facility = Facilities::where('facility_name', 'like', "%$facilityName%")
             ->where('status', 'đã duyệt')
             ->where('is_active', true)
@@ -405,81 +406,99 @@ class BookingService
             return null;
         }
 
+        // Lấy giá mới nhất
         $price = Court_prices::where('facility_id', $facility->facility_id)
             ->orderBy('effective_date', 'desc')
             ->first();
 
-        $defaultPrice = $price ? $price->default_price : ($facility->default_price ?? 0);
-        $specialPrice = $price ? $price->special_price : ($facility->special_price ?? 0);
+        $defaultPrice = $price->default_price ?? $facility->default_price ?? 0;
+        $specialPrice = $price->special_price ?? $facility->special_price ?? 0;
 
         if ($defaultPrice == 0 && $specialPrice == 0) {
             return "Chưa có thông tin giá cho cơ sở này.";
         }
 
-        // DATA ĐỂ POST
+        // Dữ liệu để nút đặt sân
         $bookingData = [
             'facility_id' => $facility->facility_id,
             'facility_name' => $facility->facility_name,
         ];
 
+        // Message giá
         $msg = "💰 <b>Giá tại {$facility->facility_name}:</b><br>" .
             "Giá sân thường: " . number_format($defaultPrice, 0, ',', '.') . "đ<br>" .
             "Giá giờ vàng/Lễ: " . number_format($specialPrice, 0, ',', '.') . "đ<br><br>";
 
-        // Trả về array để controller xử lý
+        // 🔥 Tìm các sân có giá tương tự
+        $similarFacilities = $this->findSimilarPriceFacilities(
+            $facility->facility_id,
+            $defaultPrice
+        );
+
         return [
             'message' => $msg,
             'booking_data' => $bookingData,
-            'similar_facilities' => $this->findSimilarPriceFacilities($facility->facility_id, $defaultPrice)
+            'current_price' => $defaultPrice,
+            'similar_facilities' => $similarFacilities
         ];
     }
 
     // Tìm các cơ sở có giá tương tự
-    private function findSimilarPriceFacilities($excludeFacilityId, $targetPrice, $limit = 3)
-    {
-        if ($targetPrice == 0) {
-            return [];
-        }
-
-        $percentageRange = $targetPrice * 0.25;
-        $minimumRange = 30000;
-        $priceRange = max($percentageRange, $minimumRange);
-
-        $minPrice = $targetPrice - $priceRange;
-        $maxPrice = $targetPrice + $priceRange;
-
-        $facilities = Facilities::where('status', 'đã duyệt')
-            ->where('is_active', true)
-            ->where('facility_id', '!=', $excludeFacilityId)
-            ->get();
-
-        $similarFacilities = [];
-
-        foreach ($facilities as $facility) {
-            $price = Court_prices::where('facility_id', $facility->facility_id)
-                ->orderBy('effective_date', 'desc')
-                ->first();
-
-            $facilityPrice = $price ? $price->default_price : ($facility->default_price ?? 0);
-
-            if ($facilityPrice > 0 && $facilityPrice >= $minPrice && $facilityPrice <= $maxPrice) {
-                $similarFacilities[] = [
-                    'facility_id' => $facility->facility_id,
-                    'facility_name' => $facility->facility_name,
-                    'address' => $facility->address,
-                    'default_price' => $facilityPrice,
-                    'special_price' => $price ? $price->special_price : ($facility->special_price ?? 0),
-                    'price_diff' => abs($facilityPrice - $targetPrice)
-                ];
-            }
-        }
-
-        usort($similarFacilities, function ($a, $b) {
-            return $a['price_diff'] <=> $b['price_diff'];
-        });
-
-        return array_slice($similarFacilities, 0, $limit);
+public function findSimilarPriceFacilities($excludeFacilityId, $targetPrice, $limit = 3)
+{
+    if (!$targetPrice || $targetPrice == 0) {
+        return [];
     }
+
+    // Chênh lệch giá tối đa: ±25% hoặc tối thiểu 30.000đ
+    $percentageRange = $targetPrice * 0.25;
+    $minimumRange = 30000;
+    $priceRange = max($percentageRange, $minimumRange);
+
+    $minPrice = $targetPrice - $priceRange;
+    $maxPrice = $targetPrice + $priceRange;
+
+    // Lấy danh sách cơ sở đã duyệt + active + load sẵn bảng giá mới nhất
+    $facilities = Facilities::where('status', 'đã duyệt')
+        ->where('is_active', true)
+        ->where('facility_id', '!=', $excludeFacilityId)
+        ->with(['latestPrice' => function ($q) {
+            $q->orderBy('effective_date', 'desc');
+        }])
+        ->get();
+
+    $similarFacilities = [];
+
+    foreach ($facilities as $facility) {
+        // Lấy giá mới nhất
+        $facilityPrice = $facility->latestPrice->default_price 
+            ?? ($facility->default_price ?? 0);
+
+        if ($facilityPrice == 0) {
+            continue; // bỏ qua nếu không có giá
+        }
+
+        // Kiểm tra giá nằm trong khoảng
+        if ($facilityPrice >= $minPrice && $facilityPrice <= $maxPrice) {
+
+            $similarFacilities[] = [
+                'facility_id'   => $facility->facility_id,
+                'facility_name' => $facility->facility_name,
+                'address'       => $facility->address,
+                'default_price' => $facilityPrice,
+                'special_price' => $facility->latestPrice->special_price 
+                                    ?? ($facility->special_price ?? 0),
+                'price_diff'    => abs($facilityPrice - $targetPrice)
+            ];
+        }
+    }
+
+    // Sắp xếp theo độ chênh giá gần nhất
+    usort($similarFacilities, fn ($a, $b) => $a['price_diff'] <=> $b['price_diff']);
+
+    return array_slice($similarFacilities, 0, $limit);
+}
+
 
     // FEATURE 3: Lịch sử
     public function getMyBookings($userId)
