@@ -14,9 +14,9 @@
                 <b>{{ $facilityName }}</b>
             </div>
         </div>
-        @endif
+    @endif
+    
     <div class="row g-3">
-
         {{-- Bảng danh sách đặt sân --}}
         <div class="col-lg-6">
             <div class="card shadow-sm border-0">
