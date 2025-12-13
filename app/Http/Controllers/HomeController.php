@@ -57,7 +57,7 @@ class HomeController extends Controller
             ->skip($offset)
             ->take($limit)
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 return [
                     'facility_id' => $item->facility_id,
                     'facility_name' => $item->facility_name,
@@ -216,21 +216,21 @@ class HomeController extends Controller
         }
 
         // ===== Lọc promotions theo ngày đặt sân =====
-        $bookingDates = $slotCollection->pluck('date')->map(function($d) {
+        $bookingDates = $slotCollection->pluck('date')->map(function ($d) {
             return Carbon::createFromFormat('d-m-Y', $d)->format('Y-m-d');
         })->unique();
 
         $promotions = DB::table('promotions')->where('status', 1)
-        ->where('facility_id',$request->input('facility_id'))
-        ->where(function($query) use ($bookingDates) {
-            foreach($bookingDates as $date) {
-                $query->orWhere(function($q) use ($date) {
-                    $q->where('start_date', '<=', $date)
-                    ->where('end_date', '>=', $date);
-                });
-            }
-        })
-        ->get();
+            ->where('facility_id', $request->input('facility_id'))
+            ->where(function ($query) use ($bookingDates) {
+                foreach ($bookingDates as $date) {
+                    $query->orWhere(function ($q) use ($date) {
+                        $q->where('start_date', '<=', $date)
+                            ->where('end_date', '>=', $date);
+                    });
+                }
+            })
+            ->get();
 
         // dd($bookingDates, $promotions);
         // Truyền sang view thanh toán
@@ -250,142 +250,199 @@ class HomeController extends Controller
 
     public function payments_complete(Request $request)
     {
-        $slots = json_decode($request->input('slots'), true);
+        // 1. Process Slot Data
+        $slotsInput = $request->input('slots');
+        // Decode if it's a JSON string, otherwise use as is (if array)
+        $slots = is_string($slotsInput) ? json_decode($slotsInput, true) : $slotsInput;
+
+        if (!$slots || !is_array($slots)) {
+            return back()->with('error', 'Dữ liệu đặt sân không hợp lệ.');
+        }
+
         $invoiceDetailId = $request->input('invoice_details_id');
         $userId = $request->input('user_id');
         $facility_id = $request->input('facility_id');
         $total_final = $request->input('total_final');
         $promotion_id = $request->promotion_id ?? null;
-        $description = DB::table('promotions')->where('promotion_id',$promotion_id)
-        ->select('description')
-        ->first();
+
+        // Get promotion description
+        $description = DB::table('promotions')->where('promotion_id', $promotion_id)
+            ->select('description')
+            ->first();
+
         $fullname = $request->input('customer_name');
         $phone = $request->input('customer_phone');
         $email = $request->input('customer_email');
 
+        // 2. Process User
         $currentUser = Users::find($userId);
 
         if ($currentUser) {
-            // Nếu phone khác với trong DB thì tạo user mới
             if ($currentUser->phone !== $phone) {
                 $newUser = Users::create([
                     'fullname' => $fullname,
                     'phone' => $phone,
                     'email' => $email,
-                    'password' => bcrypt('123456789'), // hoặc tạo password mặc định
-                    'role_id' => '5', // ví dụ
+                    'password' => bcrypt('123456789'),
+                    'role_id' => '5',
                 ]);
                 $userId = $newUser->user_id;
             }
         } else {
-            // Nếu user không tồn tại thì cũng tạo mới
             $newUser = Users::create([
                 'fullname' => $fullname,
                 'phone' => $phone,
                 'email' => $email,
-                'password' => bcrypt('123456789'), // hoặc tạo password mặc định
-                'role_id' => '5', // ví dụ
+                'password' => bcrypt('123456789'),
+                'role_id' => '5',
             ]);
             $userId = $newUser->user_id;
         }
-        $user_id = Users::where('user_id',$userId)->get();
+
+        // Calculate total amount
         $total = 0;
         foreach ($slots as $slot) {
-            $total += $slot['price'];
+            $total += isset($slot['price']) ? $slot['price'] : 0;
         }
-        $payment_method = 1;
-        $payment_status = 'Đã thanh toán';
-        DB::table(table: 'invoice_details')->insert([
-            'invoice_detail_id' => $invoiceDetailId,
-            'sub_total' => $total,
-            'facility_id' => $facility_id,
-        ]);
-        $invoice_details = DB::table('invoice_details')
-            ->select('invoice_id')
+
+        // 3. Process Invoice Details
+        // Check if invoice detail exists (created by Chatbot or previous attempt)
+        $existingInvoiceDetail = DB::table('invoice_details')
             ->where('invoice_detail_id', $invoiceDetailId)
             ->first();
-        
-        $total_final = $request->total_final;
-        
-        DB::table(table: 'invoices')->insert([
-            'invoice_id' => $invoice_details->invoice_id,
+
+        if (!$existingInvoiceDetail) {
+            DB::table('invoice_details')->insert([
+                'invoice_detail_id' => $invoiceDetailId,
+                'sub_total' => $total,
+                'facility_id' => $facility_id,
+                'invoice_id' => 0
+            ]);
+        }
+
+        // 4. Process Invoices (FIX FOR ERROR 1364)
+        // Since DB doesn't auto-increment ID, calculate new ID manually
+        $maxId = DB::table('invoices')->max('invoice_id');
+        $newInvoiceId = $maxId ? $maxId + 1 : 1; // If none exists, start at 1, else increment
+
+        DB::table('invoices')->insert([
+            'invoice_id' => $newInvoiceId, // Manually set ID
             'customer_id' => $userId,
             'issue_date' => now(),
             'total_amount' => $total,
             'promotion_id' => $promotion_id,
             'final_amount' => $total_final,
-            'payment_status' => $payment_status,
-            'payment_method' => $payment_method,
+            'payment_status' => 'Đã thanh toán',
+            'payment_method' => 1,
+            'updated_at' => now(),
         ]);
-        if (!$slots || !is_array($slots)) {
-            return back()->with('error', 'Không có dữ liệu đặt sân!');
-        }
 
-        // dd($slots, $invoiceDetailId, $userId, $facility_id);
+        // Update invoice_id back to invoice_details table
+        DB::table('invoice_details')
+            ->where('invoice_detail_id', $invoiceDetailId)
+            ->update(['invoice_id' => $newInvoiceId]);
+
+
+        // 5. Process Bookings
         foreach ($slots as $slot) {
-            DB::table(table: 'bookings')->insert([
-                'invoice_detail_id' => $invoiceDetailId,
-                'user_id' => $userId,
-                'facility_id' => $facility_id,
-                'court_id' => $slot['court'],
-                'booking_date' => \Carbon\Carbon::parse($slot['date'])->format('Y-m-d'),
-                'time_slot_id' => $slot['time_slot_id'],
-                'unit_price' => $slot['price'],
-                'status' => 'Đã thanh toán (Online)'
-            ]);
+            $timeSlotId = $slot['time_slot_id'] ?? null;
+            $bookingDate = \Carbon\Carbon::parse($slot['date'])->format('Y-m-d');
+
+            // Extract court ID
+            $courtStr = $slot['court'] ?? '';
+            $court_id_number = (int) filter_var($courtStr, FILTER_SANITIZE_NUMBER_INT);
+            // Fallback if not found in string but exists in key
+            if (!$court_id_number && isset($slot['court_id'])) {
+                $court_id_number = $slot['court_id'];
+            }
+
+            if (!$timeSlotId)
+                continue;
+
+            // Check if booking exists (created by Chatbot)
+            $exists = DB::table('bookings')
+                ->where('invoice_detail_id', $invoiceDetailId)
+                ->where('time_slot_id', $timeSlotId)
+                ->where('booking_date', $bookingDate)
+                ->exists();
+
+            if ($exists) {
+                // UPDATE existing booking status
+                DB::table('bookings')
+                    ->where('invoice_detail_id', $invoiceDetailId)
+                    ->where('time_slot_id', $timeSlotId)
+                    ->where('booking_date', $bookingDate)
+                    ->update([
+                        'status' => 'Đã thanh toán (Online)',
+                        'user_id' => $userId,
+                        'updated_at' => now()
+                    ]);
+            } else {
+                // INSERT new booking
+                DB::table('bookings')->insert([
+                    'invoice_detail_id' => $invoiceDetailId,
+                    'user_id' => $userId,
+                    'facility_id' => $facility_id,
+                    'court_id' => $court_id_number,
+                    'booking_date' => $bookingDate,
+                    'time_slot_id' => $timeSlotId,
+                    'unit_price' => $slot['price'],
+                    'status' => 'Đã thanh toán (Online)',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
         }
 
-        // 1. Chuẩn bị dữ liệu PDF
-    $slots = json_decode($request->input('slots'), true);
-    $total = array_sum(array_column($slots, 'price'));
-    $customer = Users::find($userId);
-    $facilities = Facilities::find($facility_id);
+        // 6. Generate PDF and Send Email
+        $customer = Users::find($userId);
+        $facilities = Facilities::find($facility_id);
 
-    // Tính thời gian tổng
-    $countSlots = count($slots);
-    $result = ($countSlots % 2 === 0) ? ($countSlots / 2).' tiếng' : (($countSlots-1)/2).' tiếng rưỡi';
+        $countSlots = count($slots);
+        $result = ($countSlots % 2 === 0) ? ($countSlots / 2) . ' tiếng' : (($countSlots - 1) / 2) . ' tiếng rưỡi';
 
-    $invoice_detail_id = $request->invoice_details_id;
-    $invoice_details = DB::table('invoice_details')->where('invoice_detail_id',$invoice_detail_id)->first();
+        $bank = $facilities->account_bank ?? 'VCB';
+        $account = $facilities->account_no ?? '9704366899999';
+        $accountName = $facilities->account_name ?? 'SAN CAU LONG DEMO';
+        $qrUrl = "https://img.vietqr.io/image/{$bank}-{$account}-compact2.png?amount={$total}&addInfo=Thanh%20toan%20dat%20san&accountName=" . urlencode($accountName);
 
-    $bank = $facilities->account_bank ?? 'VCB';
-    $account = $facilities->account_no ?? '9704366899999';
-    $accountName = $facilities->account_name ?? 'SAN CAU LONG DEMO';
-    $qrUrl = "https://img.vietqr.io/image/{$bank}-{$account}-compact2.png?amount={$total}&addInfo=Thanh%20toan%20dat%20san&accountName=" . urlencode($accountName);
-    // dd($slots);
-    $pdf = PDF::setOptions(['isRemoteEnabled' => true])
-              ->loadView('pdf', [
-                  'slots' => $slots,
-                  'result' => $result,
-                  'customer' => $customer,
-                  'facilities' => $facilities,
-                  'invoice_detail_id' => $invoice_detail_id,
-                  'total' => $total,
-                  'description' => $description,
-                  'total_final' => $total_final,
-                  'user_id_nv' => null,
-                  'fullname_nv' => null,
-                  'invoice_time' => now()->format('d/m/Y H:i:s'),
-                  'invoice_id' => $invoice_details->invoice_id,
-                  'uniqueCourts' => collect($slots)->pluck('court_id')->unique()->implode(' , '),
-                  'uniqueDates' => collect($slots)->pluck('date')->unique()->implode(' / '),
-                  'uniqueTimes' => collect($slots)->map(fn($s) => $s['start_time'].' đến '.$s['end_time'])->unique()->implode(' / '),
-                  'qrUrl' => $qrUrl,
-              ])->output();
-                // dd($customer->email, $pdf, $customer->fullname);
-    // 2. Gửi email
-    $pdfContent = $pdf; // nội dung PDF từ loadView
-    $tempPath = storage_path('app/public/invoice_'.$invoice_detail_id.'.pdf');
-    file_put_contents($tempPath, $pdfContent);
+        $pdf = PDF::setOptions(['isRemoteEnabled' => true])
+            ->loadView('pdf', [
+                'slots' => $slots,
+                'result' => $result,
+                'customer' => $customer,
+                'facilities' => $facilities,
+                'invoice_detail_id' => $invoiceDetailId,
+                'total' => $total,
+                'description' => $description,
+                'total_final' => $total_final,
+                'user_id_nv' => null,
+                'fullname_nv' => null,
+                'invoice_time' => now()->format('d/m/Y H:i:s'),
+                'invoice_id' => $newInvoiceId,
+                'uniqueCourts' => collect($slots)->pluck('court')->unique()->implode(' , '),
+                'uniqueDates' => collect($slots)->pluck('date')->unique()->implode(' / '),
+                'uniqueTimes' => collect($slots)->map(fn($s) => $s['start_time'] . ' đến ' . $s['end_time'])->unique()->implode(' / '),
+                'qrUrl' => $qrUrl,
+            ])->output();
 
-    Mail::to($customer->email)->send(new InvoiceMail($tempPath, $customer->fullname));
+        $pdfContent = $pdf;
+        $tempPath = storage_path('app/public/invoice_' . $invoiceDetailId . '.pdf');
+        file_put_contents($tempPath, $pdfContent);
+
+        if ($customer && $customer->email) {
+            try {
+                Mail::to($customer->email)->send(new InvoiceMail($tempPath, $customer->fullname));
+            } catch (\Exception $e) {
+                \Log::error('Lỗi gửi mail: ' . $e->getMessage());
+            }
+        }
 
         return view('layouts.redirect_post', [
             'facility_id' => $facility_id,
             'user_id' => $userId,
             'success_message' => 'Thanh toán và đặt sân thành công! Giao dịch đã được lưu trong lịch đặt của bạn!!!'
         ]);
-
     }
 
     public function contract_bookings(Request $request)
@@ -397,10 +454,10 @@ class HomeController extends Controller
         // Lấy ngày bắt đầu và kết thúc từ form
         $dateStart = $request->input('date_start') ?? now()->format('Y-m-d');
         $dateEnd = $request->input('date_end') ?? now()->addDays(7)->format('Y-m-d');
-        
+
         $fullname = $request->name;
         $phone = $request->phonenumber;
-        
+
         // Sinh mảng ngày từ date_start → date_end
         $dates = [];
         $current = \Carbon\Carbon::parse($dateStart);
@@ -442,11 +499,11 @@ class HomeController extends Controller
         $courts = Courts::where('facility_id', $idSan)->get();
         // Lấy các khuyến mãi hợp lệ cho sân và có discount_type = 'Khách hàng thân thiết'
         $promotions = DB::table('promotions')
-        ->where('facility_id', $idSan)
-        ->where('discount_type', 'customer')
-        ->whereDate('start_date', '<=', $dateStart)
-        ->whereDate('end_date', '>=', $dateStart)
-        ->get();
+            ->where('facility_id', $idSan)
+            ->where('discount_type', 'customer')
+            ->whereDate('start_date', '<=', $dateStart)
+            ->whereDate('end_date', '>=', $dateStart)
+            ->get();
         // dd($promotions);
         return view('contract', compact(
             'thongtinsan',
@@ -487,8 +544,8 @@ class HomeController extends Controller
             $promotion_id = $request->promotion_id;
             // Lấy các khuyến mãi hợp lệ cho sân và có discount_type = 'Khách hàng thân thiết'
             $promotions = DB::table('promotions')
-            ->where('promotion_id', $promotion_id)
-            ->get();
+                ->where('promotion_id', $promotion_id)
+                ->get();
             // dd($promotions);
             if (!$startDate || !$endDate || empty($dayOfWeeks) || empty($timeSlots) || empty($courts) || empty($actualDates)) {
                 return response()->json([
@@ -499,7 +556,7 @@ class HomeController extends Controller
             $timeSlots = json_decode($data['time_slots'], true) ?? [];
             $actualDates = json_decode($data['actual_dates'], true) ?? [];
             $courts = json_decode($data['courts'], true) ?? [];
-                // ================== KIỂM TRA TRÙNG (TỐI ƯU CHO DỮ LIỆU LỚN) ==================
+            // ================== KIỂM TRA TRÙNG (TỐI ƯU CHO DỮ LIỆU LỚN) ==================
             $combinations = [];
             foreach ($actualDates as $item) {
                 $date = $item['date'] ?? null;
@@ -507,7 +564,8 @@ class HomeController extends Controller
                 $courtIds = $item['courts'] ?? [];
                 $timeSlotIds = $item['time_slots'] ?? [];
 
-                if (!$date || !$facilityId || empty($courtIds) || empty($timeSlotIds)) continue;
+                if (!$date || !$facilityId || empty($courtIds) || empty($timeSlotIds))
+                    continue;
 
                 foreach ($courtIds as $courtId) {
                     foreach ($timeSlotIds as $timeSlotId) {
@@ -548,19 +606,19 @@ class HomeController extends Controller
             }
 
             if (!empty($conflicts)) {
-                
+
                 $idSan = $facility_id;
                 $thongtinsan = Facilities::where('facility_id', $idSan)->first();
                 $customer = Users::where('user_id', $user_id)->first();
                 $timeSlots = Time_slots::all();
                 // Lấy ngày bắt đầu và kết thúc từ form
                 $dateStart = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
-                $dateEnd   = isset($endDate)   ? trim($endDate, '"')   : now()->addDays(7)->format('Y-m-d');
+                $dateEnd = isset($endDate) ? trim($endDate, '"') : now()->addDays(7)->format('Y-m-d');
 
                 // Sinh mảng ngày từ date_start → date_end
                 $dates = [];
                 $current = \Carbon\Carbon::parse($dateStart);
-                $end     = \Carbon\Carbon::parse($dateEnd);
+                $end = \Carbon\Carbon::parse($dateEnd);
 
                 while ($current->lte($end)) {
                     $dates[] = $current->format('Y-m-d');
@@ -578,8 +636,13 @@ class HomeController extends Controller
                 }
 
                 $thuTiengViet = [
-                    'Mon' => 'Thứ hai', 'Tue' => 'Thứ ba', 'Wed' => 'Thứ tư',
-                    'Thu' => 'Thứ năm', 'Fri' => 'Thứ sáu', 'Sat' => 'Thứ bảy', 'Sun' => 'Chủ nhật',
+                    'Mon' => 'Thứ hai',
+                    'Tue' => 'Thứ ba',
+                    'Wed' => 'Thứ tư',
+                    'Thu' => 'Thứ năm',
+                    'Fri' => 'Thứ sáu',
+                    'Sat' => 'Thứ bảy',
+                    'Sun' => 'Chủ nhật',
                 ];
 
                 $soLuongSan = $thongtinsan->quantity_court;
@@ -595,7 +658,7 @@ class HomeController extends Controller
                 $phone = $request->phone;
                 $conflictsGrouped = [];
                 foreach ($conflicts as $c) {
-                    $key = $c['date'].'_'.$c['court_id'];
+                    $key = $c['date'] . '_' . $c['court_id'];
                     $conflictsGrouped[$key]['date'] = $c['date'];
                     $conflictsGrouped[$key]['court_id'] = $c['court_id'];
                     $conflictsGrouped[$key]['time_slots'][] = $c['time_slot_id'];
@@ -604,18 +667,29 @@ class HomeController extends Controller
                 // Tạo array gọn
                 $conflicts = array_values($conflictsGrouped);
                 return view('contract', compact(
-                    'thongtinsan', 'customer', 'timeSlots', 'dates',
-                    'bookingsData', 'thuTiengViet', 'soLuongSan', 'dsSanCon',
-                    'dateStart', 'dateEnd', 'courts','fullname','phone', 'promotions'
+                    'thongtinsan',
+                    'customer',
+                    'timeSlots',
+                    'dates',
+                    'bookingsData',
+                    'thuTiengViet',
+                    'soLuongSan',
+                    'dsSanCon',
+                    'dateStart',
+                    'dateEnd',
+                    'courts',
+                    'fullname',
+                    'phone',
+                    'promotions'
                 ))->with([
-                    'message' => 'Có khung giờ đã được đặt trước, vui lòng chọn lại!',
-                    'conflicts' => $conflicts // <--- phải truyền conflicts vào view
-                ]);
+                            'message' => 'Có khung giờ đã được đặt trước, vui lòng chọn lại!',
+                            'conflicts' => $conflicts // <--- phải truyền conflicts vào view
+                        ]);
 
             }
 
 
-        // =====================================================================
+            // =====================================================================
             // === XỬ LÝ KHUNG GIỜ ===
             $timeSlots = collect($timeSlots)->slice(0, -1);
             // $actualDates = collect($actualDates)->slice(0, -1);
@@ -640,16 +714,13 @@ class HomeController extends Controller
             $totalDays = count($actualDates);
             $totalCourts = count($courts);
             $totalAmount = $slotDetails->sum('amount') * $totalDays * $totalCourts;
-            if($request->fullname && $request->phone)
-            {
+            if ($request->fullname && $request->phone) {
                 $fullname = $request->fullname;
                 $phone = $request->phone;
-            }
-            else 
-            {
+            } else {
                 $user = DB::table('users')->get()->where('user_id', $user_id)->first();
             }
-            
+
             $facilities = Facilities::with('Users')->get()->where('facility_id', $facility_id)->first();
             $startDate = isset($startDate) ? trim($startDate, '"') : now()->format('Y-m-d');
             $endDate = isset($endDate) ? trim($endDate, '"') : now()->addDays(7)->format('Y-m-d');
@@ -683,7 +754,7 @@ class HomeController extends Controller
             }
             // Tính tổng
             $totalAmount = collect($lines)->sum('amount');
-            
+
             $promotion = $promotions->first(); // Lấy object đầu tiên
 
             $final_amount = $totalAmount;
@@ -716,7 +787,7 @@ class HomeController extends Controller
                 'account_no' => $facilities->account_no ?? '---',
                 'account_bank' => $facilities->account_bank ?? '---',
             ];
-            
+
             $details = [
                 'actual_dates' => $actualDates,
                 'slot_details' => $slotDetails,
@@ -751,8 +822,8 @@ class HomeController extends Controller
         $phone = $request->input('phone');
 
         $currentUser = Users::where('phone', $phone)
-        ->where('fullname', 'like', "%$fullname%")
-        ->first();
+            ->where('fullname', 'like', "%$fullname%")
+            ->first();
 
         if (!$currentUser) {
             $newUser = Users::create([
@@ -833,7 +904,7 @@ class HomeController extends Controller
                 foreach ($detail['time_slots'] as $timeSlotIndex => $timeSlotId) {
                     // Lấy thông tin tương ứng từ $slot_details
                     $slotInfo = $slot_details[$timeSlotIndex] ?? null;
-                    if($slotInfo){
+                    if ($slotInfo) {
                         $slots[] = [
                             'courts' => $courtId,
                             'booking_date' => $date,
@@ -846,8 +917,8 @@ class HomeController extends Controller
             }
         }
         $promotions = DB::table('promotions')
-        ->where('promotion_id',$promotion_id)
-        ->first();
+            ->where('promotion_id', $promotion_id)
+            ->first();
         // Lấy danh sách sân duy nhất
         $courts = collect($slots)->pluck('courts')->unique()->toArray();
         // Chuyển mảng thành chuỗi để hiển thị
@@ -861,21 +932,18 @@ class HomeController extends Controller
             'promotions' => $promotions,
         ]);
 
-        if($customer->email){
+        if ($customer->email) {
             Mail::to($customer->email)->send(new LongTermInvoiceMail($customer->fullname, $pdf));
         }
         //=========================================================
         $userMana = $request->input('user_id');
         $checkMana = Users::where('user_id', $userMana)
-        ->select('role_id')
-        ->first();
+            ->select('role_id')
+            ->first();
         // dd($userMana, $checkMana);
-        if($checkMana->role_id === 4)
-        {
+        if ($checkMana->role_id === 4) {
             return redirect()->route('manager.contracts')->with('success', 'Thành công!');
-        }
-        else 
-        {
+        } else {
             return view('layouts.redirect_post', [
                 'facility_id' => $facility_id,
                 'user_id' => $userId,
@@ -916,12 +984,12 @@ class HomeController extends Controller
             try {
                 $bookingDate = \Carbon\Carbon::createFromFormat('d/m/Y', $bookingDateInput)->format('Y-m-d');
 
-                $invoicesQuery->whereExists(function($q) use ($bookingDate) {
+                $invoicesQuery->whereExists(function ($q) use ($bookingDate) {
                     $q->select(DB::raw(1))
-                    ->from('bookings')
-                    ->join('invoice_details as id2', 'bookings.invoice_detail_id', '=', 'id2.invoice_detail_id')
-                    ->whereRaw('id2.invoice_detail_id = invoice_details.invoice_detail_id')
-                    ->where('bookings.booking_date', $bookingDate);
+                        ->from('bookings')
+                        ->join('invoice_details as id2', 'bookings.invoice_detail_id', '=', 'id2.invoice_detail_id')
+                        ->whereRaw('id2.invoice_detail_id = invoice_details.invoice_detail_id')
+                        ->where('bookings.booking_date', $bookingDate);
                 });
 
             } catch (\Exception $e) {
@@ -943,7 +1011,7 @@ class HomeController extends Controller
                 ->join('invoice_details', 'invoice_details.invoice_detail_id', '=', 'bookings.invoice_detail_id')
                 ->join('time_slots', 'time_slots.time_slot_id', '=', 'bookings.time_slot_id')
                 ->where('invoice_details.invoice_detail_id', $invoice->invoice_detail_id)
-                ->select('bookings.*','time_slots.start_time','time_slots.end_time')
+                ->select('bookings.*', 'time_slots.start_time', 'time_slots.end_time')
                 ->get();
 
             $mybooking_details[$invoice->invoice_detail_id] = $details;
@@ -1065,7 +1133,7 @@ class HomeController extends Controller
             })->count();
         // dd($danhsachsan);
         // 4. Trả về view hiển thị kết quả
-        return view('listing-grid', compact('danhsachsan', 'keyword','total_count'));
+        return view('listing-grid', compact('danhsachsan', 'keyword', 'total_count'));
     }
 
 
@@ -1076,17 +1144,17 @@ class HomeController extends Controller
         $slotCollection = collect($slots);
         $invoice_detail_id = $request->invoice_detail_id;
         $invoices = DB::table('invoices')
-        ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
-        ->leftJoin('promotions', 'promotions.promotion_id', '=', 'invoices.promotion_id') // <<< sửa ở đây
-        ->where('invoice_details.invoice_detail_id', $invoice_detail_id)
-        ->select(
-            'invoices.*',
-            'invoices.final_amount as final_amount',
-            'promotions.*',
-            'promotions.value as value',
-            'promotions.description as description'
-        )
-        ->first();
+            ->join('invoice_details', 'invoices.invoice_id', '=', 'invoice_details.invoice_id')
+            ->leftJoin('promotions', 'promotions.promotion_id', '=', 'invoices.promotion_id') // <<< sửa ở đây
+            ->where('invoice_details.invoice_detail_id', $invoice_detail_id)
+            ->select(
+                'invoices.*',
+                'invoices.final_amount as final_amount',
+                'promotions.*',
+                'promotions.value as value',
+                'promotions.description as description'
+            )
+            ->first();
 
         // dd($invoices);
         $uniqueCourts = $slotCollection->pluck('court_id')->unique()->implode(' , ');
@@ -1127,9 +1195,9 @@ class HomeController extends Controller
         Bookings::where('invoice_detail_id', $invoice_detail_id)->delete();
 
         $invoice_details = DB::table('invoice_details')
-        ->where('invoice_detail_id', $invoice_detail_id)
-        ->select('invoice_id')
-        ->first();
+            ->where('invoice_detail_id', $invoice_detail_id)
+            ->select('invoice_id')
+            ->first();
 
         DB::table('invoices')->where('invoice_id', $invoice_details->invoice_id)->update([
             'payment_status' => 'Đã Hủy',
@@ -1149,80 +1217,80 @@ class HomeController extends Controller
         $invoice_detail_id = $request->invoice_detail_id;
 
         $long_term_contracts = DB::table('long_term_contracts as ltc')
-        ->leftJoin('invoice_details as id', 'id.invoice_detail_id', '=', 'ltc.invoice_detail_id')
-        ->leftJoin('promotions as p', 'p.promotion_id', '=', 'ltc.promotion_id')
-        ->where('ltc.invoice_detail_id', $invoice_detail_id)
-        ->select(
-            'ltc.*',
-            'ltc.customer_id as customer_id',
-            DB::raw('id.facility_id as facility_id'),
-            DB::raw('p.promotion_id as promotion_id'),
-            DB::raw('p.description as description'),
-            DB::raw('p.discount_type as discount_type'),
-            DB::raw('p.value as value')
-        )
-        ->first();
+            ->leftJoin('invoice_details as id', 'id.invoice_detail_id', '=', 'ltc.invoice_detail_id')
+            ->leftJoin('promotions as p', 'p.promotion_id', '=', 'ltc.promotion_id')
+            ->where('ltc.invoice_detail_id', $invoice_detail_id)
+            ->select(
+                'ltc.*',
+                'ltc.customer_id as customer_id',
+                DB::raw('id.facility_id as facility_id'),
+                DB::raw('p.promotion_id as promotion_id'),
+                DB::raw('p.description as description'),
+                DB::raw('p.discount_type as discount_type'),
+                DB::raw('p.value as value')
+            )
+            ->first();
 
         $customer = DB::table('users')
-        ->where('user_id',$long_term_contracts->customer_id)
-        ->first();
-        
+            ->where('user_id', $long_term_contracts->customer_id)
+            ->first();
+
         $facilities = DB::table('facilities')
-        ->where('facility_id',$long_term_contracts->facility_id)
-        ->first();
-        
+            ->where('facility_id', $long_term_contracts->facility_id)
+            ->first();
+
         $groupedSlots = collect($slots)
-        ->groupBy(function ($item) {
-            return $item['booking_date'] . '_' . $item['court_id'];
-        })
-        ->map(function ($group) {
-            $first = $group->first();
-            return [
-                'booking_date' => $first['booking_date'],
-                'court_id' => $first['court_id'],
-                // mỗi slot là 0.5 giờ → tổng giờ = số slot * 0.5
-                'total_duration' => count($group) * 0.5,
-                // tổng tiền cộng dồn
-                'total_price' => collect($group)->sum('unit_price'),
-            ];
-        })
-        ->values();
+            ->groupBy(function ($item) {
+                return $item['booking_date'] . '_' . $item['court_id'];
+            })
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'booking_date' => $first['booking_date'],
+                    'court_id' => $first['court_id'],
+                    // mỗi slot là 0.5 giờ → tổng giờ = số slot * 0.5
+                    'total_duration' => count($group) * 0.5,
+                    // tổng tiền cộng dồn
+                    'total_price' => collect($group)->sum('unit_price'),
+                ];
+            })
+            ->values();
         $daysOfWeek = $groupedSlots
-        ->map(function ($slot) {
-            $date = Carbon::parse($slot['booking_date']);
-            return match ($date->dayOfWeek) {
-                0 => 'Chủ nhật',
-                1 => 'Thứ 2',
-                2 => 'Thứ 3',
-                3 => 'Thứ 4',
-                4 => 'Thứ 5',
-                5 => 'Thứ 6',
-                6 => 'Thứ 7',
-            };
-        })
-        ->unique() // loại trùng
-        ->values()
-        ->implode(', '); // nối thành chuỗi "Thứ 2, Thứ 4, Thứ 6"
+            ->map(function ($slot) {
+                $date = Carbon::parse($slot['booking_date']);
+                return match ($date->dayOfWeek) {
+                    0 => 'Chủ nhật',
+                    1 => 'Thứ 2',
+                    2 => 'Thứ 3',
+                    3 => 'Thứ 4',
+                    4 => 'Thứ 5',
+                    5 => 'Thứ 6',
+                    6 => 'Thứ 7',
+                };
+            })
+            ->unique() // loại trùng
+            ->values()
+            ->implode(', '); // nối thành chuỗi "Thứ 2, Thứ 4, Thứ 6"
 
         // ✅ Lấy danh sách các sân duy nhất
         $courts = $groupedSlots
-        ->pluck('court_id')
-        ->unique()
-        ->map(fn($id) => 'Sân ' . $id)
-        ->implode(', ');
-        
+            ->pluck('court_id')
+            ->unique()
+            ->map(fn($id) => 'Sân ' . $id)
+            ->implode(', ');
+
         $grouped = collect($slots)
             ->groupBy(function ($item) {
                 return $item['booking_date'] . '_' . $item['court_id'];
             })
             ->map(function ($items) {
                 return [
-                    'booking_date'   => $items[0]['booking_date'],
-                    'court_id'       => $items[0]['court_id'],
-                    'start_time'     => $items->min('start_time'),
-                    'end_time'       => $items->max('end_time'),
+                    'booking_date' => $items[0]['booking_date'],
+                    'court_id' => $items[0]['court_id'],
+                    'start_time' => $items->min('start_time'),
+                    'end_time' => $items->max('end_time'),
                     'total_duration' => $items->count() * 0.5, // mỗi slot 30 phút
-                    'total_price'    => $items->sum('unit_price'),
+                    'total_price' => $items->sum('unit_price'),
                 ];
             })
             ->values()
@@ -1230,7 +1298,7 @@ class HomeController extends Controller
 
         $slots = $grouped;
 
-        return view('contract_details',[
+        return view('contract_details', [
             'slots' => $grouped,
             'long_term_contracts' => $long_term_contracts,
             'customer' => $customer,
@@ -1251,7 +1319,7 @@ class HomeController extends Controller
             'payment_status' => 'Đã Hủy',
             'updated_at' => now(),
         ]);
-        
+
         return view('layouts.redirect_mycontracts', [
             'user_id' => $user_id,
             'success_message' => 'Đã hủy hợp đồng!!! Vui lòng liên hệ sân để hoàn tiền.',
