@@ -488,7 +488,7 @@
 		<div id="chat-header">Chatbot Sân Cầu Lông</div>
 		<div id="chat-body"></div>
 		<div id="quick-actions">
-			<!-- <button class="quick-action-btn" data-action="Đặt sân">📅 Đặt sân</button> -->
+			<button class="quick-action-btn" data-action="Đặt sân">📅 Đặt sân</button>
 			<button class="quick-action-btn" data-action="Kiểm tra giờ trống">🔍 Kiểm tra giờ trống</button>
 			<button class="quick-action-btn" data-action="Giá sân bao nhiêu">💰 Xem giá</button>
 		</div>

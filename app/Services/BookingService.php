@@ -140,72 +140,75 @@ class BookingService
     // Tạo booking mới 
     public function createBooking($userId, $facilityId, $courtName, $date, $timeString)
     {
+        // 1. Chuẩn bị dữ liệu
         $slotId = $this->getTimeSlotId($timeString);
 
         // Tìm ID sân từ tên
-        $court = Courts::where('facility_id', $facilityId)
+        $court = \App\Models\Courts::where('facility_id', $facilityId)
             ->where('court_name', 'like', "%$courtName%")
             ->first();
 
         if (!$court || !$slotId) {
-            return [
-                'success' => false,
-                'message' => 'Thông tin sân hoặc giờ không đúng.'
-            ];
-        }
-
-        // Check lại lần cuối tránh trùng
-        $exists = Bookings::where('court_id', $court->court_id)
-            ->where('booking_date', $date)
-            ->where('time_slot_id', $slotId)
-            ->where('status', '!=', 'Đã Hủy')
-            ->exists();
-
-        if ($exists) {
-            return [
-                'success' => false,
-                'message' => 'Rất tiếc, sân này vừa bị người khác đặt.'
-            ];
+            return ['success' => false, 'message' => 'Thông tin sân hoặc giờ không đúng.'];
         }
 
         // Lấy thông tin time slot
-        $timeSlot = Time_slots::find($slotId);
+        $timeSlot = \App\Models\Time_slots::find($slotId);
 
-        // Lấy giá từ court_prices
-        $price = Court_prices::where('facility_id', $facilityId)
-            ->where('court_id', $court->court_id)
+        // Lấy giá tiền (Logic lấy giá chung cơ sở)
+        $price = \App\Models\Court_prices::where('facility_id', $facilityId)
             ->orderBy('effective_date', 'desc')
             ->first();
 
-        if (!$price) {
-            $price = Court_prices::where('facility_id', $facilityId)
-                ->whereNull('court_id')
-                ->orderBy('effective_date', 'desc')
-                ->first();
-        }
-
-        // Kiểm tra giờ vàng
+        // Kiểm tra giờ vàng và tính giá cuối cùng
         $isSpecialTime = $this->isSpecialTime($timeSlot, $date);
         $unitPrice = $price ? ($isSpecialTime ? $price->special_price : $price->default_price) : 50000;
 
         // Tạo mã hóa đơn
         $bookingCode = 'BOT_' . time() . '_' . $userId;
 
-        // --- BẮT ĐẦU KHỐI TRY-CATCH ---
+        // 2. BẮT ĐẦU TRANSACTION
+        // Giúp đảm bảo cả Hóa đơn và Booking cùng tạo thành công, nếu 1 cái lỗi thì hủy cả 2
+        \Illuminate\Support\Facades\DB::beginTransaction();
+
         try {
-            // Tạo booking tạm thời
-            $booking = Bookings::create([
+            // A. Check trùng (Có sử dụng lockForUpdate để tránh xung đột khi nhiều người bấm cùng lúc)
+            $exists = \App\Models\Bookings::where('court_id', $court->court_id)
+                ->where('booking_date', $date)
+                ->where('time_slot_id', $slotId)
+                ->where('status', '!=', 'Đã Hủy')
+                ->lockForUpdate() // Khóa dòng dữ liệu
+                ->exists();
+
+            if ($exists) {
+                \Illuminate\Support\Facades\DB::rollBack(); // Hủy transaction
+                return ['success' => false, 'message' => 'Rất tiếc, sân này vừa bị người khác đặt.'];
+            }
+
+            // B. Tạo Hóa Đơn (Bảng Cha) Trước
+            \App\Models\InvoiceDetail::create([
+                'invoice_detail_id' => $bookingCode,
+                'invoice_id'        => 0,
+                'facility_id'       => $facilityId,
+                'sub_total'         => $unitPrice,
+            ]);
+
+            // C. Tạo Booking (Bảng Con)
+            $booking = \App\Models\Bookings::create([
                 'user_id' => $userId,
                 'facility_id' => $facilityId,
                 'court_id' => $court->court_id,
                 'time_slot_id' => $slotId,
                 'booking_date' => $date,
-                'invoice_detail_id' => $bookingCode, // Đã gán mã, không để null
+                'invoice_detail_id' => $bookingCode, // ID tham chiếu hợp lệ
                 'status' => 'Chờ thanh toán',
                 'unit_price' => $unitPrice
             ]);
 
-            // Chuẩn bị dữ liệu slots cho trang thanh toán
+            // Mọi thứ thành công -> Lưu vào DB
+            \Illuminate\Support\Facades\DB::commit();
+
+            // Chuẩn bị dữ liệu trả về cho View
             $slots = [
                 [
                     'court' => $court->court_name,
@@ -229,12 +232,14 @@ class BookingService
             ];
 
         } catch (\Exception $e) {
-            // Ghi log lỗi để admin kiểm tra (storage/logs/laravel.log)
-            \Illuminate\Support\Facades\Log::error("Booking Error in Service: " . $e->getMessage());
+            // Có lỗi -> Hủy toàn bộ thao tác DB nãy giờ
+            \Illuminate\Support\Facades\DB::rollBack();
+
+            \Illuminate\Support\Facades\Log::error("Single Booking Error: " . $e->getMessage());
 
             return [
                 'success' => false,
-                'message' => 'Lỗi hệ thống khi lưu dữ liệu: ' . $e->getMessage()
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage()
             ];
         }
     }
@@ -285,7 +290,7 @@ class BookingService
         ];
     }
 
-    // 2. Hàm tạo Booking nhiều Slot (Thay thế createBooking cũ)
+    // 2. Hàm tạo Booking nhiều Slot
     public function createBookingMultiSlots($userId, $facilityId, $courtName, $date, $startTime, $duration)
     {
         $startSlotId = $this->getTimeSlotId($startTime);
