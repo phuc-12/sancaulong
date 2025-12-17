@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Bookings;
 use App\Models\Courts;
-use App\Models\Facility;
+use App\Models\Facilities;
 use Illuminate\Http\Request;
-use App\Models\facilities;
 use App\Models\Users;
 use App\Models\Time_slots;
 use App\Models\Court;
