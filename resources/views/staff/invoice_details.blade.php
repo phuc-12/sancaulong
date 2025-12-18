@@ -68,11 +68,21 @@
 													<option value="unpaid" {{ $invoices->payment_status == 'Chưa thanh toán' ? 'selected' : '' }}>Chưa thanh toán</option>
 													<option value="paid" {{ $invoices->payment_status == 'Đã thanh toán' ? 'selected' : '' }}>Đã thanh toán</option>
 												</select>
-												<input type="hidden" id="invoice_detail_id" value="{{ $invoice_detail_id }}">
-												<button id="confirm_payment_btn" class="btn btn-success">Xác nhận</button>
-												<div id="payment_alert" class="mt-2"></div>
+												<button id="confirm_payment_status_btn" class="btn btn-success btn-sm ms-2">Xác nhận</button>
+												<div id="payment_status_alert" class="mt-2"></div>
 											</div>
-											
+										</li>
+										<li>
+											<div style="width: 100%;">
+												<i class="feather-dollar-sign me-2"></i>Sử dụng:
+												<select id="payment_method_select" class="form-select form-select-sm" style="width: 180px; display:inline-block; margin-left:10px;">
+													<option value="1" {{ $invoices->payment_method == '1' ? 'selected' : '' }}>Chưa sử dụng</option>
+													<option value="2" {{ $invoices->payment_method == '2' ? 'selected' : '' }}>Đã sử dụng</option>
+												</select>
+												<input type="hidden" id="invoice_detail_id" value="{{ $invoice_detail_id }}">
+												<button id="confirm_payment_method_btn" class="btn btn-success btn-sm ms-2">Xác nhận</button>
+												<div id="payment_method_alert" class="mt-2"></div>
+											</div>
 										</li>
 									</div>
 								</ul>
@@ -235,9 +245,9 @@ document.querySelector('form[action="{{ route('staff.cancel_invoice') }}"]').add
 });
 
 $(document).ready(function() {
-    $('#confirm_payment_btn').click(function(e) {
-        e.preventDefault(); // tránh submit form mặc định
-
+    // Xác nhận trạng thái thanh toán
+    $('#confirm_payment_status_btn').click(function(e) {
+        e.preventDefault();
         let payment_status = $('#payment_status_select').val();
         let invoice_detail_id = $('#invoice_detail_id').val();
 
@@ -250,12 +260,39 @@ $(document).ready(function() {
                 invoice_detail_id: invoice_detail_id
             },
             success: function(response) {
-                $('#payment_alert').html(
+                $('#payment_status_alert').html(
                     '<div class="alert alert-success">' + response.message + '</div>'
                 );
             },
             error: function(xhr) {
-                $('#payment_alert').html(
+                $('#payment_status_alert').html(
+                    '<div class="alert alert-danger">Có lỗi xảy ra, vui lòng thử lại!</div>'
+                );
+            }
+        });
+    });
+
+    // Xác nhận phương thức sử dụng
+    $('#confirm_payment_method_btn').click(function(e) {
+        e.preventDefault();
+        let payment_method = $('#payment_method_select').val();
+        let invoice_detail_id = $('#invoice_detail_id').val();
+
+        $.ajax({
+            url: "{{ route('staff.confirm_payment_method') }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                payment_method: payment_method,
+                invoice_detail_id: invoice_detail_id
+            },
+            success: function(response) {
+                $('#payment_method_alert').html(
+                    '<div class="alert alert-success">' + response.message + '</div>'
+                );
+            },
+            error: function(xhr) {
+                $('#payment_method_alert').html(
                     '<div class="alert alert-danger">Có lỗi xảy ra, vui lòng thử lại!</div>'
                 );
             }

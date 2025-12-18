@@ -76,6 +76,16 @@
                                     {{ $daysOfWeek == 8 ? 'CN' : 'Thứ ' . $daysOfWeek }}
                                 </p>
                                 <p><strong>Sân:</strong> {{ $courts }}</p>
+								<p>
+									<strong>Sử dụng:</strong>
+									<select id="note_select" class="form-select form-select-sm" style="width: 180px; display:inline-block; margin-left:10px;">
+										<option value="1" {{ $long_term_contracts->note == '1' ? 'selected' : '' }}>Chưa sử dụng</option>
+										<option value="2" {{ $long_term_contracts->note == '2' ? 'selected' : '' }}>Đã sử dụng</option>
+									</select>
+									<input type="hidden" id="invoice_detail_id" value="{{ $long_term_contracts->invoice_detail_id }}">
+									<button id="confirm_note_btn" class="btn btn-success btn-sm ms-2">Xác nhận</button>
+									<div id="note_alert" class="mt-2"></div>
+								</p>
 							</div>
 
 							<table>
@@ -142,6 +152,7 @@
 		</div>
 		<!-- /Page Content -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 document.querySelector('form[action="{{ route('manager.cancel_contract') }}"]').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -156,6 +167,35 @@ document.querySelector('form[action="{{ route('manager.cancel_contract') }}"]').
         if (result.isConfirmed) {
             e.target.submit();
         }
+    });
+});
+
+$(document).ready(function() {
+    // Xác nhận trạng thái sử dụng (note)
+    $('#confirm_note_btn').click(function(e) {
+        e.preventDefault();
+        let note = $('#note_select').val();
+        let invoice_detail_id = $('#invoice_detail_id').val();
+
+        $.ajax({
+            url: "{{ route('manager.confirm_note') }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                note: note,
+                invoice_detail_id: invoice_detail_id
+            },
+            success: function(response) {
+                $('#note_alert').html(
+                    '<div class="alert alert-success">' + response.message + '</div>'
+                );
+            },
+            error: function(xhr) {
+                $('#note_alert').html(
+                    '<div class="alert alert-danger">Có lỗi xảy ra, vui lòng thử lại!</div>'
+                );
+            }
+        });
     });
 });
 </script>

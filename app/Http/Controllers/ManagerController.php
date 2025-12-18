@@ -927,4 +927,30 @@ class ManagerController extends Controller
             ]);
         }
     }
+
+    public function confirm_note(Request $request)
+    {
+        $request->validate([
+            'note' => 'required|in:1,2',
+            'invoice_detail_id' => 'required',
+        ]);
+
+        $invoice_detail_id = $request->invoice_detail_id;
+        $note = $request->note;
+
+        DB::table('long_term_contracts')
+            ->where('invoice_detail_id', $invoice_detail_id)
+            ->update([
+                'note' => $note,
+                'updated_at' => now(),
+            ]);
+
+        $noteText = $note == '2' ? 'Đã sử dụng' : 'Chưa sử dụng';
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái sử dụng thành công!',
+            'note' => $noteText
+        ]);
+    }
 }
