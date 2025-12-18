@@ -42,6 +42,7 @@
                                     <th>Khách hàng</th>
                                     <th>Ngày đặt</th>
                                     <th>Tổng tiền</th>
+                                    <th>Sử dụng</th>
                                     <th>Tình trạng</th>
                                     <th></th>
                                 </tr>
@@ -51,11 +52,26 @@
                                 @php $index = 1 @endphp
                                 @isset($invoices)
                                     @forelse ($invoices as $invoice)
+                                        @php
+                                            $firstBooking = $mybooking_details[$invoice->invoice_detail_id]->first() ?? null;
+                                            $bookingDate = $firstBooking->booking_date ?? null;
+                                            $isExpired = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->lt(\Carbon\Carbon::today()) : false;
+                                        @endphp
                                         <tr>
                                             <td>{{ $index++ }}</td>
                                             <td>{{ $invoice->fullname }}</td>
                                             <td>{{ date('d/m/Y', strtotime($invoice->issue_date)) }}</td>
                                             <td>{{ number_format($invoice->final_amount) }}₫</td>
+
+                                            <td>
+                                                @if ($invoice->payment_method == '2')
+                                                    <span class="badge bg-success">Đã sử dụng</span>
+                                                @elseif ($isExpired)
+                                                    <span class="badge bg-warning text-dark">Đã quá hạn</span>
+                                                @else
+                                                    <span class="badge bg-info text-dark">Chưa sử dụng</span>
+                                                @endif
+                                            </td>
 
                                             <td>
                                                 @if ($invoice->payment_status === 'Đã thanh toán')
@@ -85,12 +101,12 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-muted">Chưa có lịch đặt nào</td>
+                                            <td colspan="7" class="text-muted">Chưa có lịch đặt nào</td>
                                         </tr>
                                     @endforelse
                                 @else
                                     <tr>
-                                        <td colspan="6" class="text-muted">Không có thông tin khách này</td>
+                                        <td colspan="7" class="text-muted">Không có thông tin khách này</td>
                                     </tr>
                                 @endisset
                             </tbody>

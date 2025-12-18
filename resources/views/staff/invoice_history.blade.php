@@ -40,8 +40,8 @@
                         <th>Tổng tiền</th>
                         <th>Ngày áp dụng</th>
                         <th>Sử dụng</th>
+                        <th>Thanh toán</th>
                         <th>Tình trạng</th>
-
                     </tr>
                 </thead>
 
@@ -58,7 +58,7 @@
                             $isExpired = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->lt(\Carbon\Carbon::today()) : false;
 
                             // Format ngày
-                            $formattedIssueDate = $invoice->issue_date ? \Carbon\Carbon::parse($invoice->issue_date)->format('d/m/Y H:i:s') : '';
+                            $formattedIssueDate = $invoice->issue_date ? \Carbon\Carbon::parse($invoice->issue_date)->format('d/m/Y') : '';
                             $formattedBookingDate = $bookingDate ? \Carbon\Carbon::parse($bookingDate)->format('d/m/Y') : '';
                         @endphp
 
@@ -70,10 +70,21 @@
                             <td class="fw-bold text-success">{{ number_format($invoice->final_amount, 0, ',', '.') }}₫</td>
                             <td>{{ $formattedBookingDate }}</td>
                             <td>
-                                @if($isExpired)
+                                @if ($invoice->payment_method == '2')
+                                    <span class="badge bg-success">Đã sử dụng</span>
+                                @elseif ($isExpired)
                                     <span class="badge bg-warning text-dark">Đã quá hạn</span>
                                 @else
                                     <span class="badge bg-info text-dark">Chưa sử dụng</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($invoice->payment_status === 'Đã thanh toán')
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                @elseif ($invoice->payment_status === 'Chưa thanh toán')
+                                    <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+                                @elseif ($invoice->payment_status === 'Đã Hủy')
+                                    <span class="badge bg-danger">Đã hủy</span>
                                 @endif
                             </td>
                             <td>

@@ -184,4 +184,30 @@ class InvoiceController extends Controller
             'payment_status' => $status
         ]);
     }
+
+    public function confirm_payment_method(Request $request)
+    {
+        $request->validate([
+            'payment_method' => 'required|in:1,2',
+            'invoice_detail_id' => 'required',
+        ]);
+
+        $invoice_detail_id = $request->invoice_detail_id;
+        $payment_method = $request->payment_method;
+
+        DB::table('invoices')
+            ->join('invoice_details', 'invoice_details.invoice_id', '=', 'invoices.invoice_id')
+            ->where('invoice_details.invoice_detail_id', $invoice_detail_id)
+            ->update([
+                'payment_method' => $payment_method,
+            ]);
+
+        $methodText = $payment_method == '2' ? 'Đã sử dụng' : 'Chưa sử dụng';
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái sử dụng thành công!',
+            'payment_method' => $methodText
+        ]);
+    }
 }

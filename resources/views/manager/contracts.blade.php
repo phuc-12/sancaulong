@@ -506,7 +506,9 @@
                     <td class="fw-bold text-success">{{ $ct->final_amount ? number_format($ct->final_amount, 0, ',', '.') . '₫' : '---' }}</td>
                     <td>{{ $bookingDate ? \Carbon\Carbon::parse($bookingDate)->format('d/m/Y') : '---' }}</td>
                     <td>
-                        @if($isExpired)
+                        @if ($ct->note == '2')
+                            <span class="badge bg-success">Đã sử dụng</span>
+                        @elseif ($isExpired)
                             <span class="badge bg-warning text-dark">Đã quá hạn</span>
                         @else
                             <span class="badge bg-info text-dark">Chưa sử dụng</span>

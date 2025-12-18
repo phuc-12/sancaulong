@@ -234,7 +234,7 @@ Route::prefix('manager')->name('manager.')->middleware(['auth'])->group(function
     Route::get('/list_Contracts', [ManagerController::class, 'list_Contracts'])->name('lich_co_dinh');
     Route::post('/contract_details', [ManagerController::class, 'contract_details'])->name('chi_tiet_ct');
     Route::post('/cancel_contract', [ManagerController::class, 'cancel_contract'])->name('cancel_contract');
-
+    Route::post('/confirm_note', [ManagerController::class, 'confirm_note'])->name('confirm_note');
 });
 
 //=============================================================================================================
@@ -261,6 +261,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:staff'])->grou
 
     Route::post('/export-invoice', [InvoiceController::class, 'exportInvoice'])->name('export_invoice');
     Route::post('/confirm_payment', [InvoiceController::class, 'confirm_payment'])->name('confirm_payment');
+    Route::post('/confirm_payment_method', [InvoiceController::class, 'confirm_payment_method'])->name('confirm_payment_method');
 
     Route::get('/booking_directly', [StaffController::class, 'booking_directly'])->name('bookDirectly');
     Route::post('/booking_directly/add-slot', [StaffController::class, 'addSlot'])->name('booking.addSlot');
