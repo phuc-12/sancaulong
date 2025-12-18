@@ -111,7 +111,11 @@ function validateDate() {
                                     <td class="fw-bold text-success">{{ number_format($invoice->final_amount, 0, ',', '.') }}₫</td>
                                     <td>{{ $formattedBookingDate }}</td>
                                     <td>
-                                        @if($isExpired)
+                                        @if ($invoice->payment_status === 'Đã Hủy')
+                                            <span class="badge bg-secondary">---</span>
+                                        @elseif ($invoice->payment_method == '2')
+                                            <span class="badge bg-success">Đã sử dụng</span>
+                                        @elseif ($isExpired)
                                             <span class="badge bg-warning text-dark">Đã quá hạn</span>
                                         @else
                                             <span class="badge bg-info text-dark">Chưa sử dụng</span>
