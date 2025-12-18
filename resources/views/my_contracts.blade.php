@@ -96,7 +96,7 @@ function validateDate() {
 									<td>{{ ++$index }}</td>
 									<td class="fw-semibold">{{ $ct->facility_name ?? '---' }}</td>
 									{{-- <td>{{ $ct->fullname ?? '---' }}</td> --}}
-									<td>{{ $ct->issue_date ? \Carbon\Carbon::parse($ct->issue_date)->format('d/m/Y H:i:s') : '---' }}</td>
+									<td>{{ $ct->issue_date ? \Carbon\Carbon::parse($ct->issue_date)->format('d/m/Y') : '---' }}</td>
 									<td class="fw-bold text-success">{{ $ct->final_amount ? number_format($ct->final_amount, 0, ',', '.') . '₫' : '---' }}</td>
 									<td>{{ $bookingDate ? \Carbon\Carbon::parse($bookingDate)->format('d/m/Y') : '---' }}</td>
 									<td>
